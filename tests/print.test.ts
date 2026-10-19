@@ -6,6 +6,7 @@ import assert from 'node:assert/strict';
 import './helpers.ts';
 import { crest, emblem } from '../src/geometry/crest.ts';
 import { geometryOf, minFeature, minDiameterMM } from '../src/print/printcheck.ts';
+import { SHARED_PRINT_MIN_UNITS } from '../src/print/service.ts';
 
 // Filament printer, 0.4 mm nozzle: the finest feature that reliably survives
 // is about one extrusion width and a bit — 0.5 mm.
@@ -20,6 +21,8 @@ test('print crest: smallest feature ≥ 3.6 units — prints from Ø ≤ 70 mm o
 test('print crest with an empty logo slot is just as printable', () => {
   const { w } = minFeature(geometryOf(crest({ detail: 'print', medal: 'slot' }).d));
   assert.ok(w >= 3.6, `minimum feature ${w.toFixed(2)} u`);
+  // The service print gate uses this measure as a constant; it must stay true.
+  assert.equal(Math.round(w * 100) / 100, SHARED_PRINT_MIN_UNITS);
 });
 
 test('print emblem: smallest feature ≥ 3.6 units', () => {

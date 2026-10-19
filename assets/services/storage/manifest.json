@@ -1,0 +1,185 @@
+{
+  "service": {
+    "id": "storage",
+    "name": "Storage",
+    "category": "storage",
+    "patron": {
+      "god": "hades"
+    },
+    "letter": "S",
+    "caption": "The Olympus · HADES",
+    "logo": null
+  },
+  "print": {
+    "variablePartsMinUnits": 4.05,
+    "minDiameterMM": 67,
+    "featureMM": 0.5
+  },
+  "warnings": [],
+  "files": [
+    {
+      "path": "svg/the-olympus-storage-crest-fine.svg",
+      "sha256": "ac92146a86f0f5d20967919800df43f91ec09e05830bf81cbdbbc1e594bb3689"
+    },
+    {
+      "path": "svg/the-olympus-storage-crest-fine-white.svg",
+      "sha256": "3ac0780802c0e351794c9c09d37a6c34a60a1ba39284dcce755534848f6b51d6"
+    },
+    {
+      "path": "svg/the-olympus-storage-crest-fine-on-light.svg",
+      "sha256": "b38c60bfa1e3e7a1bceee563da71a5061c43eb3e134e43543cbe680be3c0285b"
+    },
+    {
+      "path": "svg/the-olympus-storage-crest-fine-on-dark.svg",
+      "sha256": "957f2fa486c48d08c0d4eaf8c1ae092227928ae041ff26da51b6a57f4fb70d52"
+    },
+    {
+      "path": "svg/the-olympus-storage-crest-print.svg",
+      "sha256": "fd91b29ffa91d23e4ec6d6f35297b167f35128c91427fdf205adbaf7563160c6"
+    },
+    {
+      "path": "svg/the-olympus-storage-crest-print-white.svg",
+      "sha256": "cd6554a2a1c57ee0d08d7e90f9dedf2437bb4fd8b3be89c82658b3342256ca33"
+    },
+    {
+      "path": "svg/the-olympus-storage-crest-print-on-light.svg",
+      "sha256": "c5b3cc49b33b35cdbc1c805659b90afd27c352ba592c732053c395793f085d15"
+    },
+    {
+      "path": "svg/the-olympus-storage-crest-print-on-dark.svg",
+      "sha256": "d93636bd083d303e7a8472a4e45bd084104c4e9f883bcd64fb31640508eb89b5"
+    },
+    {
+      "path": "svg/the-olympus-storage-emblem-fine.svg",
+      "sha256": "669347062912657cf37bd67a3021b17aaad8e3b3291b5cbd05e6d00851f3e25b"
+    },
+    {
+      "path": "svg/the-olympus-storage-emblem-fine-white.svg",
+      "sha256": "29796d9cd42c5a442f1a6341eaad6c1a99172f1ac770b918aee620a18e5b39e1"
+    },
+    {
+      "path": "svg/the-olympus-storage-emblem-fine-on-light.svg",
+      "sha256": "b35408a5ed690bb707b9c4b9ced1f8e5c104e75cf320cc836ece040fc317514f"
+    },
+    {
+      "path": "svg/the-olympus-storage-emblem-fine-on-dark.svg",
+      "sha256": "008f060970669593a3da9e41d543ae4a88a025a09f30123fbff3f02200552ef1"
+    },
+    {
+      "path": "svg/the-olympus-storage-emblem-print.svg",
+      "sha256": "0cf2fd3881bca46b626ec448f8e93241dc45929e98cd80fa13ebd8dd25d5b5dd"
+    },
+    {
+      "path": "svg/the-olympus-storage-emblem-print-white.svg",
+      "sha256": "0d8ccb1362e3b649e90fc3fc63f1b7aeab9e9292f329be1a4a7ba8444a3dda0d"
+    },
+    {
+      "path": "svg/the-olympus-storage-emblem-print-on-light.svg",
+      "sha256": "5d9b3d452b26f91719b72bbe34661f2c6a2e3b115dd144174d06810ea373300b"
+    },
+    {
+      "path": "svg/the-olympus-storage-emblem-print-on-dark.svg",
+      "sha256": "95de10d7d620351d2673e6b350db7d3d1c537af1152958903499c959090dfd5a"
+    },
+    {
+      "path": "svg/the-olympus-storage-seal.svg",
+      "sha256": "71ff5e2176566f1152d3f01c7f15aa72995ac24b4a87749e545efd599a3a12ad"
+    },
+    {
+      "path": "svg/the-olympus-storage-seal-white.svg",
+      "sha256": "296ffca234963246fc05334659a6464d3ce653891c2f67d6ed319f11f5a00ff9"
+    },
+    {
+      "path": "svg/the-olympus-storage-seal-on-light.svg",
+      "sha256": "9a1a2feea652127de0949ad1cfd22b59b516ec246d2f72fd0f2c801b27d8ad19"
+    },
+    {
+      "path": "svg/the-olympus-storage-seal-on-dark.svg",
+      "sha256": "29a7bb3e30fc00fcb63e4e14928a7293d98c6aed9eeb719a265bf063f975d257"
+    },
+    {
+      "path": "svg/the-olympus-storage-lockup-horizontal.svg",
+      "sha256": "46a64b51b66b3e5d6cc7a9bdc89de7640dd75f1ee058349fef9d777d08ad77c6"
+    },
+    {
+      "path": "svg/the-olympus-storage-lockup-horizontal-white.svg",
+      "sha256": "b1efaa6f153936b24aa7f07c967bc52efcd405ecbe72a7e053b351048cddc571"
+    },
+    {
+      "path": "svg/the-olympus-storage-lockup-horizontal-on-light.svg",
+      "sha256": "0f132fa5125babe855dba8fce541b582f5f4aba8fabe605d57a233b7317a89a7"
+    },
+    {
+      "path": "svg/the-olympus-storage-lockup-horizontal-on-dark.svg",
+      "sha256": "50b04de0c20f27506556617dab734eb0462c10406aff34c697db590e27dcd706"
+    },
+    {
+      "path": "svg/the-olympus-storage-lockup-vertical.svg",
+      "sha256": "33657228dba0f395209fb8f31f24afefc4784ee9ada9c83c55053d4d143c11cc"
+    },
+    {
+      "path": "svg/the-olympus-storage-lockup-vertical-white.svg",
+      "sha256": "d83fb62c4e8991173c0b5b5b05da786a7b9e044084febd10f2dfc841a392d92b"
+    },
+    {
+      "path": "svg/the-olympus-storage-lockup-vertical-on-light.svg",
+      "sha256": "9f319eee524c6970f5077d26edeaca68d6fba55c194f42eb6d883f6915066b48"
+    },
+    {
+      "path": "svg/the-olympus-storage-lockup-vertical-on-dark.svg",
+      "sha256": "cab4369e4a0e2d5342b99889e3e2e36a5ed44aecfa264e6dff679691a3272b34"
+    },
+    {
+      "path": "png/the-olympus-storage-crest-fine-512.png",
+      "sha256": "e1f96524b70b042966ed43d293e05e2325b9ab738e1ac9b181b8945d2f02420b"
+    },
+    {
+      "path": "png/the-olympus-storage-crest-fine-white-512.png",
+      "sha256": "fa1e5d17b6e0d463f4771e265e155c727d865d3fb18430b6b7353e2149321e1d"
+    },
+    {
+      "path": "png/the-olympus-storage-emblem-fine-128.png",
+      "sha256": "342d8a6f346a48915a72c935a34c98db5a922f97c88d3a2bea59c11c3e2c0602"
+    },
+    {
+      "path": "png/the-olympus-storage-emblem-fine-256.png",
+      "sha256": "b0b76787b72fcce4273bf925301fb782160cc0bc9a0b26979ff4b267a5bb00ef"
+    },
+    {
+      "path": "png/the-olympus-storage-seal-32.png",
+      "sha256": "6f27a06b34ff8e48fa43571674fc09ef455c2dcc10c2b68b1d58271af76bb8f8"
+    },
+    {
+      "path": "png/the-olympus-storage-seal-64.png",
+      "sha256": "86a725f9c340f685f1a57cf0ca6d719f8a4ad6082c6ea95b245b85127c848398"
+    },
+    {
+      "path": "png/the-olympus-storage-seal-180.png",
+      "sha256": "b6527a7350dadbbcb32e57e3e204901f63b393720bad9a6be3507672cd68da84"
+    },
+    {
+      "path": "png/the-olympus-storage-seal-512.png",
+      "sha256": "1d5dd3613d2015f108830fc75e5c6f1f4b0221808fa5ff9f8c957359c9f14fe5"
+    },
+    {
+      "path": "png/the-olympus-storage-lockup-horizontal-1600.png",
+      "sha256": "a68142508afa111845d56ecba458bffc39ff2318a31a513b6081bc699ba57027"
+    },
+    {
+      "path": "png/the-olympus-storage-lockup-horizontal-white-1600.png",
+      "sha256": "d7b16e61dcead7339b8c7d8d28fd2597da849a8c77e265d12e74f5a85ef45cf3"
+    },
+    {
+      "path": "png/the-olympus-storage-lockup-vertical-800.png",
+      "sha256": "454c85a6267b7e5ecda38414d453f33cdf055fbd62ec530c429e29b3eab89c2d"
+    },
+    {
+      "path": "favicon.ico",
+      "sha256": "5a9204c6097549b4361018efa90fdf876aca442d16b0e9c8710393da6d3013a8"
+    },
+    {
+      "path": "preview.png",
+      "sha256": "082940fb66fb374ed7ae9a61eb9543a62a667813dff2c6fb76219fb5c85f3a3c"
+    }
+  ]
+}

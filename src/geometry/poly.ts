@@ -69,12 +69,13 @@ export function flatten(d: string): Ring[] {
   const rings: Ring[] = [];
   let ring: Ring | null = null;
   let cur: Pt = [0, 0];
-  const tokens = d.match(/[MLACQZ]|-?\d*\.?\d+(?:e-?\d+)?/g) ?? [];
+  // Any other command letter (H, V, relative…) is an error, never silently skipped.
+  const tokens = d.match(/[A-Za-z]|-?\d*\.?\d+(?:e-?\d+)?/g) ?? [];
   let i = 0;
   let cmd: string | null = null;
   const num = () => Number(tokens[i++]);
   while (i < tokens.length) {
-    if (/[MLACQZ]/.test(tokens[i])) cmd = tokens[i++];
+    if (/[A-Za-z]/.test(tokens[i])) cmd = tokens[i++];
     switch (cmd) {
       case 'M':
         if (ring && ring.length > 2) rings.push(ring);
@@ -118,7 +119,7 @@ export function flatten(d: string): Ring[] {
         cmd = null;
         break;
       default:
-        throw new Error(`flatten: unexpected token ${tokens[i]}`);
+        throw new Error(`flatten: unsupported path command ${cmd ?? tokens[i]} (expected absolute M L A C Q Z)`);
     }
   }
   if (ring && ring.length > 2) rings.push(ring);

@@ -1,0 +1,6 @@
+{
+  "id": "proxmox",
+  "name": "Proxmox",
+  "category": "virtualization",
+  "description": "Hypervisor carrying every machine"
+}

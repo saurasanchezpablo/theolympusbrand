@@ -1,0 +1,185 @@
+{
+  "service": {
+    "id": "containers",
+    "name": "Containers",
+    "category": "containers",
+    "patron": {
+      "god": "poseidon"
+    },
+    "letter": "C",
+    "caption": "The Olympus · POSEIDON",
+    "logo": null
+  },
+  "print": {
+    "variablePartsMinUnits": 4.05,
+    "minDiameterMM": 67,
+    "featureMM": 0.5
+  },
+  "warnings": [],
+  "files": [
+    {
+      "path": "svg/the-olympus-containers-crest-fine.svg",
+      "sha256": "ca104a16b39b29d98eb079b996386ed02cc4cee7850374f8b09776be1fbbcfab"
+    },
+    {
+      "path": "svg/the-olympus-containers-crest-fine-white.svg",
+      "sha256": "4f49c1e6552f224590415e3e951dae16161534f5615c82def180396593216fd2"
+    },
+    {
+      "path": "svg/the-olympus-containers-crest-fine-on-light.svg",
+      "sha256": "f65386d3a0b6b7da649bd0f69f5221d6492e2a5a478ff1ceef729afc0964a1d2"
+    },
+    {
+      "path": "svg/the-olympus-containers-crest-fine-on-dark.svg",
+      "sha256": "4e41b27689531748c67a6184c37a2b4dce95618eb1c22a75c2153aa3bef02e85"
+    },
+    {
+      "path": "svg/the-olympus-containers-crest-print.svg",
+      "sha256": "9c650812d022e773143b7d724584692cc2f4f1d4f9ee79ca71cb6ab9738e1b00"
+    },
+    {
+      "path": "svg/the-olympus-containers-crest-print-white.svg",
+      "sha256": "6a5d7a95437502731e6b2466d936737f4364fda2e8be75cfcda4f33d046a4ef1"
+    },
+    {
+      "path": "svg/the-olympus-containers-crest-print-on-light.svg",
+      "sha256": "cdc66f59fefca3fe80a0d18d21413b29d199c6f1099fad52fb7d2e427d848c40"
+    },
+    {
+      "path": "svg/the-olympus-containers-crest-print-on-dark.svg",
+      "sha256": "f757b3373c9b1a3a87391f85c9057286ba703781ebf0dafa868765e40d7b5a3b"
+    },
+    {
+      "path": "svg/the-olympus-containers-emblem-fine.svg",
+      "sha256": "a2e0c8b9952619e8f4d5823a9cb358192f132a7073d47809844474995eda95b9"
+    },
+    {
+      "path": "svg/the-olympus-containers-emblem-fine-white.svg",
+      "sha256": "e49ce1adff763e01909fd89d686d2d6c92bacb17dd0c19efb886641bc731eac2"
+    },
+    {
+      "path": "svg/the-olympus-containers-emblem-fine-on-light.svg",
+      "sha256": "c5e2e0a87793d7dcf16e707624afeb9d6aea7dffd6c6f8bd2dd8397d58406adb"
+    },
+    {
+      "path": "svg/the-olympus-containers-emblem-fine-on-dark.svg",
+      "sha256": "2af10646f7f8ff79b5535573980662dee4ec655484d04eae0c16a5af64b2a742"
+    },
+    {
+      "path": "svg/the-olympus-containers-emblem-print.svg",
+      "sha256": "6f4c53823f554575d41a7a456a2baac3846d82e97a7df35a36a0dafa18b9a5ba"
+    },
+    {
+      "path": "svg/the-olympus-containers-emblem-print-white.svg",
+      "sha256": "f21c114c02273d2e00d97709155e90320f07e0e69b03bc0ffa919da0011fd43b"
+    },
+    {
+      "path": "svg/the-olympus-containers-emblem-print-on-light.svg",
+      "sha256": "4a9934dc95a7261a2b7e6f3a0534cb00527502e92eda0c0510eeadef1e102a98"
+    },
+    {
+      "path": "svg/the-olympus-containers-emblem-print-on-dark.svg",
+      "sha256": "f5af4ea9e2bc0cca6bc385956bddebeebd024bb19a4b062195ecc0de90d16575"
+    },
+    {
+      "path": "svg/the-olympus-containers-seal.svg",
+      "sha256": "5bb2c36eb3beb9f86441d00ba60e3beafd245aa32b401bba1e62f666818390ba"
+    },
+    {
+      "path": "svg/the-olympus-containers-seal-white.svg",
+      "sha256": "3439f73321add24551765c6149da644f234c22541ecf3a301dc143fa90a2dc74"
+    },
+    {
+      "path": "svg/the-olympus-containers-seal-on-light.svg",
+      "sha256": "16280a1102227992d69d05a9d5281549da15548fad6347d788545be087996f56"
+    },
+    {
+      "path": "svg/the-olympus-containers-seal-on-dark.svg",
+      "sha256": "8cb1f4e722f5aac7817b9648567887aae7f9714b008d2cadf415a856c4b9c788"
+    },
+    {
+      "path": "svg/the-olympus-containers-lockup-horizontal.svg",
+      "sha256": "8f8e271e8f7d9e45cc3fecfed517395c5c40b44786d0c8399e75d91efcbc7c2b"
+    },
+    {
+      "path": "svg/the-olympus-containers-lockup-horizontal-white.svg",
+      "sha256": "c784874d148e2b8b9b3165de0752392dd147d56b7d5b7da4a1209a1b647b6e6c"
+    },
+    {
+      "path": "svg/the-olympus-containers-lockup-horizontal-on-light.svg",
+      "sha256": "9f39ffddfa14ea23afd5523c50d05a03dc9e96cf3b6f26787a4dc704e107bb07"
+    },
+    {
+      "path": "svg/the-olympus-containers-lockup-horizontal-on-dark.svg",
+      "sha256": "02516e5e9d7e701188c71c73016ff819cd70ec525b079644bebd99523f179c2c"
+    },
+    {
+      "path": "svg/the-olympus-containers-lockup-vertical.svg",
+      "sha256": "9c146af9c77a31aed936ae9d34d3e2ddb584e925e82b3bca17641d9fbfbf07d4"
+    },
+    {
+      "path": "svg/the-olympus-containers-lockup-vertical-white.svg",
+      "sha256": "cf3207a17d6a4d651fc84118964cabca0dd3ea2d951985bf5fde419daa710bc0"
+    },
+    {
+      "path": "svg/the-olympus-containers-lockup-vertical-on-light.svg",
+      "sha256": "7d1df8bc315ab7dcac6a34bdb00e4a460b45a7c367820e33f486b443000229c8"
+    },
+    {
+      "path": "svg/the-olympus-containers-lockup-vertical-on-dark.svg",
+      "sha256": "b1228525600c5654f8970754abee267406ac97bcca6257e6b4259ef2f6d19ba0"
+    },
+    {
+      "path": "png/the-olympus-containers-crest-fine-512.png",
+      "sha256": "32a35f7934c96ba47f1f5a68fc9e630578df4fffc7e036c3f34574275a685492"
+    },
+    {
+      "path": "png/the-olympus-containers-crest-fine-white-512.png",
+      "sha256": "a2a80e711242d9e41b0303e9706111017fef58821226fc3a180c54919287b486"
+    },
+    {
+      "path": "png/the-olympus-containers-emblem-fine-128.png",
+      "sha256": "24cb9d1f70c11094b0f6df50aa3b1e99524594d78bd6f89003e2b4606e89892c"
+    },
+    {
+      "path": "png/the-olympus-containers-emblem-fine-256.png",
+      "sha256": "fad86340a1c730ad83060372300825a6a7445999cae8083c7caeb6dd644b28f9"
+    },
+    {
+      "path": "png/the-olympus-containers-seal-32.png",
+      "sha256": "ca645e6aeda89982e4a6ce05e9eaf31ab474d6e61e8fcad336adbd6272fca228"
+    },
+    {
+      "path": "png/the-olympus-containers-seal-64.png",
+      "sha256": "e8abbf5eb92bf37ebe2cd20adcbed6b01cbd3d1f8c5f1370c1fd6c49b1be7f81"
+    },
+    {
+      "path": "png/the-olympus-containers-seal-180.png",
+      "sha256": "77142050616c2572faeb17ba14ab2f6f42e084e414e3bdf7289ec14ca8fb74e7"
+    },
+    {
+      "path": "png/the-olympus-containers-seal-512.png",
+      "sha256": "06bcb56019ba9da80b9da5b7d5d01767b76979988d22d501fa72f72abb658381"
+    },
+    {
+      "path": "png/the-olympus-containers-lockup-horizontal-1600.png",
+      "sha256": "ff069b01658d3e6d1d59b8677910bc84cd50e4da2a6653ff47df75ccde715566"
+    },
+    {
+      "path": "png/the-olympus-containers-lockup-horizontal-white-1600.png",
+      "sha256": "cc09baa5c76d1c13859f10af50dbd3489cd26a92885fb28cddafa522ab1ebe22"
+    },
+    {
+      "path": "png/the-olympus-containers-lockup-vertical-800.png",
+      "sha256": "092627ab05da784daf5a68b1e8c1ea107cc8649f1aeb0ab5feeb0b6f3da719aa"
+    },
+    {
+      "path": "favicon.ico",
+      "sha256": "8362b4fe6ec4943f2dba827ad47d6e03cf0c387c2c00e510bf23366ee1253855"
+    },
+    {
+      "path": "preview.png",
+      "sha256": "8bdf3a0c21562768a069c63a951d52362693a8ced7d089b05266c4721e90b37a"
+    }
+  ]
+}

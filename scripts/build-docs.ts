@@ -231,7 +231,7 @@ const tHalf = (COMPOSITION.columns[3] + COMPOSITION.shaftW / 2 + 22 - 256) * TK;
     b += paragraph(lx, y + 56, body, 880, { size: 15, fill: P.graphite, leading: 22 }).svg;
   });
   ['apollo', 'athena', 'argus'].forEach((god, i) => {
-    b += place(productionSvg(crest({ god: god as 'apollo' })), lx + i * 300, 690, 260);
+    b += place(productionSvg(crest({ patron: { god: god as 'apollo' } })), lx + i * 300, 690, 260);
   });
   b += text(lx, 980, 'Apollo · Athena · Argus — the same crest; only the god and the slot change.', { size: 14, fill: P.slate });
   board(join(OUT, 'ds-6-system.png'), W, 1040, P.paper, b);

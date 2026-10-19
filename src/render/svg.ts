@@ -23,8 +23,13 @@ export type Ground = 'transparent' | 'light' | 'dark';
 export function productionSvg(mark: Mark, { ground = 'transparent' as Ground, ink, title = 'The Olympus', size = S }: { ground?: Ground; ink?: string; title?: string; size?: number } = {}): string {
   const fill = ink ?? (ground === 'dark' ? PALETTE.marble : PALETTE.charcoal);
   const bg = ground === 'light' ? PALETTE.paper : ground === 'dark' ? PALETTE.obsidian : null;
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${S} ${S}" width="${size}" height="${size}">
-  <title>${esc(title)}</title>${bg ? `\n  <rect id="ground" width="${S}" height="${S}" fill="${bg}"/>` : ''}
+  // Square marks sit on the 512 artboard; lockups carry their own width and height.
+  const w = mark.width ?? S;
+  const h = mark.height ?? S;
+  const outW = Math.round(size * (w / Math.max(w, h)));
+  const outH = Math.round(size * (h / Math.max(w, h)));
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${w} ${h}" width="${outW}" height="${outH}">
+  <title>${esc(title)}</title>${bg ? `\n  <rect id="ground" width="${w}" height="${h}" fill="${bg}"/>` : ''}
   <path id="mark" d="${mark.d}" fill="${fill}"/>
 </svg>
 `;

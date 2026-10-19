@@ -1,0 +1,185 @@
+{
+  "service": {
+    "id": "reverse-proxy",
+    "name": "Reverse Proxy",
+    "category": "proxy",
+    "patron": {
+      "god": "hermes"
+    },
+    "letter": "R",
+    "caption": "The Olympus · HERMES",
+    "logo": null
+  },
+  "print": {
+    "variablePartsMinUnits": 4.05,
+    "minDiameterMM": 67,
+    "featureMM": 0.5
+  },
+  "warnings": [],
+  "files": [
+    {
+      "path": "svg/the-olympus-reverse-proxy-crest-fine.svg",
+      "sha256": "accdf6772f08cec939bad3b5e2a60c20d1cf6bd223e3679b772b51ecc604e57c"
+    },
+    {
+      "path": "svg/the-olympus-reverse-proxy-crest-fine-white.svg",
+      "sha256": "2c49c327842a73796cf37969e1ff72a025c81dd308228514fc654be30f018b76"
+    },
+    {
+      "path": "svg/the-olympus-reverse-proxy-crest-fine-on-light.svg",
+      "sha256": "b2f705d4916b013edea5a671dfa18234b50e37bc41064c1139387aaa28a9e0f6"
+    },
+    {
+      "path": "svg/the-olympus-reverse-proxy-crest-fine-on-dark.svg",
+      "sha256": "d1af61b49d36b796773f85125a01f75696ab06d69dd8c4b9dbc314481fabb3ea"
+    },
+    {
+      "path": "svg/the-olympus-reverse-proxy-crest-print.svg",
+      "sha256": "350a0e9acbbb54e9a1b9b0eef241ebc0562b9e76144a64fa67be5d297bdbeb74"
+    },
+    {
+      "path": "svg/the-olympus-reverse-proxy-crest-print-white.svg",
+      "sha256": "d222809dc563de987506ec177d0f7c89de520e0a4784dbbae15d55e4ba6fb874"
+    },
+    {
+      "path": "svg/the-olympus-reverse-proxy-crest-print-on-light.svg",
+      "sha256": "df512d363975b019ae958768f31bca7f90b167064927fe6533acc9de284da710"
+    },
+    {
+      "path": "svg/the-olympus-reverse-proxy-crest-print-on-dark.svg",
+      "sha256": "4ea2cf3ecb6453e4aaf8ccf93cd651e6b8e98b20cf596e9c8483a4b83c163890"
+    },
+    {
+      "path": "svg/the-olympus-reverse-proxy-emblem-fine.svg",
+      "sha256": "3e8ae66e725f7b044b532956aaa7d5d1c06c92ace1013d9b1856daf7a07b0594"
+    },
+    {
+      "path": "svg/the-olympus-reverse-proxy-emblem-fine-white.svg",
+      "sha256": "5e11130ef544618b6629c0a02828bfd74b8835ad1fa83ec3c128dddc22856d76"
+    },
+    {
+      "path": "svg/the-olympus-reverse-proxy-emblem-fine-on-light.svg",
+      "sha256": "6fca59b076ee22657f7217094f15833ec4bdadb2fb51d3c57cded4b7d86f8503"
+    },
+    {
+      "path": "svg/the-olympus-reverse-proxy-emblem-fine-on-dark.svg",
+      "sha256": "2d5940aebc2a10dbcc0869fb3cf9ce7791b339ddaf5459b76e19a766f0a6412b"
+    },
+    {
+      "path": "svg/the-olympus-reverse-proxy-emblem-print.svg",
+      "sha256": "304a1cca6acc4b7f521ef7653f7d1d42a6f8109b58c5c80c98aad2eb1e67aefc"
+    },
+    {
+      "path": "svg/the-olympus-reverse-proxy-emblem-print-white.svg",
+      "sha256": "c2495b6c3c4dbe79287eb275769d805d06fac95fb060e5129af98b1760654d85"
+    },
+    {
+      "path": "svg/the-olympus-reverse-proxy-emblem-print-on-light.svg",
+      "sha256": "ad693e09595484ef7f6523525b691a9ada6a3d3f9354672e742e2e9386fa4f98"
+    },
+    {
+      "path": "svg/the-olympus-reverse-proxy-emblem-print-on-dark.svg",
+      "sha256": "94a08eb4fe33f242a89b06719d63c141480f7e283d95e3d092c4152b7dbcbf57"
+    },
+    {
+      "path": "svg/the-olympus-reverse-proxy-seal.svg",
+      "sha256": "c75257c4f8f9a89dcc461d56688714a39ad6a4d884ee8718801e8bcfafb2dd21"
+    },
+    {
+      "path": "svg/the-olympus-reverse-proxy-seal-white.svg",
+      "sha256": "d4a4e941551ff81ff4e32df5b7785cfb8a3e56f6503ca4405f142333d85b5762"
+    },
+    {
+      "path": "svg/the-olympus-reverse-proxy-seal-on-light.svg",
+      "sha256": "f4538460e10f328a55d6ac1ea37885e841f4283f00f1fd428252815bdda4e2ae"
+    },
+    {
+      "path": "svg/the-olympus-reverse-proxy-seal-on-dark.svg",
+      "sha256": "3397af229c4130beb80ab98abb359f5a9628e961770baff26dcc64adbf3aba7d"
+    },
+    {
+      "path": "svg/the-olympus-reverse-proxy-lockup-horizontal.svg",
+      "sha256": "b7241b682ae9a72bcedefe158ef0c086632f76c5fc792d09900b4dc02842fdbb"
+    },
+    {
+      "path": "svg/the-olympus-reverse-proxy-lockup-horizontal-white.svg",
+      "sha256": "c14d770bf283de97cab79b1b9a2e91e931b0ecba7af5ccd190700af52b1cb93c"
+    },
+    {
+      "path": "svg/the-olympus-reverse-proxy-lockup-horizontal-on-light.svg",
+      "sha256": "aa70dc7e66a7ba0ff23a80f421471bd19ba578a029a1dbfeb024f6d033b4ee3f"
+    },
+    {
+      "path": "svg/the-olympus-reverse-proxy-lockup-horizontal-on-dark.svg",
+      "sha256": "a61d6d7625f9331fd26fbe4fc66a04814b1f4dd461d11823f9b562393e155295"
+    },
+    {
+      "path": "svg/the-olympus-reverse-proxy-lockup-vertical.svg",
+      "sha256": "9ab35c05b4320927c9926cc68d6a9012f3eff26a51a52b34064ca49992d9809f"
+    },
+    {
+      "path": "svg/the-olympus-reverse-proxy-lockup-vertical-white.svg",
+      "sha256": "99e1b16740d3aa31d8ea98f3a0056eeb0c93c2c036ef251845ded3a081050f82"
+    },
+    {
+      "path": "svg/the-olympus-reverse-proxy-lockup-vertical-on-light.svg",
+      "sha256": "71c45c481fb3f2756bacc03d30f3bc3c278a9cd0d6dd5b8f8a73470b41678231"
+    },
+    {
+      "path": "svg/the-olympus-reverse-proxy-lockup-vertical-on-dark.svg",
+      "sha256": "763a192bd5d3cc50c31144c959486979fd1a1eccb52817256dbd7b1c3daae151"
+    },
+    {
+      "path": "png/the-olympus-reverse-proxy-crest-fine-512.png",
+      "sha256": "d1ec157949d263dc250ba26b44af0ad390c7852004b5841612087318647b9537"
+    },
+    {
+      "path": "png/the-olympus-reverse-proxy-crest-fine-white-512.png",
+      "sha256": "16fade09bd93bb7d8fc2005396d335c172cd414c2842ee25408246220f50421e"
+    },
+    {
+      "path": "png/the-olympus-reverse-proxy-emblem-fine-128.png",
+      "sha256": "987f7a09b64647ca78a0ca802136444890bdace43134bca3872a615818c86408"
+    },
+    {
+      "path": "png/the-olympus-reverse-proxy-emblem-fine-256.png",
+      "sha256": "7d4737885f1977bc29a75810f2ec6c684874545dbc23bb174574297d963206b4"
+    },
+    {
+      "path": "png/the-olympus-reverse-proxy-seal-32.png",
+      "sha256": "7e722794400b2362b407d3f75d4850b8362e634276275151390fff12888a5666"
+    },
+    {
+      "path": "png/the-olympus-reverse-proxy-seal-64.png",
+      "sha256": "fa3b82f53e34b2fefd877bb79e5e7623a911507a7dbb448266f815f740da943b"
+    },
+    {
+      "path": "png/the-olympus-reverse-proxy-seal-180.png",
+      "sha256": "21f16715c7f83bf0025fef96c9b42de5c97111ba65bef371c290c7da61a2a613"
+    },
+    {
+      "path": "png/the-olympus-reverse-proxy-seal-512.png",
+      "sha256": "5568868033211e78b9e87246c9186bed1fd955bdb61843c1f790b7189479247c"
+    },
+    {
+      "path": "png/the-olympus-reverse-proxy-lockup-horizontal-1600.png",
+      "sha256": "c9d0e61af190c52c2b00ab6056b2c0914fcc78377c7005b0f944310f35a1623e"
+    },
+    {
+      "path": "png/the-olympus-reverse-proxy-lockup-horizontal-white-1600.png",
+      "sha256": "2082738a5fd73d2ea3240a3285b8442d2eca947b013f8fd462b6ccf4c86c577b"
+    },
+    {
+      "path": "png/the-olympus-reverse-proxy-lockup-vertical-800.png",
+      "sha256": "4df03788696aa001dd6b0fdc3509fd826df7f7ab512f1606c4a4fd38fdc69452"
+    },
+    {
+      "path": "favicon.ico",
+      "sha256": "b549918a0212f0d28b73513f9df351936fe8687e01a2364e2defa0cfe9a3db2f"
+    },
+    {
+      "path": "preview.png",
+      "sha256": "293a17e60dc6b0eb9249ccebb0f22e739a75fcdafe8c08dad6fe1e8e19db3362"
+    }
+  ]
+}

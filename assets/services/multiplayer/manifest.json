@@ -1,0 +1,185 @@
+{
+  "service": {
+    "id": "multiplayer",
+    "name": "Multiplayer",
+    "category": "competitive",
+    "patron": {
+      "god": "ares"
+    },
+    "letter": "M",
+    "caption": "The Olympus · ARES",
+    "logo": null
+  },
+  "print": {
+    "variablePartsMinUnits": 4.05,
+    "minDiameterMM": 67,
+    "featureMM": 0.5
+  },
+  "warnings": [],
+  "files": [
+    {
+      "path": "svg/the-olympus-multiplayer-crest-fine.svg",
+      "sha256": "e2a530273b3b87f75c78add700de444741e7271366992c564263304ecb482184"
+    },
+    {
+      "path": "svg/the-olympus-multiplayer-crest-fine-white.svg",
+      "sha256": "13bc7a1684bffba90b473eada288afc4fca230fd3490d10246516e0e0f818831"
+    },
+    {
+      "path": "svg/the-olympus-multiplayer-crest-fine-on-light.svg",
+      "sha256": "2d7953fcf00624bd0b31f854e72d33a68abaaab7bcdedbfb5389225fcb4c85ac"
+    },
+    {
+      "path": "svg/the-olympus-multiplayer-crest-fine-on-dark.svg",
+      "sha256": "cb345b07cf2291321c7798d9e7572dd53546383324be1495e0ebc1e777589177"
+    },
+    {
+      "path": "svg/the-olympus-multiplayer-crest-print.svg",
+      "sha256": "d16716136b972d4bbe45fdb48d83736d4de0bc78634135ce3c19a90e56a48a16"
+    },
+    {
+      "path": "svg/the-olympus-multiplayer-crest-print-white.svg",
+      "sha256": "f001496361bc5ab16c165820350c5c194bb0562602b2cdb3411e2a4853df6585"
+    },
+    {
+      "path": "svg/the-olympus-multiplayer-crest-print-on-light.svg",
+      "sha256": "cb2fddce1a3d84a93401931d2bc9fd358e1c242674c7ad3fda775dd6abfa1094"
+    },
+    {
+      "path": "svg/the-olympus-multiplayer-crest-print-on-dark.svg",
+      "sha256": "8a0a15aa0a4a3d84516fcb950ba90d6bfeaa9572671716aef3c6b24d372c5d80"
+    },
+    {
+      "path": "svg/the-olympus-multiplayer-emblem-fine.svg",
+      "sha256": "92927a7cbd4c802f3ac38f8450c2676d625339e577dda9f59e09d3e487c656b3"
+    },
+    {
+      "path": "svg/the-olympus-multiplayer-emblem-fine-white.svg",
+      "sha256": "cc53a166d0110c049097cccdd2dd516ece7de3a7eefc71f6d3c35cf1bef7e3ef"
+    },
+    {
+      "path": "svg/the-olympus-multiplayer-emblem-fine-on-light.svg",
+      "sha256": "7c8e1d1a0627eb27691eaf77525a85c9e46ae83c034fd6181930ab934f383abc"
+    },
+    {
+      "path": "svg/the-olympus-multiplayer-emblem-fine-on-dark.svg",
+      "sha256": "a3561e579fe15607fec5ae991085bdb3a1bb25e7086c4cb802113798c8de8291"
+    },
+    {
+      "path": "svg/the-olympus-multiplayer-emblem-print.svg",
+      "sha256": "dbc04b2ece59c074d09ba97cb852a0c2de55eb16788d3e66a4ed99d2402f0758"
+    },
+    {
+      "path": "svg/the-olympus-multiplayer-emblem-print-white.svg",
+      "sha256": "185df76197b653f79a0f3f35c503cb95c88e0414a7c212cd277a21db47bb0578"
+    },
+    {
+      "path": "svg/the-olympus-multiplayer-emblem-print-on-light.svg",
+      "sha256": "95b9744bb2a64a23212ac5c7e6992f9367220fe4678b28734cfb0804d20fb15b"
+    },
+    {
+      "path": "svg/the-olympus-multiplayer-emblem-print-on-dark.svg",
+      "sha256": "b84f696d46e531413607a9ad70a5a4eaf364387a3fab9a0303d6aced2016f101"
+    },
+    {
+      "path": "svg/the-olympus-multiplayer-seal.svg",
+      "sha256": "8b89a2a246a2c065d87f32772afa58f15b6e86768afc1ec94a24d2645249b8a4"
+    },
+    {
+      "path": "svg/the-olympus-multiplayer-seal-white.svg",
+      "sha256": "3e4a83dc3a84be06d98b4ae081a099d24f0931758374a7cb3e8a4a5c17c2c0fb"
+    },
+    {
+      "path": "svg/the-olympus-multiplayer-seal-on-light.svg",
+      "sha256": "e2aa7ee38b7ab9a0d70544f8c579818dd98f4006cf69df62501e04477b323b53"
+    },
+    {
+      "path": "svg/the-olympus-multiplayer-seal-on-dark.svg",
+      "sha256": "acd5f608289ac350fa4dfd232999a09989513ee63984b142696bc151beafc634"
+    },
+    {
+      "path": "svg/the-olympus-multiplayer-lockup-horizontal.svg",
+      "sha256": "cecc93e93bb9c85efc1866ca276f48daf96199d38911c1b9bf014ced546e822c"
+    },
+    {
+      "path": "svg/the-olympus-multiplayer-lockup-horizontal-white.svg",
+      "sha256": "a068c1469ef38f6b736a4acdf586831309b96dd39ff93ed804f520209e539c62"
+    },
+    {
+      "path": "svg/the-olympus-multiplayer-lockup-horizontal-on-light.svg",
+      "sha256": "5c2b52d3a13972cf71f5cabef3d53b03f4062c7c38dffd8319ecdb62458d040e"
+    },
+    {
+      "path": "svg/the-olympus-multiplayer-lockup-horizontal-on-dark.svg",
+      "sha256": "d90babad9a90d7e754899e296a9c07939ca756c48b9428b861e1b1b67c4ac8ee"
+    },
+    {
+      "path": "svg/the-olympus-multiplayer-lockup-vertical.svg",
+      "sha256": "d8b0fe0aca1f4a75889a2411a0afeaba65b024c1b8dfc63c643cbb86e84fcfcf"
+    },
+    {
+      "path": "svg/the-olympus-multiplayer-lockup-vertical-white.svg",
+      "sha256": "048a54937924e85d31262531d4da54410165382ed1059e406f18fa8dcb0d4919"
+    },
+    {
+      "path": "svg/the-olympus-multiplayer-lockup-vertical-on-light.svg",
+      "sha256": "f00df22d928e1852aa3739412421f4d73b8f2812dfa8f024879d4198f450d0d4"
+    },
+    {
+      "path": "svg/the-olympus-multiplayer-lockup-vertical-on-dark.svg",
+      "sha256": "c78e2669f26ecf419dc4ff8770413e54011be17eceed2ffa5b3099c6191fe5a2"
+    },
+    {
+      "path": "png/the-olympus-multiplayer-crest-fine-512.png",
+      "sha256": "9523a04e0c3f4d4f0c1b156c020a135e2402ec65c1c9bba506f8a8613421815c"
+    },
+    {
+      "path": "png/the-olympus-multiplayer-crest-fine-white-512.png",
+      "sha256": "510f819376e1c6d71ad35905baaa6134e6bdd87a2ca9c589cf97b8fcee335696"
+    },
+    {
+      "path": "png/the-olympus-multiplayer-emblem-fine-128.png",
+      "sha256": "8b68b9ebeaa4167156633596a506713bbfa25804f1ca7ea371ec4774fb695ff5"
+    },
+    {
+      "path": "png/the-olympus-multiplayer-emblem-fine-256.png",
+      "sha256": "81a1ef4644ad7c8203101255b7ab5811532d9cec8674faf54d474e82055dbd8a"
+    },
+    {
+      "path": "png/the-olympus-multiplayer-seal-32.png",
+      "sha256": "eb4d2b6064516f6f05385043f0a2e7e3ebf5524c87d5c1ea1407d83acb74675e"
+    },
+    {
+      "path": "png/the-olympus-multiplayer-seal-64.png",
+      "sha256": "8de03395e18c337ed2a26ce3853664f232769e0471181cc25b5a52e677fff9ff"
+    },
+    {
+      "path": "png/the-olympus-multiplayer-seal-180.png",
+      "sha256": "51669830e647c0bae79434730b80545a491ad40383c4b8bc996c89aa59bc2260"
+    },
+    {
+      "path": "png/the-olympus-multiplayer-seal-512.png",
+      "sha256": "555904572b57149c5058a04f5a384ece5350c7c1b70c4da496e86e4fdafa328f"
+    },
+    {
+      "path": "png/the-olympus-multiplayer-lockup-horizontal-1600.png",
+      "sha256": "5430a663a9e201f974bd18f098d54e74cf522ae2043b3016183f36052dca6ba5"
+    },
+    {
+      "path": "png/the-olympus-multiplayer-lockup-horizontal-white-1600.png",
+      "sha256": "0e83488a007a2d5a288139ad24f0c2ac0f89fc5fdc8cb54b71132e154926ee3f"
+    },
+    {
+      "path": "png/the-olympus-multiplayer-lockup-vertical-800.png",
+      "sha256": "db441020b4075d65216357a369713bf7e6ad58ce0dc2cff32677d71cbc0641bb"
+    },
+    {
+      "path": "favicon.ico",
+      "sha256": "8486fbb07ae6ce37b36d382cd7a0d86a546b9536bda8c155e45b2cb786df7261"
+    },
+    {
+      "path": "preview.png",
+      "sha256": "fbdbff583aecf799648bd825be530c46c750557b20675f54eab89b460cacc1ca"
+    }
+  ]
+}

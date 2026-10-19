@@ -7,6 +7,7 @@
 //     a slot, a counter, a hole too small.
 // Losses at sharp tips and in acute crevices are ignored — they print as
 // slightly rounded corners — but whole islands or holes that vanish never are.
+// For glyphs, `topology` also rejects bridges that break and gaps that fuse.
 // The largest clean w is the mark's minimum feature; the minimum printable
 // diameter follows from the printer's finest reliable feature in mm.
 
@@ -47,32 +48,60 @@ const significant = (rings: Ring[], w: number, k = 3): Ring[] =>
     .filter((g) => g.net > Math.max(k * w * w, 0.5))
     .map((g) => g.outer);
 
-export type Problems = { thin: Ring[]; gaps: Ring[]; lostIslands: Ring[]; lostHoles: Ring[] };
+export type Problems = { thin: Ring[]; gaps: Ring[]; lostIslands: Ring[]; lostHoles: Ring[]; topology: string[] };
 
-export function problemsAt(G: Ring[], w: number): Problems {
+/** Outer rings and holes that matter at feature size w (the same 3 w² as above). */
+const census = (rings: Ring[], w: number) => {
+  const real = rings.filter((r) => Math.abs(signedArea(r)) > Math.max(3 * w * w, 0.5));
+  return { parts: real.filter((r) => signedArea(r) > 0).length, holes: real.filter((r) => signedArea(r) < 0).length };
+};
+
+export type CheckOptions = {
+  /**
+   * Also fail on any change of topology — a bridge that breaks, a gap that
+   * fuses, a counter that fills. For letters and symbols, where a broken
+   * hairline makes a different glyph; the architecture tolerates pinches.
+   */
+  topology?: boolean;
+};
+
+export function problemsAt(G: Ring[], w: number, { topology: strict = false }: CheckOptions = {}): Problems {
   const opened = offset(offset(G, -w / 2), w / 2);
   const closed = offset(offset(G, w / 2), -w / 2);
+  // A short hairline loses little area, but if it breaks, the shape is broken:
+  // whatever its area, a change of topology is never a rounded corner.
+  const topology: string[] = [];
+  if (strict) {
+    const g = census(G, w);
+    const o = census(opened, w);
+    // A counter shrinks under closing; it is lost only if nothing of it is left.
+    const c = { parts: census(closed, 0).parts, holes: closed.filter((r) => signedArea(r) < -0.5).length };
+    if (o.parts > g.parts) topology.push(`a thin bridge breaks (${g.parts} → ${o.parts} parts)`);
+    if (c.parts < g.parts) topology.push(`a narrow gap fills (${g.parts} → ${c.parts} parts)`);
+    if (c.holes < g.holes) topology.push(`a counter fills (${g.holes} → ${c.holes} holes)`);
+  }
   return {
     thin: significant(difference(G, opened), w),
     gaps: significant(difference(closed, G), w),
     lostIslands: G.filter((r) => signedArea(r) > 0 && offset([r], -w / 2).length === 0),
     lostHoles: G.filter((r) => signedArea(r) < 0 && offset([[...r].reverse()], -w / 2).length === 0),
+    topology,
   };
 }
 
-export const isClean = (p: Problems): boolean => !p.thin.length && !p.gaps.length && !p.lostIslands.length && !p.lostHoles.length;
+export const isClean = (p: Problems): boolean => !p.thin.length && !p.gaps.length && !p.lostIslands.length && !p.lostHoles.length && !p.topology.length;
 
 /** Largest w (to ±0.05 units) at which nothing is lost. */
-export function minFeature(G: Ring[], { lo = 0.1, hi = 8 } = {}): { w: number; problems: Problems } {
+export function minFeature(G: Ring[], { lo = 0.1, hi = 8, ...opts }: { lo?: number; hi?: number } & CheckOptions = {}): { w: number; problems: Problems } {
   let a = lo;
   let b = hi;
-  if (!isClean(problemsAt(G, a))) return { w: 0, problems: problemsAt(G, a) };
+  if (!isClean(problemsAt(G, a, opts))) return { w: 0, problems: problemsAt(G, a, opts) };
   while (b - a > 0.05) {
     const m = (a + b) / 2;
-    if (isClean(problemsAt(G, m))) a = m;
+    if (isClean(problemsAt(G, m, opts))) a = m;
     else b = m;
   }
-  return { w: a, problems: problemsAt(G, b) };
+  return { w: a, problems: problemsAt(G, b, opts) };
 }
 
 /** Minimum printable outer diameter (mm) for a printer whose finest reliable feature is `featureMM`. */

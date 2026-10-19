@@ -1,0 +1,185 @@
+{
+  "service": {
+    "id": "home-assistant",
+    "name": "Home Assistant",
+    "category": "home",
+    "patron": {
+      "god": "hestia"
+    },
+    "letter": "H",
+    "caption": "The Olympus · HESTIA",
+    "logo": null
+  },
+  "print": {
+    "variablePartsMinUnits": 4.05,
+    "minDiameterMM": 67,
+    "featureMM": 0.5
+  },
+  "warnings": [],
+  "files": [
+    {
+      "path": "svg/the-olympus-home-assistant-crest-fine.svg",
+      "sha256": "1b5b5b68a156bff67f7e8069ecccf647422f670bfcbb9b270a60bb70ad3200e5"
+    },
+    {
+      "path": "svg/the-olympus-home-assistant-crest-fine-white.svg",
+      "sha256": "4e1e67a2b9ecb242a964cede7cbe3872d3259ad767483cedea6cd8ba7561fe2f"
+    },
+    {
+      "path": "svg/the-olympus-home-assistant-crest-fine-on-light.svg",
+      "sha256": "955995e7e9f4d6cd3bf4ccb3110799d02fbbca3aaec0e2ed28fb9acfb459b884"
+    },
+    {
+      "path": "svg/the-olympus-home-assistant-crest-fine-on-dark.svg",
+      "sha256": "3f8de4633eb4a9b2305312e7f7a12e7933bf0eae07ee8124212b78eb91c084a9"
+    },
+    {
+      "path": "svg/the-olympus-home-assistant-crest-print.svg",
+      "sha256": "eb545ce703a36daacd5b29618627f1334343660a07410cfd8ed2a6de3669e430"
+    },
+    {
+      "path": "svg/the-olympus-home-assistant-crest-print-white.svg",
+      "sha256": "897a60b2fe42b437d17030510c0e35491428be8a4684835cbaff0995492fdd87"
+    },
+    {
+      "path": "svg/the-olympus-home-assistant-crest-print-on-light.svg",
+      "sha256": "7bf80977f73c43e31e8ebd0202cdcfa0260b9426a00e58511c26b5647771f835"
+    },
+    {
+      "path": "svg/the-olympus-home-assistant-crest-print-on-dark.svg",
+      "sha256": "e3c883459a91b6c759628ee4bd28c89484a5a36918ddd3cde9293e630b65cc94"
+    },
+    {
+      "path": "svg/the-olympus-home-assistant-emblem-fine.svg",
+      "sha256": "c8311e4ccfab8bfb95cc00049f7f1ede80271a710cd0bcbf424dc4256e0b24d9"
+    },
+    {
+      "path": "svg/the-olympus-home-assistant-emblem-fine-white.svg",
+      "sha256": "06135c767e4e8285772a0de8b7c696fe21dfe25c518b70c0bcf9e56502404644"
+    },
+    {
+      "path": "svg/the-olympus-home-assistant-emblem-fine-on-light.svg",
+      "sha256": "8529f4f6bed7e5a09c8ac226f56f2d04072812d852404b3f02921fa18f415741"
+    },
+    {
+      "path": "svg/the-olympus-home-assistant-emblem-fine-on-dark.svg",
+      "sha256": "af886469231a3f4f32233803a0568653b2691c4ec3f410ecfb99b92d941eaa57"
+    },
+    {
+      "path": "svg/the-olympus-home-assistant-emblem-print.svg",
+      "sha256": "cc99b23bd6bd118b1f39e3f26e0acd45c80c2e91db23f8bd0e61d33d1cf34e7b"
+    },
+    {
+      "path": "svg/the-olympus-home-assistant-emblem-print-white.svg",
+      "sha256": "9dc8ae5fe780538a693675e5a01652494cb8babea3c46be754047caf936b7952"
+    },
+    {
+      "path": "svg/the-olympus-home-assistant-emblem-print-on-light.svg",
+      "sha256": "571783d846505629567c5412c063cd02b36232de81601ea49db0b63a955c7b1a"
+    },
+    {
+      "path": "svg/the-olympus-home-assistant-emblem-print-on-dark.svg",
+      "sha256": "ea0a2c5d4cde36a3480e1e13993bd36bcec5ad49bf6b817fda65165678f6fa52"
+    },
+    {
+      "path": "svg/the-olympus-home-assistant-seal.svg",
+      "sha256": "2ba81a62506adac6aa7541db2c2c02d41554b4cf98b598979092659b78218d81"
+    },
+    {
+      "path": "svg/the-olympus-home-assistant-seal-white.svg",
+      "sha256": "8b9118a8b6d84e6476739ef358c80c848bf7e10c986274a9f95e1f4ea79d10a4"
+    },
+    {
+      "path": "svg/the-olympus-home-assistant-seal-on-light.svg",
+      "sha256": "654530c72cfae91c2dae132d884da1e157a51cee45e472be3c50496c3dbf20b7"
+    },
+    {
+      "path": "svg/the-olympus-home-assistant-seal-on-dark.svg",
+      "sha256": "42877816f9a76f16912b16cf391a9cbf83a18458cb2dbbab2b0eb0af5409d910"
+    },
+    {
+      "path": "svg/the-olympus-home-assistant-lockup-horizontal.svg",
+      "sha256": "c41abd64e74f461233123b34d76c05a04b335ecf94f14ad68fd570f57c870f79"
+    },
+    {
+      "path": "svg/the-olympus-home-assistant-lockup-horizontal-white.svg",
+      "sha256": "d5951d0208eaf2871407251cc36b7f3bbdbacb2c2e30f8aaf49815a33124a8dd"
+    },
+    {
+      "path": "svg/the-olympus-home-assistant-lockup-horizontal-on-light.svg",
+      "sha256": "90e7b85bad9861fc440aacdec9e1a95d20f724f2f0e72e34fa6c8547239de7fd"
+    },
+    {
+      "path": "svg/the-olympus-home-assistant-lockup-horizontal-on-dark.svg",
+      "sha256": "5142fab5efac2a191246bb4626e92edaf2dc91cd115a968c54aba3324c8aaee7"
+    },
+    {
+      "path": "svg/the-olympus-home-assistant-lockup-vertical.svg",
+      "sha256": "268c8c72fdf035aead2a753ae6beba752719ce833ee35e72985a9d49a5d42022"
+    },
+    {
+      "path": "svg/the-olympus-home-assistant-lockup-vertical-white.svg",
+      "sha256": "5b57c8d6ad6dd23648f500f1306bc0e29666a3394d3ec7b13b662ed63d1c46a6"
+    },
+    {
+      "path": "svg/the-olympus-home-assistant-lockup-vertical-on-light.svg",
+      "sha256": "ad8191f7e0079212a0928ae557394b4265ba16be351f57f7d52b5dbf5ed06e9b"
+    },
+    {
+      "path": "svg/the-olympus-home-assistant-lockup-vertical-on-dark.svg",
+      "sha256": "bd126d439ebc884ce5521c75fa94b05a87083c30557aa82526f6d8e78805af39"
+    },
+    {
+      "path": "png/the-olympus-home-assistant-crest-fine-512.png",
+      "sha256": "f97d3b7841e3499332eb44c81a641eadc6f8f7161751914a610794d806d11073"
+    },
+    {
+      "path": "png/the-olympus-home-assistant-crest-fine-white-512.png",
+      "sha256": "9103e8a480a25acc57909692428332aacdcb1d545af5b66074c364e74f5e067d"
+    },
+    {
+      "path": "png/the-olympus-home-assistant-emblem-fine-128.png",
+      "sha256": "39050f268c945c2fe6426f6fc8c65be703a0b2a7a09432501075492237a34bd9"
+    },
+    {
+      "path": "png/the-olympus-home-assistant-emblem-fine-256.png",
+      "sha256": "e8f6a4880f8e72f9d8e633d8848ea52e300adb2f9dfc917bb53ddbc80e50c625"
+    },
+    {
+      "path": "png/the-olympus-home-assistant-seal-32.png",
+      "sha256": "c9b336e82612692c0ed9ad5927366fdea7d111f5f8ef87ca54119d9caabd9a7a"
+    },
+    {
+      "path": "png/the-olympus-home-assistant-seal-64.png",
+      "sha256": "4ba2eb15d799cacfb42f80e84ae8a8f958d875354cd6ff82467e852587049839"
+    },
+    {
+      "path": "png/the-olympus-home-assistant-seal-180.png",
+      "sha256": "33a1613fada9c6e2ff59543afea5f486a35c9bc1280abfa6adee742b58f58c3a"
+    },
+    {
+      "path": "png/the-olympus-home-assistant-seal-512.png",
+      "sha256": "c84d188d6171118ba48962960af2092de29fe7d60bb3e674e1325fb0868f079d"
+    },
+    {
+      "path": "png/the-olympus-home-assistant-lockup-horizontal-1600.png",
+      "sha256": "c01b23dfd8c5ef6626fda19171111df34d3d73921179f1bd0f22befb148b2f8a"
+    },
+    {
+      "path": "png/the-olympus-home-assistant-lockup-horizontal-white-1600.png",
+      "sha256": "84c44be781d1900ac076d9cca13562b006ca25d69819c6b78d747f2f36e580cf"
+    },
+    {
+      "path": "png/the-olympus-home-assistant-lockup-vertical-800.png",
+      "sha256": "3f8fb662a4db7e89e5de5b00cb5b25458966ccb3ede6a509f73f3eafd3d785a7"
+    },
+    {
+      "path": "favicon.ico",
+      "sha256": "f38184591bd0e4b1ae4aaba6d834b8f8a4a89ec866f2962367a15066bef82314"
+    },
+    {
+      "path": "preview.png",
+      "sha256": "f5962fb0b737d35f3e8e628f014e5252093a2b6d978a82afa91ba0bb1bccff38"
+    }
+  ]
+}

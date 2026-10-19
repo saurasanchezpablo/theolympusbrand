@@ -1,0 +1,162 @@
+[
+  {
+    "id": "backup",
+    "name": "Backup",
+    "category": "backup",
+    "patron": {
+      "god": "kronos"
+    },
+    "caption": "The Olympus · KRONOS",
+    "path": "backup/"
+  },
+  {
+    "id": "community",
+    "name": "Community",
+    "category": "community",
+    "patron": {
+      "god": "dionysus"
+    },
+    "caption": "The Olympus · DIONYSUS",
+    "path": "community/"
+  },
+  {
+    "id": "containers",
+    "name": "Containers",
+    "category": "containers",
+    "patron": {
+      "god": "poseidon"
+    },
+    "caption": "The Olympus · POSEIDON",
+    "path": "containers/"
+  },
+  {
+    "id": "game-server",
+    "name": "Game Server",
+    "category": "gaming",
+    "patron": {
+      "god": "nike"
+    },
+    "caption": "The Olympus · NIKE",
+    "path": "game-server/"
+  },
+  {
+    "id": "home-assistant",
+    "name": "Home Assistant",
+    "category": "home",
+    "patron": {
+      "god": "hestia"
+    },
+    "caption": "The Olympus · HESTIA",
+    "path": "home-assistant/"
+  },
+  {
+    "id": "jellyfin",
+    "name": "Jellyfin",
+    "category": "media",
+    "patron": {
+      "god": "apollo"
+    },
+    "caption": "The Olympus · APOLLO",
+    "path": "jellyfin/"
+  },
+  {
+    "id": "minecraft",
+    "name": "Minecraft",
+    "category": "sandbox",
+    "patron": {
+      "god": "hephaestus"
+    },
+    "caption": "The Olympus · HEPHAESTUS",
+    "path": "minecraft/"
+  },
+  {
+    "id": "monitoring",
+    "name": "Monitoring",
+    "category": "monitoring",
+    "patron": {
+      "god": "argus"
+    },
+    "caption": "The Olympus · ARGUS",
+    "path": "monitoring/"
+  },
+  {
+    "id": "multiplayer",
+    "name": "Multiplayer",
+    "category": "competitive",
+    "patron": {
+      "god": "ares"
+    },
+    "caption": "The Olympus · ARES",
+    "path": "multiplayer/"
+  },
+  {
+    "id": "network",
+    "name": "Network",
+    "category": "networking",
+    "patron": {
+      "god": "iris"
+    },
+    "caption": "The Olympus · IRIS",
+    "path": "network/"
+  },
+  {
+    "id": "nextcloud",
+    "name": "Nextcloud",
+    "category": "cloud",
+    "patron": {
+      "god": "nephele"
+    },
+    "caption": "The Olympus · NEPHELE",
+    "path": "nextcloud/"
+  },
+  {
+    "id": "proxmox",
+    "name": "Proxmox",
+    "category": "virtualization",
+    "patron": {
+      "god": "atlas"
+    },
+    "caption": "The Olympus · ATLAS",
+    "path": "proxmox/"
+  },
+  {
+    "id": "reverse-proxy",
+    "name": "Reverse Proxy",
+    "category": "proxy",
+    "patron": {
+      "god": "hermes"
+    },
+    "caption": "The Olympus · HERMES",
+    "path": "reverse-proxy/"
+  },
+  {
+    "id": "storage",
+    "name": "Storage",
+    "category": "storage",
+    "patron": {
+      "god": "hades"
+    },
+    "caption": "The Olympus · HADES",
+    "path": "storage/"
+  },
+  {
+    "id": "vpn",
+    "name": "VPN",
+    "category": "security",
+    "patron": {
+      "god": "athena"
+    },
+    "caption": "The Olympus · ATHENA",
+    "path": "vpn/"
+  },
+  {
+    "id": "web",
+    "name": "Web",
+    "category": "web",
+    "patron": {
+      "god": "arachne"
+    },
+    "caption": "The Olympus · ARACHNE",
+    "path": "web/"
+  }
+]

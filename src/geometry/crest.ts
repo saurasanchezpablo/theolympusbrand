@@ -1,8 +1,10 @@
 // The Olympus — master crest (composition I · Classic) and its size tiers.
 //
-//   crest({ detail, god, medal })           ≥ 256 px, print, plaques
-//   emblem({ detail, god })                  64–256 px, dashboards, avatars
-//   seal({ god })                            ≤ 48 px, favicons
+//   crest({ detail, patron, medal, logo })  ≥ 256 px, print, plaques
+//   emblem({ detail, patron })               64–256 px, dashboards, avatars
+//   seal({ patron })                         ≤ 48 px, favicons
+//
+// The patron is the god of a service (or a monogram); Zeus is the master.
 //
 // Two detail profiles: `fine` (screens, large prints) and `print` (every rib
 // and gap ≥ ~4 units on the 512 artboard; verified by src/print/printcheck.ts).
@@ -14,7 +16,7 @@ import { flatten, union, difference, intersection, offset, ringsPath, noSpecks }
 import { lineText, type FontRole } from './fonts.ts';
 import { keyBand, beadAndReel } from './border.ts';
 import { laurelBranch, engravedClouds, type LaurelStyle, type CloudBank } from './ornament.ts';
-import { GODS, sealGlyph, type GodId } from './pantheon.ts';
+import { patronSymbol, sealGlyph, type Patron } from './pantheon.ts';
 import { BORDER, type BorderRhythms } from '../brand/identity.ts';
 
 /* ---------------------------------------------------------------- */
@@ -154,8 +156,25 @@ function fitBolt(P: Profile, tBase: number, tApex: number, tan: number, margin: 
   return { s: 0.5, cy: tBase - margin - 8 };
 }
 
+/** The central bay of the temple, in temple coordinates. */
+function centralBay(P: Profile): [number, number] {
+  const cols = COMPOSITION.columns;
+  const H = COMPOSITION.shaftW / 2;
+  return [cols[1] + H + P.bayInset, cols[2] - H - P.bayInset];
+}
+
+/** The patron's symbol placed in the central bay (bold in print editions); null for the master. */
+function cella(P: Profile, patron: Patron): string | null {
+  // Symbols are drawn for a 38-wide bay centred on x = 256.
+  const symbol = patronSymbol(patron, P.medal.mode === 'bold' ? 'bold' : 'fine');
+  if (!symbol) return null;
+  const [b0, b1] = centralBay(P);
+  const k = (b1 - b0) / 38;
+  return transformPath(symbol, k, (b0 + b1) / 2 - C * k, 251 - 251 * k);
+}
+
 /** The temple-server in its own coordinates (bottom step at y = 334). */
-function temple(P: Profile, god: GodId): string {
+function temple(P: Profile, patron: Patron): string {
   const cols = COMPOSITION.columns;
   const H = COMPOSITION.shaftW / 2;
   const first = cols[0];
@@ -212,13 +231,8 @@ function temple(P: Profile, god: GodId): string {
   bays.forEach((bay, i) => {
     if (i !== mid) d += rackUnits(bay, P);
   });
-  const cella = GODS[god].cella;
-  if (!cella) d += rackUnits(bays[mid], P, 2);
-  else {
-    const [b0, b1] = bays[mid];
-    const k = (b1 - b0) / 38;
-    d += transformPath(cella(), k, (b0 + b1) / 2 - C * k, 251 - 251 * k);
-  }
+  const c = cella(P, patron);
+  d += c ?? rackUnits(bays[mid], P, 2);
   return d;
 }
 
@@ -250,17 +264,36 @@ function plinth(P: Profile, ringR: number, fieldR: number, withName = true): Rin
 /* ---------------------------------------------------------------- */
 export type MedalMode = 'seal' | 'slot';
 
-function medallion(P: Profile, god: GodId, mode: MedalMode): string {
+/** Fit path data into a circle of radius r centred at (cx, cy), by its bounding box. */
+function fitInto(d: string, r: number, cx: number, cy: number): string {
+  const pts = flatten(d).flat();
+  const xs = pts.map((p) => p[0]);
+  const ys = pts.map((p) => p[1]);
+  const [x0, x1, y0, y1] = [Math.min(...xs), Math.max(...xs), Math.min(...ys), Math.max(...ys)];
+  const k = r / Math.hypot((x1 - x0) / 2, (y1 - y0) / 2);
+  return transformPath(d, k, cx - ((x0 + x1) / 2) * k, cy - ((y0 + y1) / 2) * k);
+}
+
+/**
+ * The logo slot. Fine: the patron's seal, or an external logo (path data, any
+ * scale) fitted to the safe area inside the ring. Print: a heavy ring around a
+ * bold temple glyph for every crest — at this size no seal, logo or letter
+ * keeps its shape on a 0.4 mm nozzle; the cella carries the patron instead.
+ */
+function medallion(P: Profile, patron: Patron, mode: MedalMode, logo?: string): string {
   const { r, cy } = P.medal;
-  const ringW = P.medal.mode === 'bold' ? 5 : r * (38 / RIM);
-  if (mode === 'slot') return annulus(r - ringW, r, C, cy);
-  if (P.medal.mode === 'seal') {
+  const bold = P.medal.mode === 'bold';
+  const ringW = bold ? 5 : r * (38 / RIM);
+  const ring = annulus(r - ringW, r, C, cy);
+  if (mode === 'slot') return ring;
+  if (!bold) {
+    if (logo) return ring + fitInto(logo, (r - ringW) * 0.86, C, cy);
     const k = r / RIM;
-    return transformPath(sealGlyph(god), k, C - C * k, cy - C * k);
+    return transformPath(sealGlyph(patron), k, C - C * k, cy - C * k);
   }
-  // Print: a heavy ring and a bold temple glyph (drawn for r = 28), every part ≥ the print minimum.
+  // A bold temple glyph (drawn for r = 28), every part ≥ the print minimum.
   const g = r / 28;
-  let d = annulus(r - ringW, r, C, cy);
+  let d = ring;
   d += solid([[C - 15 * g, cy - 5 * g], [C, cy - 14 * g], [C + 15 * g, cy - 5 * g]]);
   for (const x of [-9.8, 0, 9.8]) d += rect(C + (x - 2.5) * g, cy - 5.5 * g, C + (x + 2.5) * g, cy + 9.5 * g);
   d += rect(C - 12.5 * g, cy + 9 * g, C + 12.5 * g, cy + 13.5 * g);
@@ -270,9 +303,20 @@ function medallion(P: Profile, god: GodId, mode: MedalMode): string {
 /* ---------------------------------------------------------------- */
 /* Tiers                                                             */
 /* ---------------------------------------------------------------- */
-export type Mark = { id: string; d: string };
+export type Mark = { id: string; d: string; width?: number; height?: number };
 
-export type CrestConfig = { detail?: Detail; god?: GodId; medal?: MedalMode; border?: BorderRhythms };
+export type CrestConfig = {
+  detail?: Detail;
+  /** The service's god, or a monogram. Default: Zeus, the master. */
+  patron?: Patron;
+  medal?: MedalMode;
+  /** External logo (path data at any scale) for the fine edition's logo slot. */
+  logo?: string;
+  border?: BorderRhythms;
+};
+
+const ZEUS: Patron = { god: 'zeus' };
+const patronId = (p: Patron) => ('god' in p ? p.god : `monogram-${p.monogram}`);
 
 const placeTemple = (P: Profile, d: string) => {
   const k = COMPOSITION.templeK;
@@ -280,7 +324,7 @@ const placeTemple = (P: Profile, d: string) => {
 };
 
 /** Tier 1 — the full crest. */
-export function crest({ detail = 'fine', god = 'zeus', medal = 'seal', border: rhythms = BORDER }: CrestConfig = {}): Mark {
+export function crest({ detail = 'fine', patron = ZEUS, medal = 'seal', logo, border: rhythms = BORDER }: CrestConfig = {}): Mark {
   const P = PROFILES[detail];
   const L = borderLayout(P);
   const b = P.border;
@@ -309,28 +353,43 @@ export function crest({ detail = 'fine', god = 'zeus', medal = 'seal', border: r
   const centre =
     laurelBranch(lr.R, lr.left[0], lr.left[1], lr.leaves, P.laurel) +
     laurelBranch(lr.R, lr.right[0], lr.right[1], lr.leaves, P.laurel) +
-    placeTemple(P, temple(P, god)) +
+    placeTemple(P, temple(P, patron)) +
     // The plinth ends at the field, so it never covers the bead-and-reel.
     ringsPath(noSpecks(difference(plinth(P, COMPOSITION.nominalField, COMPOSITION.nominalField), cl.halo))) +
     ringsPath(noSpecks(difference(cl.outline, medalHalo))) +
-    medallion(P, god, medal);
+    medallion(P, patron, medal, logo);
 
-  return { id: `crest-${detail}-${god}${medal === 'slot' ? '-slot' : ''}`, d: border + scaleAbout(centre, k) };
+  return { id: `crest-${detail}-${patronId(patron)}${medal === 'slot' ? '-slot' : ''}`, d: border + scaleAbout(centre, k) };
+}
+
+/**
+ * The parts of a crest that vary per service — the bay symbol and the logo
+ * slot — exactly where they sit in the finished crest. Used to print-check a
+ * new service quickly without re-checking the fixed parts.
+ */
+export function variableParts({ detail = 'fine', patron = ZEUS, medal = 'seal', logo }: CrestConfig = {}): { cella: string; medal: string } {
+  const P = PROFILES[detail];
+  const k = borderLayout(P).fieldR / COMPOSITION.nominalField;
+  const c = cella(P, patron);
+  return {
+    cella: c ? scaleAbout(placeTemple(P, c), k) : '',
+    medal: scaleAbout(medallion(P, patron, medal, logo), k),
+  };
 }
 
 /** Tier 2 — the emblem: heavy ring, temple-server, plinth; no lettering, laurel or border code. */
-export function emblem({ detail = 'fine', god = 'zeus' }: CrestConfig = {}): Mark {
+export function emblem({ detail = 'fine', patron = ZEUS }: CrestConfig = {}): Mark {
   const P = PROFILES[detail];
   const k = 1.08;
   const ringIn = detail === 'print' ? 220 : 222;
-  const centre = placeTemple(P, temple(P, god)) + ringsPath(plinth(P, (ringIn + 4) / k, COMPOSITION.nominalField, false));
+  const centre = placeTemple(P, temple(P, patron)) + ringsPath(plinth(P, (ringIn + 4) / k, COMPOSITION.nominalField, false));
   const d = annulus(234, RIM) + annulus(ringIn, ringIn + 4) + scaleAbout(centre, k);
-  return { id: `emblem-${detail}-${god}`, d };
+  return { id: `emblem-${detail}-${patronId(patron)}`, d };
 }
 
 /** Tier 3 — the seal: a heavy ring around one bold symbol. */
-export function seal({ god = 'zeus' }: CrestConfig = {}): Mark {
-  return { id: `seal-${god}`, d: sealGlyph(god) };
+export function seal({ patron = ZEUS }: CrestConfig = {}): Mark {
+  return { id: `seal-${patronId(patron)}`, d: sealGlyph(patron) };
 }
 
 export const TIERS = { crest, emblem, seal } as const;

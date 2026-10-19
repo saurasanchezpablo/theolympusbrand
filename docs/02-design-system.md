@@ -142,11 +142,15 @@ consistent.
 | | What | Rule |
 |---|---|---|
 | Variable | **Central bay** | The god of the service, standing in the cella. The master has server racks there. |
-| Variable | **Logo slot** | The service's seal by default, or an application logo (§8). |
+| Variable | **Logo slot** | Fine edition: the service's seal by default, or an application logo (§8). Print edition: always the bold temple glyph — no seal, logo or letter keeps its shape at that size. |
 | Fixed | **Everything else** | Rim, Greek key, bead-and-reel, laurel, temple and thunderbolt, name plinth, clouds, proportions, palette, typography. |
 
 The seal tier follows the same logic: one ring, one symbol, either the
 temple-server or the god.
+
+Every service in the family is defined by one small file in
+`catalog/services/` and built with one command; see the
+[service catalogue](03-catalog.md).
 
 ## 8. Grounds, materials and logos
 
@@ -160,7 +164,8 @@ temple-server or the god.
   every render. A real marble look on a physical object comes from the
   material or the printing technique, not from the file.
 - **External application logos** in the logo slot follow three rules:
-  - reduce the logo to a single grey from the palette;
+  - reduce the logo to a single grey from the palette (the importer does
+    this: fills become one ink, white fills become cut-outs);
   - fit it inside the dashed safe area, Ø 40 on the 512 artboard;
   - keep it inside its own ring.
 
@@ -185,6 +190,10 @@ morphology rather than by eye:
 - **Ignored:** losses at sharp tips and in acute crevices. These print as
   slightly rounded corners.
 - **Never ignored:** whole islands or holes that vanish.
+- **Glyphs, strictly:** the god symbols and monogram letters must also keep
+  their topology — a hairline that breaks or a counter that fills makes a
+  different glyph, however little area it loses. Every god and every letter
+  and digit is checked this way at 3.6 units.
 
 The largest clean size is the mark's **minimum feature**, and from it:
 
@@ -224,7 +233,16 @@ check. The Fine SVGs keep their curves.
 | Path | Contents |
 |---|---|
 | `src/geometry/crest.ts` | The master: composition, detail profiles, temple, plinth, medallion, the three tiers |
-| `src/geometry/pantheon.ts` | The gods of the central bay, and the seal glyphs |
+| `src/geometry/pantheon.ts` | Categories, the gods of the central bay, monograms, and the seal glyphs |
+| `src/geometry/symbols.ts` | The gods' attributes, each drawn fine and bold |
+| `src/geometry/lockup.ts` | Crest with a service name and caption, horizontal or vertical |
+| `src/geometry/logo.ts` | Import of external application logos (SVG) for the logo slot |
+| `src/catalog/service.ts`, `src/node/catalog.ts` | Service files: schema, validation, loading |
+| `src/catalog/design.ts` | Saved designs: the web app's files, import and export |
+| `src/catalog/fileset.ts` | The files a service is delivered as, shared by the command line and the web app |
+| `src/print/service.ts` | The print gate for a service crest |
+| `src/export/ico.ts` | favicon.ico writer |
+| `app/` | The Atelier, the web generator ([guide](04-generator.md)) |
 | `src/geometry/border.ts` | Greek key and bead-and-reel bands |
 | `src/geometry/ornament.ts` | Laurel and engraved clouds |
 | `src/geometry/{math,path,poly,fonts}.ts` | Primitives, path builders, polygon booleans and offsets (Clipper), lettering |
@@ -237,6 +255,8 @@ npm install
 npm test                    # determinism, golden fingerprints, silhouette, border, palette, printability
 npm run typecheck
 npm run build:master        # assets/master/
+npm run service -- help     # the service catalogue: add, build, list, check, remove
+npm run app                 # the Atelier, the web generator
 npm run build:docs          # docs/design-system/*.png
 npm run test:update-golden  # only after an intended change to the geometry; review the boards first
 ```

@@ -1,85 +1,116 @@
-// The pantheon: the god of each service, drawn for the temple's central bay
-// (38 units wide, centred on x = 256, y ≈ 251), and the seal tier built from it.
-// Zeus — the master — has no statue: his bay holds more server racks.
+// The pantheon: the god of every service. Each god brings a symbol (its
+// attribute) that stands in the temple's central bay and becomes its seal.
+// Zeus is the master — his bay holds more server racks. Services with no
+// fitting god can use a `monogram`: their initial, cut in Cinzel.
 
-import { C, type Ring } from './math.ts';
-import { annulus, bar, circle, hole, poly, rect, rectHole, ribbon, ribbonPts, solid, transformPath } from './path.ts';
-import { ccw } from './math.ts';
+import { C, RIM } from './math.ts';
+import { annulus, poly, rect, ribbonPts, solid, transformPath } from './path.ts';
+import { ccw, signedArea } from './math.ts';
+import { flatten, union, difference, offset, ringsPath } from './poly.ts';
+import { lineText } from './fonts.ts';
+import { SYMBOLS, type SymbolDetail, type SymbolId } from './symbols.ts';
 
-export type GodId = 'zeus' | 'apollo' | 'hestia' | 'athena' | 'argus';
+/** Service categories. Each has a default god; a service may still name another. */
+export const CATEGORIES = {
+  virtualization: 'Hypervisors, virtual machines, clusters',
+  networking: 'Routing, DNS, DHCP, switching, connectivity',
+  proxy: 'Reverse proxies, gateways, application routing',
+  storage: 'NAS, volumes, object stores, file servers',
+  backup: 'Backups, snapshots, replication, archives',
+  monitoring: 'Metrics, logs, alerting, uptime',
+  security: 'VPN, firewalls, identity, secrets, access',
+  cloud: 'Private cloud, file sync, collaboration',
+  media: 'Streaming, music, photos, books',
+  home: 'Home automation, IoT',
+  containers: 'Container runtimes, orchestration, registries',
+  web: 'Websites, web apps, wikis, dashboards',
+  gaming: 'Game servers in general',
+  sandbox: 'Crafting and building games (e.g. Minecraft)',
+  competitive: 'Competitive and dedicated multiplayer servers',
+  community: 'Game communities, voice, chat, events',
+  other: 'Anything else — falls back to a monogram',
+} as const;
+export type Category = keyof typeof CATEGORIES;
 
-export type God = { id: GodId; name: string; domain: string; cella?: () => string };
+export type GodId =
+  | 'zeus' | 'atlas' | 'iris' | 'hermes' | 'hades' | 'kronos' | 'argus' | 'athena' | 'nephele'
+  | 'apollo' | 'hestia' | 'poseidon' | 'arachne' | 'nike' | 'hephaestus' | 'ares' | 'dionysus';
 
-const almond = (cx: number, cy: number, w: number, h: number, steps = 14): Ring => {
-  const pts: Ring = [];
-  for (let i = 0; i <= steps; i++) pts.push([cx - w / 2 + (w * i) / steps, cy - Math.sin((Math.PI * i) / steps) * (h / 2)]);
-  for (let i = steps - 1; i > 0; i--) pts.push([cx - w / 2 + (w * i) / steps, cy + Math.sin((Math.PI * i) / steps) * (h / 2)]);
-  return pts;
+export type God = {
+  id: GodId;
+  name: string;
+  /** Who the god is, in a phrase. */
+  title: string;
+  /** What stands in the bay. */
+  attribute: string;
+  /** The categories this god presides over by default. */
+  categories: Category[];
+  symbol?: SymbolId;
 };
 
 export const GODS: Record<GodId, God> = {
-  zeus: { id: 'zeus', name: 'ZEUS', domain: 'The Olympus' },
-
-  apollo: {
-    id: 'apollo',
-    name: 'APOLLO',
-    domain: 'Media',
-    cella: () => {
-      // Lyre: sound box, curving arms, yoke and four strings.
-      let d = 'M240 282L272 282C272 296 264 302 256 302C248 302 240 296 240 282Z';
-      for (const s of [1, -1]) {
-        const arm: Ring = ([[244, 284], [241, 262], [240, 240], [243, 224], [240, 212], [235, 206]] as Ring).map(([x, y]) => [C + s * (x - C), y]);
-        d += ribbon(arm, [4.6, 4.4, 4, 3.6, 3, 2.4], { capEnd: 2 });
-      }
-      d += bar([238, 221], [274, 221], 4.2);
-      for (const x of [250, 254, 258, 262]) d += bar([x, 223], [x, 282], 1.4);
-      return d;
-    },
-  },
-
-  hestia: {
-    id: 'hestia',
-    name: 'HESTIA',
-    domain: 'Home',
-    cella: () =>
-      // Flame on the household altar.
-      'M257 204C271 226 275 246 268 258C264 266 260 268 256 268C252 268 248 266 244 258C238 246 243 230 252 218C252 226 254 230 257 232C260 224 260 214 257 204Z' +
-      'M256 236C251 244 249 252 252 259C253 262 259 262 260 259C263 252 261 244 256 236Z' +
-      rect(238, 271, 274, 277) +
-      rect(241, 277, 271, 303) +
-      rectHole(245, 282, 267, 298) +
-      solid([[256, 284], [262, 290], [256, 296], [250, 290]]),
-  },
-
-  athena: {
-    id: 'athena',
-    name: 'ATHENA',
-    domain: 'Security',
-    cella: () => {
-      // Athena's owl on a perch.
-      let d = 'M240 224L244 208L251 218L261 218L268 208L272 224C274 252 270 278 256 290C242 278 238 252 240 224Z';
-      for (const x of [249, 263]) d += circle(x, 230, 6.4, true) + circle(x, 230, 2.8);
-      d += hole([[253.6, 237], [258.4, 237], [256, 244]]);
-      for (const [y, xs] of [[253, [250, 256, 262]], [262, [247, 253, 259, 265]], [271, [250, 256, 262]]] as [number, number[]][]) {
-        for (const x of xs) d += circle(x, y, 1.7, true);
-      }
-      d += rect(236, 296, 276, 300.5) + rect(249, 287, 252, 296) + rect(260, 287, 263, 296);
-      return d;
-    },
-  },
-
-  argus: {
-    id: 'argus',
-    name: 'ARGUS',
-    domain: 'Monitoring',
-    cella: () => {
-      // Argus Panoptes, the hundred-eyed watchman.
-      let d = '';
-      for (const y of [222, 251, 280]) d += solid(almond(256, y, 38, 18)) + hole(almond(256, y, 31, 11.5)) + circle(256, y, 5.2) + circle(256, y, 2, true);
-      return d;
-    },
-  },
+  zeus: { id: 'zeus', name: 'ZEUS', title: 'King of Olympus', attribute: 'Server racks — the master host itself', categories: [] },
+  atlas: { id: 'atlas', name: 'ATLAS', title: 'The Titan who holds up the heavens', attribute: 'Celestial sphere on a pillar', categories: ['virtualization'], symbol: 'sphere' },
+  iris: { id: 'iris', name: 'IRIS', title: 'Messenger of the rainbow, the bridge between worlds', attribute: 'Rainbow arches', categories: ['networking'], symbol: 'rainbow' },
+  hermes: { id: 'hermes', name: 'HERMES', title: 'God of roads, crossings and travellers', attribute: 'Kerykeion — the herald’s winged staff', categories: ['proxy'], symbol: 'kerykeion' },
+  hades: { id: 'hades', name: 'HADES', title: 'Lord of the vault below, where nothing is lost', attribute: 'Key', categories: ['storage'], symbol: 'key' },
+  kronos: { id: 'kronos', name: 'KRONOS', title: 'Titan of time', attribute: 'Hourglass', categories: ['backup'], symbol: 'hourglass' },
+  argus: { id: 'argus', name: 'ARGUS', title: 'The hundred-eyed watchman', attribute: 'Watching eyes', categories: ['monitoring'], symbol: 'eyes' },
+  athena: { id: 'athena', name: 'ATHENA', title: 'Goddess of wisdom and defence', attribute: 'Owl', categories: ['security'], symbol: 'owl' },
+  nephele: { id: 'nephele', name: 'NEPHELE', title: 'Nymph of the clouds', attribute: 'Clouds', categories: ['cloud'], symbol: 'clouds' },
+  apollo: { id: 'apollo', name: 'APOLLO', title: 'God of music and the arts', attribute: 'Lyre', categories: ['media'], symbol: 'lyre' },
+  hestia: { id: 'hestia', name: 'HESTIA', title: 'Goddess of the hearth and the home', attribute: 'Flame on the household altar', categories: ['home'], symbol: 'hearth' },
+  poseidon: { id: 'poseidon', name: 'POSEIDON', title: 'Lord of the sea and all it carries', attribute: 'Trident', categories: ['containers'], symbol: 'trident' },
+  arachne: { id: 'arachne', name: 'ARACHNE', title: 'The weaver whom Athena could not outdo', attribute: 'Web', categories: ['web'], symbol: 'web' },
+  nike: { id: 'nike', name: 'NIKE', title: 'Goddess of victory', attribute: 'Victor’s wreath', categories: ['gaming'], symbol: 'wreath' },
+  hephaestus: { id: 'hephaestus', name: 'HEPHAESTUS', title: 'The divine smith', attribute: 'Hammer and anvil', categories: ['sandbox'], symbol: 'forge' },
+  ares: { id: 'ares', name: 'ARES', title: 'God of contest and combat', attribute: 'Crested helmet', categories: ['competitive'], symbol: 'helmet' },
+  dionysus: { id: 'dionysus', name: 'DIONYSUS', title: 'God of the feast and its company', attribute: 'Kantharos — the cup of the feast', categories: ['community'], symbol: 'kantharos' },
 };
+
+/** A service's patron: a god, or a monogram for services no god fits. */
+export type Patron = { god: GodId } | { monogram: string };
+
+/** The default patron for a category. */
+export function defaultPatron(category: Category, name: string): Patron {
+  const god = (Object.values(GODS) as God[]).find((g) => g.categories.includes(category));
+  return god ? { god: god.id } : { monogram: initialOf(name) };
+}
+
+export const initialOf = (name: string): string => (name.match(/[A-Za-z0-9]/)?.[0] ?? 'O').toUpperCase();
+
+/* ---------------------------------------------------------------- */
+/* Drawing a patron                                                  */
+/* ---------------------------------------------------------------- */
+
+const BOLD_GROW = 2.3;
+const BOLD_CHOKE = 0.2;
+
+/** A monogram drawn in bay space: the initial, centred, fitted to the bay. */
+function monogramSymbol(letter: string, detail: SymbolDetail): string {
+  const bold = detail === 'bold';
+  const t = lineText(letter, { cx: C, baseline: 0, size: 96, tracking: 0, maxWidth: bold ? 38 - 2 * BOLD_GROW : 36, role: 'inscription' });
+  let rings = union(flatten(t.d));
+  // Print: Cinzel Bold (its counters are more open than Black's) thickened by
+  // BOLD_GROW, with the counters cut back in shrunk only by BOLD_CHOKE — the
+  // hairlines grow without choking small counters (A, R, 4…). Every letter and
+  // digit is checked against the print minimum in tests/catalog.test.ts.
+  if (bold) rings = difference(offset(rings, BOLD_GROW), offset(rings.filter((r) => signedArea(r) < 0).map((r) => [...r].reverse()), -BOLD_CHOKE));
+  const d = ringsPath(rings);
+  // Centre the cap height on the bay's centre line (y = 251).
+  return transformPath(d, 1, 0, 251 + t.capHeight / 2);
+}
+
+/** The patron's symbol in bay space (x 237–275, y 198–304). Zeus has none. */
+export function patronSymbol(p: Patron, detail: SymbolDetail): string | null {
+  if ('monogram' in p) return monogramSymbol(p.monogram, detail);
+  const s = GODS[p.god].symbol;
+  return s ? SYMBOLS[s](detail) : null;
+}
+
+/* ---------------------------------------------------------------- */
+/* Seals                                                             */
+/* ---------------------------------------------------------------- */
 
 /** Bold temple-server for the master seal: bolt in the pediment, rack bars in the bays. */
 function templeGlyph(): string {
@@ -94,14 +125,20 @@ function templeGlyph(): string {
   return d;
 }
 
+/** Fit path data into a circle of radius `r` about the artboard centre, by its bounding box. */
+export function fitToCircle(d: string, r: number): string {
+  const pts = flatten(d).flat();
+  const xs = pts.map((p) => p[0]);
+  const ys = pts.map((p) => p[1]);
+  const [x0, x1, y0, y1] = [Math.min(...xs), Math.max(...xs), Math.min(...ys), Math.max(...ys)];
+  const k = r / Math.hypot((x1 - x0) / 2, (y1 - y0) / 2);
+  return transformPath(d, k, C - ((x0 + x1) / 2) * k, C - ((y0 + y1) / 2) * k);
+}
+
 /** The seal tier (≤ 48 px): a heavy ring around one bold symbol. */
-export function sealGlyph(god: GodId): string {
-  let d = annulus(214, 252);
-  const cella = GODS[god].cella;
-  if (!cella) d += transformPath(templeGlyph(), 0.76, 256 * 0.24, 257 * 0.24 - 4);
-  else {
-    const k = 3.15;
-    d += transformPath(cella(), k, 256 - 256 * k, 256 - 251 * k);
-  }
-  return d;
+export function sealGlyph(p: Patron = { god: 'zeus' }): string {
+  const ring = annulus(214, RIM);
+  const symbol = patronSymbol(p, 'bold');
+  if (!symbol) return ring + transformPath(templeGlyph(), 0.76, 256 * 0.24, 257 * 0.24 - 4);
+  return ring + fitToCircle(symbol, 'monogram' in p ? 150 : 176);
 }

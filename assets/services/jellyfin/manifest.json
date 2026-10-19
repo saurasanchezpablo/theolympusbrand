@@ -1,0 +1,185 @@
+{
+  "service": {
+    "id": "jellyfin",
+    "name": "Jellyfin",
+    "category": "media",
+    "patron": {
+      "god": "apollo"
+    },
+    "letter": "J",
+    "caption": "The Olympus · APOLLO",
+    "logo": null
+  },
+  "print": {
+    "variablePartsMinUnits": 4.05,
+    "minDiameterMM": 67,
+    "featureMM": 0.5
+  },
+  "warnings": [],
+  "files": [
+    {
+      "path": "svg/the-olympus-jellyfin-crest-fine.svg",
+      "sha256": "f15ed52b23498a41506a2e76c01da8a39f1fe0a4447bcaa0d3af7478a6bd4afa"
+    },
+    {
+      "path": "svg/the-olympus-jellyfin-crest-fine-white.svg",
+      "sha256": "673c2c60a0fc3f69b0d1d02542629629cc5c855e14a62bffe922b27cb9f816fd"
+    },
+    {
+      "path": "svg/the-olympus-jellyfin-crest-fine-on-light.svg",
+      "sha256": "7157115889178461c8d79b71feac8b7da7abd1e26327b21bdde3a3687a4b5a20"
+    },
+    {
+      "path": "svg/the-olympus-jellyfin-crest-fine-on-dark.svg",
+      "sha256": "91d06c649cf9997fe49c8b4c922572357097430dbedc7104b3703e1d0aa0e0d1"
+    },
+    {
+      "path": "svg/the-olympus-jellyfin-crest-print.svg",
+      "sha256": "13f31558ac6ff495f17f5364183016b02865bd6508d809ce61f1b526ca370e89"
+    },
+    {
+      "path": "svg/the-olympus-jellyfin-crest-print-white.svg",
+      "sha256": "0b900a8071d416ebe94ae44b7846b3e7a97edce5637677b80b716d68007e9e05"
+    },
+    {
+      "path": "svg/the-olympus-jellyfin-crest-print-on-light.svg",
+      "sha256": "9a4bde35eb1a2f295ecd98c5094c9b2db84fda2234b5c50ddbcd527a21e49032"
+    },
+    {
+      "path": "svg/the-olympus-jellyfin-crest-print-on-dark.svg",
+      "sha256": "ffd9997843611eeb51000fe96c29d01b5c3acb914964962f4f03ce13a66b6a66"
+    },
+    {
+      "path": "svg/the-olympus-jellyfin-emblem-fine.svg",
+      "sha256": "182e9cc0a50c4174e0e19e9541f20d0eb2f43c62edaad2e9086925b8c379d7ed"
+    },
+    {
+      "path": "svg/the-olympus-jellyfin-emblem-fine-white.svg",
+      "sha256": "c0fccd2f759f42b931204b4202fcd439dc2f76ad4ada7ad882fbd33eb8715c77"
+    },
+    {
+      "path": "svg/the-olympus-jellyfin-emblem-fine-on-light.svg",
+      "sha256": "da90dc72258733464f1cfc42ba2ff8d8797b79afa3b0c6abdf0549431da53f5e"
+    },
+    {
+      "path": "svg/the-olympus-jellyfin-emblem-fine-on-dark.svg",
+      "sha256": "9991d5db7ade618804cab657a66e9acc88d7dff06255ec65299ff646037f0c90"
+    },
+    {
+      "path": "svg/the-olympus-jellyfin-emblem-print.svg",
+      "sha256": "d98ebfe4c86cbbc972e1fc4a30b9e39c9921e4359283cbcb6614a16a816ab980"
+    },
+    {
+      "path": "svg/the-olympus-jellyfin-emblem-print-white.svg",
+      "sha256": "d5830de40c1dc8b7edb9b24a503137013f3a9440320acb3168168942033a8ac1"
+    },
+    {
+      "path": "svg/the-olympus-jellyfin-emblem-print-on-light.svg",
+      "sha256": "2f438bbc0b60df919888f957c015c139deecc1edd9010cf35d77b98c6c4f513c"
+    },
+    {
+      "path": "svg/the-olympus-jellyfin-emblem-print-on-dark.svg",
+      "sha256": "0728db2bbcf700164157b6ede33db1c977f3f910044d92032578afb7156c4a39"
+    },
+    {
+      "path": "svg/the-olympus-jellyfin-seal.svg",
+      "sha256": "86e53f7c8748696847c5250f0313745fe40ea7a2763b377e7997474b87d25ef8"
+    },
+    {
+      "path": "svg/the-olympus-jellyfin-seal-white.svg",
+      "sha256": "97330f30647a1e369f7a015d67e12a8a556e2805edfa3997f1ba4c00ec4f528b"
+    },
+    {
+      "path": "svg/the-olympus-jellyfin-seal-on-light.svg",
+      "sha256": "43c7e8c6d61f3b99d1084eb1ec7bda99e93b154f9fd8bcbe907198d50e69aad5"
+    },
+    {
+      "path": "svg/the-olympus-jellyfin-seal-on-dark.svg",
+      "sha256": "e790f3f3c3eccabc16cc318024ddc33ddec9e8c43327078b624bebf9158f019a"
+    },
+    {
+      "path": "svg/the-olympus-jellyfin-lockup-horizontal.svg",
+      "sha256": "2a116285af070d47d912a00bcb3561a9b7243eb0777165847c621908431db6f7"
+    },
+    {
+      "path": "svg/the-olympus-jellyfin-lockup-horizontal-white.svg",
+      "sha256": "8a3bf8348a4bddde7f46a5e90f61571592b7a447216bd4a50d4e2bfb62cc08c4"
+    },
+    {
+      "path": "svg/the-olympus-jellyfin-lockup-horizontal-on-light.svg",
+      "sha256": "20b8eaca9f567b23e25ce1dff4988b4cb76f99074e99e3c5da8815499481a7d6"
+    },
+    {
+      "path": "svg/the-olympus-jellyfin-lockup-horizontal-on-dark.svg",
+      "sha256": "996441853ca16ae49f1a0e5e80140d0343873fedd87c440bf9c9a48c6714ce7e"
+    },
+    {
+      "path": "svg/the-olympus-jellyfin-lockup-vertical.svg",
+      "sha256": "d1c3035768217325e700888de29efcec71fd45394897c41d82b4e30498bba2fa"
+    },
+    {
+      "path": "svg/the-olympus-jellyfin-lockup-vertical-white.svg",
+      "sha256": "97ef04c8a40f7c08a00e91452a38a00f11979ec1f0e56e436b1ccacbf4202a41"
+    },
+    {
+      "path": "svg/the-olympus-jellyfin-lockup-vertical-on-light.svg",
+      "sha256": "597a2cc625187ff1a8494a47828257426a970bad732894731e209e812a9ce251"
+    },
+    {
+      "path": "svg/the-olympus-jellyfin-lockup-vertical-on-dark.svg",
+      "sha256": "cf5c9cfe72abff23d922cf0b2f5c1fa41faa90166d65246fd88b2cfd38349559"
+    },
+    {
+      "path": "png/the-olympus-jellyfin-crest-fine-512.png",
+      "sha256": "db800f5c7297b497225ff152a141ec16cf26b0bb9dc3e8745f9cdeeb3fd543c7"
+    },
+    {
+      "path": "png/the-olympus-jellyfin-crest-fine-white-512.png",
+      "sha256": "51eaad712297670a4ece090da02641a309108e9e404f430bb806ab147d339257"
+    },
+    {
+      "path": "png/the-olympus-jellyfin-emblem-fine-128.png",
+      "sha256": "8ac88724ff38521934935edad27892e3582e33d244bdfe4d1882f2b50fa23101"
+    },
+    {
+      "path": "png/the-olympus-jellyfin-emblem-fine-256.png",
+      "sha256": "f187560dfab2867a2acb2e3fe64128866608bab9484088951246c3b7cec7d39c"
+    },
+    {
+      "path": "png/the-olympus-jellyfin-seal-32.png",
+      "sha256": "f7621759abd53a22f2e921e7c5f63bb9a119b11b3b0d134706bd0386a24fd5d0"
+    },
+    {
+      "path": "png/the-olympus-jellyfin-seal-64.png",
+      "sha256": "f2ebc7a8a454401a65bcbfd7a0aa5bef2a1a8e6b4459d960fa76eb0a3daf958f"
+    },
+    {
+      "path": "png/the-olympus-jellyfin-seal-180.png",
+      "sha256": "25059a93b0b508895c0bf436a1081090df49e00bfd4dbbc66002c5b026983464"
+    },
+    {
+      "path": "png/the-olympus-jellyfin-seal-512.png",
+      "sha256": "a5865fa4bb0aea14ba098421669e35396eb69d2be940467ae96a793573cb5b31"
+    },
+    {
+      "path": "png/the-olympus-jellyfin-lockup-horizontal-1600.png",
+      "sha256": "406963d2c38f58bf9f41cb4bcac6f4fcb29ce5116c1a85f0583961f6ab9fdc21"
+    },
+    {
+      "path": "png/the-olympus-jellyfin-lockup-horizontal-white-1600.png",
+      "sha256": "9c839e3a4019ffebd6a231c94902cf9920c97b48ad07828fb32756bd5628aafb"
+    },
+    {
+      "path": "png/the-olympus-jellyfin-lockup-vertical-800.png",
+      "sha256": "e84ee3a456481c7498bfcfa4c24d15d52ede27dc9414982a2283d80846d30692"
+    },
+    {
+      "path": "favicon.ico",
+      "sha256": "94c4a1bf3b0befc6af777c4f12f4ff4173a4b682f32d3315d55622d418f5cfe7"
+    },
+    {
+      "path": "preview.png",
+      "sha256": "6c996c0414e758695a931752e1104fa43fded7aa76bfa0c7c057120155283db1"
+    }
+  ]
+}

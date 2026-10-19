@@ -17,12 +17,14 @@ test('palette tokens are neutral greys', () => {
   for (const [name, hex] of Object.entries(PALETTE)) assert.ok(neutral(hex), `${name} ${hex} has a hue`);
 });
 
-test('no hue anywhere in the brand source', () => {
+test('no hue anywhere in the brand source or the web app', () => {
   const files = (dir: string): string[] =>
-    readdirSync(dir, { withFileTypes: true }).flatMap((e) => (e.isDirectory() ? files(join(dir, e.name)) : e.name.endsWith('.ts') ? [join(dir, e.name)] : []));
-  for (const file of files(new URL('../src', import.meta.url).pathname)) {
+    readdirSync(dir, { withFileTypes: true }).flatMap((e) => (e.isDirectory() ? files(join(dir, e.name)) : /\.(ts|tsx|css|html)$/.test(e.name) ? [join(dir, e.name)] : []));
+  const roots = ['../src', '../app/src', '../app/index.html'].map((p) => new URL(p, import.meta.url).pathname);
+  for (const file of roots.flatMap((r) => (r.endsWith('.html') ? [r] : files(r)))) {
     const src = readFileSync(file, 'utf8');
     for (const [hex] of src.matchAll(/#[0-9a-fA-F]{6}\b|#[0-9a-fA-F]{3}\b/g)) assert.ok(neutral(hex), `${file}: ${hex} has a hue`);
-    for (const [, r, g, b] of src.matchAll(/rgba?\((\d+),\s*(\d+),\s*(\d+)/g)) assert.ok(r === g && g === b, `${file}: rgb(${r},${g},${b}) has a hue`);
+    for (const [, r, g, b] of src.matchAll(/rgba?\((\d+)[,\s]+(\d+)[,\s]+(\d+)/g)) assert.ok(r === g && g === b, `${file}: rgb(${r} ${g} ${b}) has a hue`);
+    assert.ok(!/\b(hsla?|hwb|lab|lch|oklab|oklch)\(/.test(src), `${file}: use neutral hex or rgb colours only`);
   }
 });

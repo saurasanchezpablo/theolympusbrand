@@ -1,0 +1,6 @@
+{
+  "id": "monitoring",
+  "name": "Monitoring",
+  "category": "monitoring",
+  "description": "Metrics, logs and alerts"
+}

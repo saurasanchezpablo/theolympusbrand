@@ -1,0 +1,6 @@
+{
+  "id": "network",
+  "name": "Network",
+  "category": "networking",
+  "description": "Routing, switching and DNS"
+}

@@ -2,15 +2,21 @@
   "name": "theolympusbrand",
   "version": "0.1.0",
   "private": true,
-  "description": "The Olympus — visual identity system for a private server ecosystem",
+  "description": "The Olympus \u2014 visual identity system for a private server ecosystem",
   "type": "module",
   "scripts": {
     "test": "node --test 'tests/**/*.test.ts'",
     "test:update-golden": "UPDATE_GOLDEN=1 node --test tests/geometry.test.ts",
-    "typecheck": "tsc -p .",
+    "typecheck": "tsc -p . && tsc -p app",
     "build:master": "node scripts/build-master.ts",
     "build:docs": "node scripts/build-docs.ts",
-    "build": "npm run build:master && npm run build:docs"
+    "service": "node scripts/service.ts",
+    "build:services": "node scripts/service.ts build",
+    "build": "npm run build:master && npm run build:services && npm run build:docs",
+    "app": "vite --config app/vite.config.ts",
+    "app:build": "vite build --config app/vite.config.ts",
+    "app:preview": "vite preview --config app/vite.config.ts",
+    "app:check": "node scripts/app-check.ts"
   },
   "devDependencies": {
     "@fontsource/cinzel": "5.2.8",
@@ -19,9 +25,19 @@
     "@resvg/resvg-js": "^2.6.2",
     "@types/node": "24.19.2",
     "@types/opentype.js": "1.3.10",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "@vitejs/plugin-react": "6.1.2",
     "clipper-lib": "6.4.2",
+    "fast-xml-parser": "5.11.2",
+    "fflate": "0.8.3",
     "opentype.js": "1.3.4",
+    "playwright-core": "1.64.1",
     "polygon-clipping": "0.15.7",
-    "typescript": "5.9.3"
+    "react": "19.3.1",
+    "react-dom": "19.3.1",
+    "svgpath": "2.6.0",
+    "typescript": "5.9.3",
+    "vite": "8.3.4"
   }
 }

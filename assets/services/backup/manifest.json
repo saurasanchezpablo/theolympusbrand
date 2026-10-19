@@ -1,0 +1,185 @@
+{
+  "service": {
+    "id": "backup",
+    "name": "Backup",
+    "category": "backup",
+    "patron": {
+      "god": "kronos"
+    },
+    "letter": "B",
+    "caption": "The Olympus · KRONOS",
+    "logo": null
+  },
+  "print": {
+    "variablePartsMinUnits": 4.05,
+    "minDiameterMM": 67,
+    "featureMM": 0.5
+  },
+  "warnings": [],
+  "files": [
+    {
+      "path": "svg/the-olympus-backup-crest-fine.svg",
+      "sha256": "04487e403e89df5240f5cb13ead6cd62c4c0160369ecf1217ae2778fa56fd1a6"
+    },
+    {
+      "path": "svg/the-olympus-backup-crest-fine-white.svg",
+      "sha256": "7dda9ba00cd66cbe42ad74cba11758fd4f5b7e811672be2251aac49610acde1c"
+    },
+    {
+      "path": "svg/the-olympus-backup-crest-fine-on-light.svg",
+      "sha256": "474bdf464ca1b224aaea65aa9c7b5c91479e492f42db91c8ffec63ed73a4e913"
+    },
+    {
+      "path": "svg/the-olympus-backup-crest-fine-on-dark.svg",
+      "sha256": "d05caa95b16a6687ee0b6451c8d2c8e4777edae141524f50b83a8ac9cb4789a1"
+    },
+    {
+      "path": "svg/the-olympus-backup-crest-print.svg",
+      "sha256": "7fadc80389a31434a1e9c32045add18a917c4162f9521fa1d90960a0cd9439c9"
+    },
+    {
+      "path": "svg/the-olympus-backup-crest-print-white.svg",
+      "sha256": "69df6e5951e0cedce884f02e48ab21c655971116055cfe505b67f705a5de5fc9"
+    },
+    {
+      "path": "svg/the-olympus-backup-crest-print-on-light.svg",
+      "sha256": "5823a7055d3b7978e3b67cbd5a3c233f8db2d40bfc69393a56a091d8761aa7e1"
+    },
+    {
+      "path": "svg/the-olympus-backup-crest-print-on-dark.svg",
+      "sha256": "0d7afd7ffc85616653765766447d19fdcdaf0669313dff253d14c1f1128414ee"
+    },
+    {
+      "path": "svg/the-olympus-backup-emblem-fine.svg",
+      "sha256": "758e60e470180f09cee310899de484639513a650c50035f6cba988fe869f7e87"
+    },
+    {
+      "path": "svg/the-olympus-backup-emblem-fine-white.svg",
+      "sha256": "a7dbb65e00d210d07253655905df1bdabb574427698dd93746fc1ec0ba66189a"
+    },
+    {
+      "path": "svg/the-olympus-backup-emblem-fine-on-light.svg",
+      "sha256": "c849d363f337797d87a2f4914fbf4e8a21311b9526d10c383ae925da7c987551"
+    },
+    {
+      "path": "svg/the-olympus-backup-emblem-fine-on-dark.svg",
+      "sha256": "5671d714a037ea65c05473b6cccda75dd05f935338846b77a01c7ccb506cb99a"
+    },
+    {
+      "path": "svg/the-olympus-backup-emblem-print.svg",
+      "sha256": "3bcbb73d22dc373665d5c4745ea6f4295004de86a99ef84aef38f5db1bce7bd5"
+    },
+    {
+      "path": "svg/the-olympus-backup-emblem-print-white.svg",
+      "sha256": "f12524054ef579af0497b2d2b48b8bbe0d4d5b527816600203ba8d92fcbafb87"
+    },
+    {
+      "path": "svg/the-olympus-backup-emblem-print-on-light.svg",
+      "sha256": "9010cbba7306d2f2f51fd05a2bb31b2907d41dc5ac036a93260310957be79b18"
+    },
+    {
+      "path": "svg/the-olympus-backup-emblem-print-on-dark.svg",
+      "sha256": "3560d9c3c83d9ab35af175962da6ff9eeb363e6377fc8e14532b265579eb768d"
+    },
+    {
+      "path": "svg/the-olympus-backup-seal.svg",
+      "sha256": "d7fbc1965c1a520d9361b0ef03ee0afc2be4a13041a01b7c61b1da76d8b28be8"
+    },
+    {
+      "path": "svg/the-olympus-backup-seal-white.svg",
+      "sha256": "b803b334adbec2d9ac35e7ce1098cb25393d9d57cf0e43d8d3c6786e0a75d439"
+    },
+    {
+      "path": "svg/the-olympus-backup-seal-on-light.svg",
+      "sha256": "4b846b1d294f9dca5d0ce4491433fc8de31123e312547dcb4d5853c25a33d316"
+    },
+    {
+      "path": "svg/the-olympus-backup-seal-on-dark.svg",
+      "sha256": "fe121e5666ccdbe926f0a743e13bb55e913e77377297bdee9952025de6e495e7"
+    },
+    {
+      "path": "svg/the-olympus-backup-lockup-horizontal.svg",
+      "sha256": "03c48b100f26cd8a256da53d7bf6083d112eaf9bf3926f9e77fa53be235c7090"
+    },
+    {
+      "path": "svg/the-olympus-backup-lockup-horizontal-white.svg",
+      "sha256": "4d8e9224b7535e49814e7d16c4ceba2e916467d549aaebe660295446391e1fad"
+    },
+    {
+      "path": "svg/the-olympus-backup-lockup-horizontal-on-light.svg",
+      "sha256": "d95454b410c8a5b7455ead4395c60b41133fbd554e055571e081c97a934a15b6"
+    },
+    {
+      "path": "svg/the-olympus-backup-lockup-horizontal-on-dark.svg",
+      "sha256": "b09985a242c3701e75c4a47fd810db7d0651f89485070b0243a99677f50aeb6b"
+    },
+    {
+      "path": "svg/the-olympus-backup-lockup-vertical.svg",
+      "sha256": "2a659b60ac8231199c843deff3c782f4ed2ba281f19a96df37baec9a001782c3"
+    },
+    {
+      "path": "svg/the-olympus-backup-lockup-vertical-white.svg",
+      "sha256": "7fba8d1fa7d46f628d61ded985a568f6228cca15a17d51156d8ce6f7354c6d56"
+    },
+    {
+      "path": "svg/the-olympus-backup-lockup-vertical-on-light.svg",
+      "sha256": "e0be4cacb894d84a882530d8bc5acd295862d5a3f3717e80dd954684987a4a5b"
+    },
+    {
+      "path": "svg/the-olympus-backup-lockup-vertical-on-dark.svg",
+      "sha256": "01bae5e5e6cbb08c34b82ab432e85365c4765bab03e0216e9365f2599b218dcb"
+    },
+    {
+      "path": "png/the-olympus-backup-crest-fine-512.png",
+      "sha256": "90a266570608ca378dc8908d473fc32c8c47a3411cdb34e3ffb872521d78f329"
+    },
+    {
+      "path": "png/the-olympus-backup-crest-fine-white-512.png",
+      "sha256": "f29643165a010b10077096515f71a5814bfaf1e79c95fb8175f5b933376e176b"
+    },
+    {
+      "path": "png/the-olympus-backup-emblem-fine-128.png",
+      "sha256": "542447e5b3e0c1d3e2b4d920fc978b3539c49895cc26baf9783b3a777298995b"
+    },
+    {
+      "path": "png/the-olympus-backup-emblem-fine-256.png",
+      "sha256": "f68057154f61cf0b40ca619085375c1cd8d9903eba54cb5fc78f5599f7f1006b"
+    },
+    {
+      "path": "png/the-olympus-backup-seal-32.png",
+      "sha256": "8f50df0d0e1fdfc2a432d393f6aa2f2e52338a648ad496981740408193c1c19a"
+    },
+    {
+      "path": "png/the-olympus-backup-seal-64.png",
+      "sha256": "a4ca1f2b43f92f3e1aab84410fbe0ffaf86bf9c1ea9fa5641dac3d5b9de5a763"
+    },
+    {
+      "path": "png/the-olympus-backup-seal-180.png",
+      "sha256": "38e8c8de48f94b4c825b9c3387aa7fbfe0c15290803a50a338bebbc3a00e82ea"
+    },
+    {
+      "path": "png/the-olympus-backup-seal-512.png",
+      "sha256": "2f1356d99124d760f62bbb42e7077fd18ca11b7dac2a8316528fe4d259eab7df"
+    },
+    {
+      "path": "png/the-olympus-backup-lockup-horizontal-1600.png",
+      "sha256": "8c0dd236616f990c51b42e8514a19a07d8e767800afb8e473d3449aee6bf8c11"
+    },
+    {
+      "path": "png/the-olympus-backup-lockup-horizontal-white-1600.png",
+      "sha256": "2031abca5ed86cfa06ed6f246c141b810fde5719d075993a8aa701766e9a3871"
+    },
+    {
+      "path": "png/the-olympus-backup-lockup-vertical-800.png",
+      "sha256": "a45fbf5da5a32f93a0b5aae9170a7a3f740e0fd59dc5439f34c3ced96a32691e"
+    },
+    {
+      "path": "favicon.ico",
+      "sha256": "04e40f877cfc5b6c7ac95d2b8057e89208c986e1e197f089ca921f7d170a72af"
+    },
+    {
+      "path": "preview.png",
+      "sha256": "3800b46dc0dd3185f1e52cb0ad22fe6c1e9b601ccf1c6ec866644f45e341866b"
+    }
+  ]
+}

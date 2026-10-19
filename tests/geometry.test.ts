@@ -19,9 +19,12 @@ const marks = () => {
     out[`emblem-${detail}`] = emblem({ detail }).d;
   }
   for (const god of Object.keys(GODS) as GodId[]) {
-    out[`seal-${god}`] = seal({ god }).d;
-    out[`crest-fine-${god}`] = crest({ god }).d;
+    out[`seal-${god}`] = seal({ patron: { god } }).d;
+    out[`crest-fine-${god}`] = crest({ patron: { god } }).d;
+    out[`crest-print-${god}`] = crest({ detail: 'print', patron: { god } }).d;
   }
+  out['crest-fine-monogram-V'] = crest({ patron: { monogram: 'V' } }).d;
+  out['seal-monogram-V'] = seal({ patron: { monogram: 'V' } }).d;
   return out;
 };
 

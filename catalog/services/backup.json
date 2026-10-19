@@ -1,0 +1,6 @@
+{
+  "id": "backup",
+  "name": "Backup",
+  "category": "backup",
+  "description": "Snapshots and off-site copies"
+}

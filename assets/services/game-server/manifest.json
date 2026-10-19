@@ -1,0 +1,185 @@
+{
+  "service": {
+    "id": "game-server",
+    "name": "Game Server",
+    "category": "gaming",
+    "patron": {
+      "god": "nike"
+    },
+    "letter": "G",
+    "caption": "The Olympus · NIKE",
+    "logo": null
+  },
+  "print": {
+    "variablePartsMinUnits": 3.53,
+    "minDiameterMM": 70,
+    "featureMM": 0.5
+  },
+  "warnings": [],
+  "files": [
+    {
+      "path": "svg/the-olympus-game-server-crest-fine.svg",
+      "sha256": "b3cdabec0dbe85c0ef6509d26e28cba1374475b1a9b29a5431e6676d4aea515f"
+    },
+    {
+      "path": "svg/the-olympus-game-server-crest-fine-white.svg",
+      "sha256": "91fd4e23c70c8891e658edf9ac1d77d7b04bde3eeffa7fee6fd2194b3e33cded"
+    },
+    {
+      "path": "svg/the-olympus-game-server-crest-fine-on-light.svg",
+      "sha256": "672d889c838224da0d97141fe66aef3df8a710c85fbc106a1abe38cf6fe13411"
+    },
+    {
+      "path": "svg/the-olympus-game-server-crest-fine-on-dark.svg",
+      "sha256": "6541a04937a49039bb1af6270a2038e645ae68797f602791b05cc6fb9d353b94"
+    },
+    {
+      "path": "svg/the-olympus-game-server-crest-print.svg",
+      "sha256": "a032318c12d27b756ed47d3e3cae815aa04d7b0f6358b2d512c9f35f32255029"
+    },
+    {
+      "path": "svg/the-olympus-game-server-crest-print-white.svg",
+      "sha256": "6b2bbd77f1ce20c14f50f5ae559e9c584c1d786d649c222393d941cd4ff6db17"
+    },
+    {
+      "path": "svg/the-olympus-game-server-crest-print-on-light.svg",
+      "sha256": "efd1d3335638376093dc4692191b3648de65d2d61fa26aa397ba79e50a7a53f1"
+    },
+    {
+      "path": "svg/the-olympus-game-server-crest-print-on-dark.svg",
+      "sha256": "6ebac14c4ca63a51c637c5e1b947b19368f70149d37cc3c80a8244f8b44e2c14"
+    },
+    {
+      "path": "svg/the-olympus-game-server-emblem-fine.svg",
+      "sha256": "aa9e02437da030077532201166f1940c4c65e4714ecb3c3d1ac4887fb5f454c4"
+    },
+    {
+      "path": "svg/the-olympus-game-server-emblem-fine-white.svg",
+      "sha256": "a3621e21652a563e2a726d1f25da51fb2ebb1c8a26d1ff81ee978d665e8b49da"
+    },
+    {
+      "path": "svg/the-olympus-game-server-emblem-fine-on-light.svg",
+      "sha256": "831a3c5cfedfd78f65c31d18d470959c9f839af68cefc8fc914ecf1400aca7ed"
+    },
+    {
+      "path": "svg/the-olympus-game-server-emblem-fine-on-dark.svg",
+      "sha256": "54c38803a9d719e0415f06d512a20506cea86c9e759ed510bf23717b80d99a62"
+    },
+    {
+      "path": "svg/the-olympus-game-server-emblem-print.svg",
+      "sha256": "d409b0c3d05b7b722d562201e16b51006379cb452c40ca280884e4b2ec134e4e"
+    },
+    {
+      "path": "svg/the-olympus-game-server-emblem-print-white.svg",
+      "sha256": "d503d54dc5bca524389a46356547fc0319a31f51972b3adaeb2a665dd085cacf"
+    },
+    {
+      "path": "svg/the-olympus-game-server-emblem-print-on-light.svg",
+      "sha256": "0d86ecaeccaf6fd818f6c26699f0f89f439e4aa029dc034954569d499e39ab08"
+    },
+    {
+      "path": "svg/the-olympus-game-server-emblem-print-on-dark.svg",
+      "sha256": "02a6a351c3743230330b03ed3087ea74fae37064cb46604d277ef8f8fa67cb33"
+    },
+    {
+      "path": "svg/the-olympus-game-server-seal.svg",
+      "sha256": "e60b9bd687e3bc6d707d2d9fecaea1092eaaf0c34522e66560f4e18422e9cf22"
+    },
+    {
+      "path": "svg/the-olympus-game-server-seal-white.svg",
+      "sha256": "fed6ae9a332fbf7f93d72f9bc592967a77658736fbf5e3b995151808475229ee"
+    },
+    {
+      "path": "svg/the-olympus-game-server-seal-on-light.svg",
+      "sha256": "592ea57e1eff1c53b5746eae74d08ff6def7346762c16c060f724f6212092bc6"
+    },
+    {
+      "path": "svg/the-olympus-game-server-seal-on-dark.svg",
+      "sha256": "239b02e2e7acf120b6e6ddb2b15b8f67ec09593019ad4656e85761a9a1b02b53"
+    },
+    {
+      "path": "svg/the-olympus-game-server-lockup-horizontal.svg",
+      "sha256": "b11b1dba84b43dd3e4b86fc1fea04c58d3db1e858bd006f00a478ba36eff4989"
+    },
+    {
+      "path": "svg/the-olympus-game-server-lockup-horizontal-white.svg",
+      "sha256": "00bbc130033bf69032585f29199048cd89dcec050f51a449339cd1b47a048293"
+    },
+    {
+      "path": "svg/the-olympus-game-server-lockup-horizontal-on-light.svg",
+      "sha256": "c31ced0f435833af3c3fd8cd85ff4e9db5f24478d0dbb52b98b4b599de188135"
+    },
+    {
+      "path": "svg/the-olympus-game-server-lockup-horizontal-on-dark.svg",
+      "sha256": "3345f72a6a7a070c7384313b31b5d12fc289947c25a110c4305a12902b85f4d0"
+    },
+    {
+      "path": "svg/the-olympus-game-server-lockup-vertical.svg",
+      "sha256": "14a8a404e08afe346c5f70f55af22c77fdb08be4ca9f7f0a8f1c73b63bd20eba"
+    },
+    {
+      "path": "svg/the-olympus-game-server-lockup-vertical-white.svg",
+      "sha256": "37827f380ad2fb068da578f0c252e8a19a96a1e91e0c575e54e40eb83fc37980"
+    },
+    {
+      "path": "svg/the-olympus-game-server-lockup-vertical-on-light.svg",
+      "sha256": "38e3f7edee45412592051575b1fcce13b23122fc742be6e493786fc3fd32c1f2"
+    },
+    {
+      "path": "svg/the-olympus-game-server-lockup-vertical-on-dark.svg",
+      "sha256": "2ca1da206e9cac68a04ba225fc2e0d202bb938060168c69c14cfff25a8b3c5a6"
+    },
+    {
+      "path": "png/the-olympus-game-server-crest-fine-512.png",
+      "sha256": "f9282d79ea60ac15b2c2b40e90c62e316d283a6a7c7b8ec404d04b8b97e23689"
+    },
+    {
+      "path": "png/the-olympus-game-server-crest-fine-white-512.png",
+      "sha256": "3c42b43c2c60c5b7e049032a8ca5257e9b94af1737737d0c4c9e03950ededa1c"
+    },
+    {
+      "path": "png/the-olympus-game-server-emblem-fine-128.png",
+      "sha256": "e424bff13f3bfda6f1c9ca020ae6c82b31bb4c8481d73b52b41a189fb75b46df"
+    },
+    {
+      "path": "png/the-olympus-game-server-emblem-fine-256.png",
+      "sha256": "58efbf253f8f585c9d18f851eeb1aa7c1aeced2b1aadc87a0517b6e2ad3b91bf"
+    },
+    {
+      "path": "png/the-olympus-game-server-seal-32.png",
+      "sha256": "8bb487f22b35cba9ed74fb2bb7f3530aa40e74f811bc68688d63aef02d227d3c"
+    },
+    {
+      "path": "png/the-olympus-game-server-seal-64.png",
+      "sha256": "3a9e55783fa3926706bf0331c24db9ad9a4ecbf181b2d36eadffd0f03b6128ae"
+    },
+    {
+      "path": "png/the-olympus-game-server-seal-180.png",
+      "sha256": "7092964ae308a4d35fe223376fcb45aecf8e800f3b63ce0a99b26651d394da82"
+    },
+    {
+      "path": "png/the-olympus-game-server-seal-512.png",
+      "sha256": "af292b10b74470a1eead6d2933dcfa716fd79d00fc0bf3b059088ea3b6bbb4e0"
+    },
+    {
+      "path": "png/the-olympus-game-server-lockup-horizontal-1600.png",
+      "sha256": "f46c9a7a234fd59d9ec0065274885255a3625e67fb6de61ce963d023ffbe5dae"
+    },
+    {
+      "path": "png/the-olympus-game-server-lockup-horizontal-white-1600.png",
+      "sha256": "3b94a8528814d6ad5ae56a298ac91d09b4c0f0f0dcd950cac29b7fd8e633ed93"
+    },
+    {
+      "path": "png/the-olympus-game-server-lockup-vertical-800.png",
+      "sha256": "a9c6d04d84c8faa45957f813ce4373931e5b217e1b34356a48581f358a997cf7"
+    },
+    {
+      "path": "favicon.ico",
+      "sha256": "e42d2bc3535f712560442e6b46d795ed17581385fb12bba6cb299674b0cb5f1c"
+    },
+    {
+      "path": "preview.png",
+      "sha256": "de58533bf8e82d61c0ea20b3b06a2c52271225e085a4e2f8361663d00b4b36f6"
+    }
+  ]
+}

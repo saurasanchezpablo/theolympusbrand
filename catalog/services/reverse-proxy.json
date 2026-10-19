@@ -1,0 +1,6 @@
+{
+  "id": "reverse-proxy",
+  "name": "Reverse Proxy",
+  "category": "proxy",
+  "description": "Gateway and certificates"
+}

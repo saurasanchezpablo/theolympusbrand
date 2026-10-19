@@ -1,0 +1,185 @@
+{
+  "service": {
+    "id": "web",
+    "name": "Web",
+    "category": "web",
+    "patron": {
+      "god": "arachne"
+    },
+    "letter": "W",
+    "caption": "The Olympus · ARACHNE",
+    "logo": null
+  },
+  "print": {
+    "variablePartsMinUnits": 3.53,
+    "minDiameterMM": 70,
+    "featureMM": 0.5
+  },
+  "warnings": [],
+  "files": [
+    {
+      "path": "svg/the-olympus-web-crest-fine.svg",
+      "sha256": "0d4253705f5c4696bb63d251fc09800dcd9c3206b339fbee4c991e15cd3aaa2e"
+    },
+    {
+      "path": "svg/the-olympus-web-crest-fine-white.svg",
+      "sha256": "0b78bf7069027a8d18c262c749a857fbc48b4741a116b3ab5bdffbd9b35edff2"
+    },
+    {
+      "path": "svg/the-olympus-web-crest-fine-on-light.svg",
+      "sha256": "9ce4f173d5a1963f400c7134599461fb1821de86c98ec3b17ff982139eae7eda"
+    },
+    {
+      "path": "svg/the-olympus-web-crest-fine-on-dark.svg",
+      "sha256": "3b03f97af1fa8c0361a2890687ea58497e6d638752848f1f58956a9a55f7caec"
+    },
+    {
+      "path": "svg/the-olympus-web-crest-print.svg",
+      "sha256": "5e20ffd710f03694513b643ea597b1091ffc74fc51e96578053b679eb96ab178"
+    },
+    {
+      "path": "svg/the-olympus-web-crest-print-white.svg",
+      "sha256": "6e24d47d8473786360b93b5009854dcd10f18257bd224157036ab3c4156f788b"
+    },
+    {
+      "path": "svg/the-olympus-web-crest-print-on-light.svg",
+      "sha256": "8cf6274351ecc9dd8adf838fdece1a9dec5198e266a0ac2d5a14999920714bef"
+    },
+    {
+      "path": "svg/the-olympus-web-crest-print-on-dark.svg",
+      "sha256": "80de7717b18ee51a0e263e4757fbe4d5db2c136d73e8609ac13296c66651f369"
+    },
+    {
+      "path": "svg/the-olympus-web-emblem-fine.svg",
+      "sha256": "afc34fb605c17cbc1b5e3b4ea9683156796c4643a72a9733ca7a54c8a09c13f8"
+    },
+    {
+      "path": "svg/the-olympus-web-emblem-fine-white.svg",
+      "sha256": "ab0c29a03c2bbcbea57d99fa91349004c280361fec07fca57b3b57368a12eef7"
+    },
+    {
+      "path": "svg/the-olympus-web-emblem-fine-on-light.svg",
+      "sha256": "0cb10c3e4cf4b2c4191077a91db6101edbce3db4f9e953fb4e3ec5361763a15d"
+    },
+    {
+      "path": "svg/the-olympus-web-emblem-fine-on-dark.svg",
+      "sha256": "e9dcef602415d61fd348585795c3382152b523b037586d8e643a2338b53f0e00"
+    },
+    {
+      "path": "svg/the-olympus-web-emblem-print.svg",
+      "sha256": "fa4ddcbac40ec8e9ed27f533b4c22a4a8cd7879dc8c7972d4331d1bef8dd9b08"
+    },
+    {
+      "path": "svg/the-olympus-web-emblem-print-white.svg",
+      "sha256": "7030046dc054d72ae9b9cd1ccf42c2094ec8e6e0b949d2bb2321a7cef8a7b6f4"
+    },
+    {
+      "path": "svg/the-olympus-web-emblem-print-on-light.svg",
+      "sha256": "a47ad4cc4359397fc53bb1faa4e265591efc3827f060eabcb761b4949de5bfd9"
+    },
+    {
+      "path": "svg/the-olympus-web-emblem-print-on-dark.svg",
+      "sha256": "3b6ca57c175d42de20710b9aeac7507f3d6add4b735420a323209df98cbf211a"
+    },
+    {
+      "path": "svg/the-olympus-web-seal.svg",
+      "sha256": "38ab4c76476f28c2de6da2baf9591ff9769613607a86cd7a4c516cd9d8b17f25"
+    },
+    {
+      "path": "svg/the-olympus-web-seal-white.svg",
+      "sha256": "a2fb8cec66610aab51bb6d17c10f2537ec8f7c0fab4b015c6c53d85dff63e5c8"
+    },
+    {
+      "path": "svg/the-olympus-web-seal-on-light.svg",
+      "sha256": "3307112f3ec0c559e94163d95e977738d7bee6de4fcaa5708da05d7417a6d291"
+    },
+    {
+      "path": "svg/the-olympus-web-seal-on-dark.svg",
+      "sha256": "1a4c0402a979c7422fe144d58ebbd543f46835ced413288f6b250de2cc45adc9"
+    },
+    {
+      "path": "svg/the-olympus-web-lockup-horizontal.svg",
+      "sha256": "52e9478beedaa2c96450dd7bf05bfa490452ac900c924c1c39e4f2dba6cff310"
+    },
+    {
+      "path": "svg/the-olympus-web-lockup-horizontal-white.svg",
+      "sha256": "daef160ced868378642747ee758da5a13e92742fa7bc8fbadd5093fd37bb69d5"
+    },
+    {
+      "path": "svg/the-olympus-web-lockup-horizontal-on-light.svg",
+      "sha256": "e65ec6cd55b7d954dbd394a0267843666eb0454ccacc85a53e38d15100509cc1"
+    },
+    {
+      "path": "svg/the-olympus-web-lockup-horizontal-on-dark.svg",
+      "sha256": "8548928673d1957c03c79076bd202b9bb677a4942c5da56b3c2051ef95501fe6"
+    },
+    {
+      "path": "svg/the-olympus-web-lockup-vertical.svg",
+      "sha256": "34d7cfb6eeebae19c39c295f2ef212d6a831b7026eba9ff60cba91a01164ba98"
+    },
+    {
+      "path": "svg/the-olympus-web-lockup-vertical-white.svg",
+      "sha256": "61d85c6aa82b58637e4425760d9dca7ce5b446c10b657c1591a38ebb672892cb"
+    },
+    {
+      "path": "svg/the-olympus-web-lockup-vertical-on-light.svg",
+      "sha256": "47aba1413b800516a67d854c74f8cd53365724e91eb21d024642d30f8245ff87"
+    },
+    {
+      "path": "svg/the-olympus-web-lockup-vertical-on-dark.svg",
+      "sha256": "82c8b56d81aa0fb7b021242ad5025d03ef367e5060b1cbb14b427234ceee973e"
+    },
+    {
+      "path": "png/the-olympus-web-crest-fine-512.png",
+      "sha256": "688dabe9baa21ca77147053c300d0f0e09db8e81f855c695bc0af742645a92da"
+    },
+    {
+      "path": "png/the-olympus-web-crest-fine-white-512.png",
+      "sha256": "9dac1971f99732ad9c7a74e16f004cec6cc0618f83e818d848d217c89df047d0"
+    },
+    {
+      "path": "png/the-olympus-web-emblem-fine-128.png",
+      "sha256": "8c7303243a4ce0e6793d881738c3f844b4d961db33f17bb9d30f31499ee717c4"
+    },
+    {
+      "path": "png/the-olympus-web-emblem-fine-256.png",
+      "sha256": "7176ccd6109124baaa8a461e2db57e2599122e2c9d1b50458010cafed6cc537a"
+    },
+    {
+      "path": "png/the-olympus-web-seal-32.png",
+      "sha256": "8a6a2337c0f484de11ff949131e7203d37291e52cd711c3dfdd63fb25c32abe8"
+    },
+    {
+      "path": "png/the-olympus-web-seal-64.png",
+      "sha256": "77c22545076614e0979b651375b892ab3060c673c1543732443284d5277c4e8c"
+    },
+    {
+      "path": "png/the-olympus-web-seal-180.png",
+      "sha256": "c85ff06bc481625d744073cfde3151a8d21cb63b4330832f1e148f7b6983ae27"
+    },
+    {
+      "path": "png/the-olympus-web-seal-512.png",
+      "sha256": "e17861f2623cb64e385833f857dcdaa07b748f24773a305227f744ab04190454"
+    },
+    {
+      "path": "png/the-olympus-web-lockup-horizontal-1600.png",
+      "sha256": "d86d74ca28e512944fa19f83ee54f5f2f814176933d0d9bd4c599fd33aafb97a"
+    },
+    {
+      "path": "png/the-olympus-web-lockup-horizontal-white-1600.png",
+      "sha256": "5442d480164ae280cf92cf0563bd4d18079be12772bfce91d0a4020633c8bccf"
+    },
+    {
+      "path": "png/the-olympus-web-lockup-vertical-800.png",
+      "sha256": "54f2ee6288dfe3f9695d226a4c68c01fa6b980c500b607e11d181e21c45c96b3"
+    },
+    {
+      "path": "favicon.ico",
+      "sha256": "a778cc561a8bb4b3e4d384997c83b060c349ba9dc337a88c31c6505b643b0aaa"
+    },
+    {
+      "path": "preview.png",
+      "sha256": "6c9bdd6c2f47a6e5a8fe71dc8a8bbe1a28590a95b23be971c8bacdcb6e1ae248"
+    }
+  ]
+}

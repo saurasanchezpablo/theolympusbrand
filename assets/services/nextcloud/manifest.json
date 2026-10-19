@@ -1,0 +1,185 @@
+{
+  "service": {
+    "id": "nextcloud",
+    "name": "Nextcloud",
+    "category": "cloud",
+    "patron": {
+      "god": "nephele"
+    },
+    "letter": "N",
+    "caption": "The Olympus · NEPHELE",
+    "logo": null
+  },
+  "print": {
+    "variablePartsMinUnits": 4.05,
+    "minDiameterMM": 67,
+    "featureMM": 0.5
+  },
+  "warnings": [],
+  "files": [
+    {
+      "path": "svg/the-olympus-nextcloud-crest-fine.svg",
+      "sha256": "077c6b4910502a13837bf0b79ade173fa343b6be6397807b3401a6d01839359e"
+    },
+    {
+      "path": "svg/the-olympus-nextcloud-crest-fine-white.svg",
+      "sha256": "c78667237e27f0b73561aa99c168e1e8d603d96b86f0083f9cc8b328ac2a2d79"
+    },
+    {
+      "path": "svg/the-olympus-nextcloud-crest-fine-on-light.svg",
+      "sha256": "aeb17c1b263377e29b303c7f2dd6e3c95c5dedc80b0a9654d44dc6c509da225a"
+    },
+    {
+      "path": "svg/the-olympus-nextcloud-crest-fine-on-dark.svg",
+      "sha256": "66f916ef0e45e05d9327cd3bfa7209b46cf4e541834ad2bd4e52c1b9be85a7d3"
+    },
+    {
+      "path": "svg/the-olympus-nextcloud-crest-print.svg",
+      "sha256": "68d53f5be6bec5fdd223ff2fe00b408eb41c455c74cf2e58a52c35784a422fdb"
+    },
+    {
+      "path": "svg/the-olympus-nextcloud-crest-print-white.svg",
+      "sha256": "38a1757256e25e016748d3a33caadb5cce24ee7cd34b955afad86f110e581219"
+    },
+    {
+      "path": "svg/the-olympus-nextcloud-crest-print-on-light.svg",
+      "sha256": "8717803dd29c88c10e14f85307ebcd319f634515b2a497f8c35652692f06e23b"
+    },
+    {
+      "path": "svg/the-olympus-nextcloud-crest-print-on-dark.svg",
+      "sha256": "de557084a216f19287ca3751a0ffa9454dc457e26a76aef4dbc2c5e1988eda0a"
+    },
+    {
+      "path": "svg/the-olympus-nextcloud-emblem-fine.svg",
+      "sha256": "fc749576d1c5873170aacf33be0b54368d89001132bb4a86bf07a36a4735ebc8"
+    },
+    {
+      "path": "svg/the-olympus-nextcloud-emblem-fine-white.svg",
+      "sha256": "78c327695f4b1e32db72b3b471857bbe23080ed24d5ac85c5ac54668267d6112"
+    },
+    {
+      "path": "svg/the-olympus-nextcloud-emblem-fine-on-light.svg",
+      "sha256": "7d10b66ab90b2bb5eb466c0251669c76e920f827d3184aa1f68421f098ba6f44"
+    },
+    {
+      "path": "svg/the-olympus-nextcloud-emblem-fine-on-dark.svg",
+      "sha256": "aa7485810eb14a09c62f7314b0fed389b933f7d617f70bd343b3a4c1d5ad9193"
+    },
+    {
+      "path": "svg/the-olympus-nextcloud-emblem-print.svg",
+      "sha256": "57589db2f1ebcc269c28434174cd3e9ea832703bd0b98c5ede07416b3b16c1f1"
+    },
+    {
+      "path": "svg/the-olympus-nextcloud-emblem-print-white.svg",
+      "sha256": "b0111bdf38c38a995a33a0edc538789ac56679511c56523731c5d52f9749a288"
+    },
+    {
+      "path": "svg/the-olympus-nextcloud-emblem-print-on-light.svg",
+      "sha256": "2fefb0e37bc8b3879567bc06eb30820796c8fe4b0d060b3af1d076eb29744ade"
+    },
+    {
+      "path": "svg/the-olympus-nextcloud-emblem-print-on-dark.svg",
+      "sha256": "25ea95a263615a55321257744f25394452d96b443d538fe362fd4a8b557d0b88"
+    },
+    {
+      "path": "svg/the-olympus-nextcloud-seal.svg",
+      "sha256": "f4d9b5e9cbdb98b24c6de05030d5ae021a03950078086bf53010b9de432af90e"
+    },
+    {
+      "path": "svg/the-olympus-nextcloud-seal-white.svg",
+      "sha256": "9851fa5e08fa1ea0a8ef9380bc966238aad17caf6f3483bd7b5543f48854b3c3"
+    },
+    {
+      "path": "svg/the-olympus-nextcloud-seal-on-light.svg",
+      "sha256": "4924130f24201b1d1594756208785d937b4cd4730a452164121801f5c08c6162"
+    },
+    {
+      "path": "svg/the-olympus-nextcloud-seal-on-dark.svg",
+      "sha256": "aafc1d53072e72170a31a2a65f9df4d7f157fb3a9212af7be386e18ce575bee9"
+    },
+    {
+      "path": "svg/the-olympus-nextcloud-lockup-horizontal.svg",
+      "sha256": "ef0f3726427cfb10587428abf33fc62839384d956f4aaa925fe73a84ff3db50b"
+    },
+    {
+      "path": "svg/the-olympus-nextcloud-lockup-horizontal-white.svg",
+      "sha256": "b09363d3e398d57e38fde20a18de5b74b1116ead014f145c3da3e8d81471a849"
+    },
+    {
+      "path": "svg/the-olympus-nextcloud-lockup-horizontal-on-light.svg",
+      "sha256": "f496d7590b75977519405b27e4fa2328a91376327762d2ec288db7cb0625cf17"
+    },
+    {
+      "path": "svg/the-olympus-nextcloud-lockup-horizontal-on-dark.svg",
+      "sha256": "072afbbc227ba917c7123de67ac8e7cad5a0d75e04ae520299a9f16834429d31"
+    },
+    {
+      "path": "svg/the-olympus-nextcloud-lockup-vertical.svg",
+      "sha256": "c8db4d38e01ae94d5ccb9b65af6f5d02c4161516c7bca54139c2d12a29fcd0c2"
+    },
+    {
+      "path": "svg/the-olympus-nextcloud-lockup-vertical-white.svg",
+      "sha256": "770b5256aaf08209e99c504e8d2a91c29c8ae064a452ef8c955c1e73acec4951"
+    },
+    {
+      "path": "svg/the-olympus-nextcloud-lockup-vertical-on-light.svg",
+      "sha256": "2c3b93d3bf87cf289032c26167624065bf5c3a4e9345a821aebc178cf135ce2b"
+    },
+    {
+      "path": "svg/the-olympus-nextcloud-lockup-vertical-on-dark.svg",
+      "sha256": "34766e97d87eb3d87779af084398f2543505c68c4eacf10d07c49cd7f3dee77e"
+    },
+    {
+      "path": "png/the-olympus-nextcloud-crest-fine-512.png",
+      "sha256": "3828ed953d5a6621e7298ea0bfd6b0f84bfca1968d44b5422cc4213f81525c98"
+    },
+    {
+      "path": "png/the-olympus-nextcloud-crest-fine-white-512.png",
+      "sha256": "24d9fdd4d5882f6881a909a85b0edab5ccd330ff8f304153907944a0774fc696"
+    },
+    {
+      "path": "png/the-olympus-nextcloud-emblem-fine-128.png",
+      "sha256": "12873f9ef36fa93bd710b1ce60322ff51f375cdfef8c7e51d6cc355e1ccd6a12"
+    },
+    {
+      "path": "png/the-olympus-nextcloud-emblem-fine-256.png",
+      "sha256": "90bf4b1ba158eb8492ef672dd6cbe424dcd6fa93db54bcd5f1e66cf2054e419d"
+    },
+    {
+      "path": "png/the-olympus-nextcloud-seal-32.png",
+      "sha256": "a7f4fe1c2afef5de88d0ed529a1c43f8177e85784f3b8f442948b97ae7a457b4"
+    },
+    {
+      "path": "png/the-olympus-nextcloud-seal-64.png",
+      "sha256": "0a30bfdcde13a70ab942d27bb9f75a57f8d7df6c3ed63ab3c3584f96734f363b"
+    },
+    {
+      "path": "png/the-olympus-nextcloud-seal-180.png",
+      "sha256": "7af7cd6cf8504a427a9d0e2a91ebdea08eb436915a38959344b787ba7f08c1ad"
+    },
+    {
+      "path": "png/the-olympus-nextcloud-seal-512.png",
+      "sha256": "5dce4a0ee9a1c8116772241be9ba9af90102c2c4436d380fdc0893d66760db2d"
+    },
+    {
+      "path": "png/the-olympus-nextcloud-lockup-horizontal-1600.png",
+      "sha256": "e76cc064d4b5e4e8afa0818825a8b3ca260dfe67d47eacb106ed2c363f1f1604"
+    },
+    {
+      "path": "png/the-olympus-nextcloud-lockup-horizontal-white-1600.png",
+      "sha256": "913d94447d1944bd611aebb44b28e2d020041215c301241a756b38427cb7192f"
+    },
+    {
+      "path": "png/the-olympus-nextcloud-lockup-vertical-800.png",
+      "sha256": "bb959673f7b199fa1c07ab3a1bcedd72c2f7784cf933699ec8772ff1a2c4c783"
+    },
+    {
+      "path": "favicon.ico",
+      "sha256": "d04f8aad7807352a615861be38e173075d07d4c91229df35b5fd40fc58098baa"
+    },
+    {
+      "path": "preview.png",
+      "sha256": "331df6367dfd5be8c9e4d3a0debffab9beb970e969e3970992dcd0930d723da3"
+    }
+  ]
+}

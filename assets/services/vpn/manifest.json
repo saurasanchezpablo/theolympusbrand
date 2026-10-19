@@ -1,0 +1,185 @@
+{
+  "service": {
+    "id": "vpn",
+    "name": "VPN",
+    "category": "security",
+    "patron": {
+      "god": "athena"
+    },
+    "letter": "V",
+    "caption": "The Olympus · ATHENA",
+    "logo": null
+  },
+  "print": {
+    "variablePartsMinUnits": 4.05,
+    "minDiameterMM": 67,
+    "featureMM": 0.5
+  },
+  "warnings": [],
+  "files": [
+    {
+      "path": "svg/the-olympus-vpn-crest-fine.svg",
+      "sha256": "0f873056b097a340f2bb137d41a1ccd7322e9693de9d9da8a277ed0e77079fae"
+    },
+    {
+      "path": "svg/the-olympus-vpn-crest-fine-white.svg",
+      "sha256": "a28365b14d2b5c1f19e92b71a4f4c9e4f6ca2f360abe56fc24b1e5cfa942b45f"
+    },
+    {
+      "path": "svg/the-olympus-vpn-crest-fine-on-light.svg",
+      "sha256": "2b580da776125ad694cdcf42e7d1314e96fef1f62cbe8d1885bc1b67633b5259"
+    },
+    {
+      "path": "svg/the-olympus-vpn-crest-fine-on-dark.svg",
+      "sha256": "9f8e431735d6b5b7aae85735c8b9cea8bda9b02eb83a1f00efbd75057f829ab3"
+    },
+    {
+      "path": "svg/the-olympus-vpn-crest-print.svg",
+      "sha256": "5c5a2e581d43b1a8f9171d7e2bdc3c721c393712ee3de3bf3779dbde66b697c5"
+    },
+    {
+      "path": "svg/the-olympus-vpn-crest-print-white.svg",
+      "sha256": "d63127f0d20ac72991eeae98a2e06cbf7a8fe21b152c8dff56bdd263af4a1250"
+    },
+    {
+      "path": "svg/the-olympus-vpn-crest-print-on-light.svg",
+      "sha256": "af1231c38d92b64c718e7ec7bad43e48c788717cc155bf2754dbd9b8e430a758"
+    },
+    {
+      "path": "svg/the-olympus-vpn-crest-print-on-dark.svg",
+      "sha256": "aff9327232f0aab8f94b7f95118fd4ae44f51db541f8022b2e5963b83277c8cb"
+    },
+    {
+      "path": "svg/the-olympus-vpn-emblem-fine.svg",
+      "sha256": "f6450f0ae0f7a83dc28de604627ed3acc5f3f9427568418e803ffbee7cba5efd"
+    },
+    {
+      "path": "svg/the-olympus-vpn-emblem-fine-white.svg",
+      "sha256": "a71e2fb1b4566720a89b9d2149a153ef0dca4377d7df520b79f88dfd70a839af"
+    },
+    {
+      "path": "svg/the-olympus-vpn-emblem-fine-on-light.svg",
+      "sha256": "9205e9e4161b000e4c2f603966dd8725bbae992d165e490a3b7436e984f4ec63"
+    },
+    {
+      "path": "svg/the-olympus-vpn-emblem-fine-on-dark.svg",
+      "sha256": "10bd07422a199cf22931514995104715631efafa52a235e459c50196e5e23ae2"
+    },
+    {
+      "path": "svg/the-olympus-vpn-emblem-print.svg",
+      "sha256": "5166bf85cf2b921976764d98438f8e30016b0e507e8e850e1b49b2a724e38dbd"
+    },
+    {
+      "path": "svg/the-olympus-vpn-emblem-print-white.svg",
+      "sha256": "1105670e34b4b6a8d9a423dbf95ba9e236af843a68d85c2e02cbbadb6dfb4373"
+    },
+    {
+      "path": "svg/the-olympus-vpn-emblem-print-on-light.svg",
+      "sha256": "fe8b0622772b5a736f82b38c8b9435b2bc88220140fad707c5fd8bb35bebb7b1"
+    },
+    {
+      "path": "svg/the-olympus-vpn-emblem-print-on-dark.svg",
+      "sha256": "e5959c701d7773d77cc2ff93bc1e39db6144138b9c6bf874e6547eec351b2ddf"
+    },
+    {
+      "path": "svg/the-olympus-vpn-seal.svg",
+      "sha256": "81407990eef1e9ceea5e6d5c614dc05895020df0c8ec2bd44b15d100f43ef0db"
+    },
+    {
+      "path": "svg/the-olympus-vpn-seal-white.svg",
+      "sha256": "67392cf3a8baf8aa6daa13f7fa40260b877e75aee77410be6793a92e6c8f5f6d"
+    },
+    {
+      "path": "svg/the-olympus-vpn-seal-on-light.svg",
+      "sha256": "71d1560ca50b7c0066efa7e684dd84d89d770b9c756b3a470b97dec85ee4434e"
+    },
+    {
+      "path": "svg/the-olympus-vpn-seal-on-dark.svg",
+      "sha256": "451307ec02db8b0900931e881b0b4413456beeef8bd2b04c57456fb16cd50092"
+    },
+    {
+      "path": "svg/the-olympus-vpn-lockup-horizontal.svg",
+      "sha256": "0f692ba3d05b921585c6a2a0a0537c0f62e8240a4355f6d11b74b36e7cd2767b"
+    },
+    {
+      "path": "svg/the-olympus-vpn-lockup-horizontal-white.svg",
+      "sha256": "15e676a3aa409039c42953788c26a57981fdcb2fc10276a845457437c382e47b"
+    },
+    {
+      "path": "svg/the-olympus-vpn-lockup-horizontal-on-light.svg",
+      "sha256": "e3d01c09951daac5888abfa1bccdd404eeb1bc19257a24304310aebcaa5fba5c"
+    },
+    {
+      "path": "svg/the-olympus-vpn-lockup-horizontal-on-dark.svg",
+      "sha256": "7c33d08b0085136a48d02d770fa6cd55046ae44b331e4bdfa11f7627824d6865"
+    },
+    {
+      "path": "svg/the-olympus-vpn-lockup-vertical.svg",
+      "sha256": "15bab33af81019716817be74093b30315ec21131cad89b3799d6afa43a8a7b42"
+    },
+    {
+      "path": "svg/the-olympus-vpn-lockup-vertical-white.svg",
+      "sha256": "784931c09dac2056a5b3532c618a625cd927d3db6c4ba5a0f367ea2b94838852"
+    },
+    {
+      "path": "svg/the-olympus-vpn-lockup-vertical-on-light.svg",
+      "sha256": "43a8794b5867d402f5d52fb9c675ad9fce152f03990945ee06fae16b2b92de25"
+    },
+    {
+      "path": "svg/the-olympus-vpn-lockup-vertical-on-dark.svg",
+      "sha256": "3779268e751311ae84683091408157cab36af20a11e9cea2a1ecd27416b3cba8"
+    },
+    {
+      "path": "png/the-olympus-vpn-crest-fine-512.png",
+      "sha256": "0c2839217badb3dc0e0cb9c4961bd69127cf238ddfb9fc7db3482a98ee3633f4"
+    },
+    {
+      "path": "png/the-olympus-vpn-crest-fine-white-512.png",
+      "sha256": "1f50ded9d17a901816f38fb6ab1c21c1ba47595886eacdf65fee8608249c2649"
+    },
+    {
+      "path": "png/the-olympus-vpn-emblem-fine-128.png",
+      "sha256": "7cf8986d233e57f903c14a4c56297e713d6f916f129d42f3f578aea20d83aa67"
+    },
+    {
+      "path": "png/the-olympus-vpn-emblem-fine-256.png",
+      "sha256": "f30d5a1e35c6b19be02084ce5cdd8f0b30a1d4bf87b60542b2d4b5d3eb5b798f"
+    },
+    {
+      "path": "png/the-olympus-vpn-seal-32.png",
+      "sha256": "e637c875a1601232dc5e7794b6aaf8feec1baaf71e818aeb2cde65aac4fdcfe1"
+    },
+    {
+      "path": "png/the-olympus-vpn-seal-64.png",
+      "sha256": "54bcbd5936942835aec5b0f3cc370816ea81027908e9a72130f68bf165f4134f"
+    },
+    {
+      "path": "png/the-olympus-vpn-seal-180.png",
+      "sha256": "078ba989a39bc87f3959e74d5a151b3a6138c73c11ca73e10297c99dca283019"
+    },
+    {
+      "path": "png/the-olympus-vpn-seal-512.png",
+      "sha256": "ae29221982be65838a6ee60b7e7589051b295c946db6dbbc7ab0e25889f74f88"
+    },
+    {
+      "path": "png/the-olympus-vpn-lockup-horizontal-1600.png",
+      "sha256": "f265806eba547c5b81e296f61b4657ba1b76aefd8c3990d71b1cf1817096c17d"
+    },
+    {
+      "path": "png/the-olympus-vpn-lockup-horizontal-white-1600.png",
+      "sha256": "77a74f88a5418d010c560ba9a058955b401a941f970b53821081d1fb38455524"
+    },
+    {
+      "path": "png/the-olympus-vpn-lockup-vertical-800.png",
+      "sha256": "10139072391b3a0bda0b4f044cb2f5be05aeebff4fdb9e2b604f3b8dc2dc063c"
+    },
+    {
+      "path": "favicon.ico",
+      "sha256": "9bc46395a219487cf18f5bdd31541d37d599680e9cad7dc9002e4eb6cc59f088"
+    },
+    {
+      "path": "preview.png",
+      "sha256": "8386be708c6b01d61a80c5e986504af44c888c6203a70c73b4bcd717f197fbfd"
+    }
+  ]
+}

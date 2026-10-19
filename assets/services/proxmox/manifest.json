@@ -1,0 +1,185 @@
+{
+  "service": {
+    "id": "proxmox",
+    "name": "Proxmox",
+    "category": "virtualization",
+    "patron": {
+      "god": "atlas"
+    },
+    "letter": "P",
+    "caption": "The Olympus · ATLAS",
+    "logo": null
+  },
+  "print": {
+    "variablePartsMinUnits": 4.05,
+    "minDiameterMM": 67,
+    "featureMM": 0.5
+  },
+  "warnings": [],
+  "files": [
+    {
+      "path": "svg/the-olympus-proxmox-crest-fine.svg",
+      "sha256": "c4e903406c0587548fd1babe35c717a90faac3b51cbe9a8d49a31f948bf226ce"
+    },
+    {
+      "path": "svg/the-olympus-proxmox-crest-fine-white.svg",
+      "sha256": "3a46e9ab2e4431baaefa6def0c273108bb82557e5d5feba73d162b84b6f24fd0"
+    },
+    {
+      "path": "svg/the-olympus-proxmox-crest-fine-on-light.svg",
+      "sha256": "caf1df21202a87bb816174c2c9337e782f6d752202cb6ae41c843661de90f108"
+    },
+    {
+      "path": "svg/the-olympus-proxmox-crest-fine-on-dark.svg",
+      "sha256": "54721d71924fec098740f5b1fe59da18f1194454e921988e3e93ff33eeea25d4"
+    },
+    {
+      "path": "svg/the-olympus-proxmox-crest-print.svg",
+      "sha256": "34c4aa583eae750ce9e5b442a23cb2bfaa8c030ed24e282060f0f4bcea70c00a"
+    },
+    {
+      "path": "svg/the-olympus-proxmox-crest-print-white.svg",
+      "sha256": "2d78ccdd70be9bd7a8a78b5d862bf5df644c1e5d63deacf5bcfe8d72682c5a6e"
+    },
+    {
+      "path": "svg/the-olympus-proxmox-crest-print-on-light.svg",
+      "sha256": "29a445e8a8cef9cb0d5050beec34441c7aff359eb7627d51635d2ad5cfba3680"
+    },
+    {
+      "path": "svg/the-olympus-proxmox-crest-print-on-dark.svg",
+      "sha256": "e2de62659b7e1034dec10a238a0206758bc61e37d80863b0e101f24f7ccaab6d"
+    },
+    {
+      "path": "svg/the-olympus-proxmox-emblem-fine.svg",
+      "sha256": "66ffa9950b8cb96a22563e3e7030acb1083161ea09956b2b1e85e206175719eb"
+    },
+    {
+      "path": "svg/the-olympus-proxmox-emblem-fine-white.svg",
+      "sha256": "34d91707dc24609836afa3b82830ef1038dbc4747a4b650e966d08a7b968cd0d"
+    },
+    {
+      "path": "svg/the-olympus-proxmox-emblem-fine-on-light.svg",
+      "sha256": "36f1a80f697fe1944810ea21eeba5ceb9755cf9a24125ed9e7e312fd6bb84a5a"
+    },
+    {
+      "path": "svg/the-olympus-proxmox-emblem-fine-on-dark.svg",
+      "sha256": "b8ae6c968764890b9f6189f1fd4ff57da83e084dd8644d92183fb5480782682e"
+    },
+    {
+      "path": "svg/the-olympus-proxmox-emblem-print.svg",
+      "sha256": "d0a0d9fe43bc1a142b1df8f527633f997e2c6a08102345a2d86700aee6536c32"
+    },
+    {
+      "path": "svg/the-olympus-proxmox-emblem-print-white.svg",
+      "sha256": "ba3d17cec7a5ffbd8174498ce89beb0202c04474ced9ebad505401fa7cf49547"
+    },
+    {
+      "path": "svg/the-olympus-proxmox-emblem-print-on-light.svg",
+      "sha256": "62c5a7a9d55b03d63ba63149ef27da064e0d3ee5cf9f1c93dc5027b1d9a20cc2"
+    },
+    {
+      "path": "svg/the-olympus-proxmox-emblem-print-on-dark.svg",
+      "sha256": "bb32788351b39d1759e30f8acbee1f9a1c14fd62859e13712b30946344bffc84"
+    },
+    {
+      "path": "svg/the-olympus-proxmox-seal.svg",
+      "sha256": "3fee9e72f2a333b04e4ac5d5119b8c5273d5947e5170e27e2e0ec71cc99e0c49"
+    },
+    {
+      "path": "svg/the-olympus-proxmox-seal-white.svg",
+      "sha256": "9c0386cf22b2a8ddd76ec8dacbdae0d622fbb23adedf52e65ea908a7d547ee54"
+    },
+    {
+      "path": "svg/the-olympus-proxmox-seal-on-light.svg",
+      "sha256": "76d52e450c65ef8157693f826bdde809071e10b845891f28a7a92b3ebf1d2d16"
+    },
+    {
+      "path": "svg/the-olympus-proxmox-seal-on-dark.svg",
+      "sha256": "0f3a4d8c5f55898e16c7ea7064a2094abf921ef9e695aebf46d960abb83fba20"
+    },
+    {
+      "path": "svg/the-olympus-proxmox-lockup-horizontal.svg",
+      "sha256": "61b1d3700601246819d5fca708bad8914df1a9d1711c0b091562b9b9123ab152"
+    },
+    {
+      "path": "svg/the-olympus-proxmox-lockup-horizontal-white.svg",
+      "sha256": "8d60615ad094cf6fed01ae5a2bfe2b98af7599bc69b817928d6e9e17d3da9aac"
+    },
+    {
+      "path": "svg/the-olympus-proxmox-lockup-horizontal-on-light.svg",
+      "sha256": "c16ce372fcfb564cd406dd89ecd781bb5b1aa1367cf46c8c09ec342b22aa1e46"
+    },
+    {
+      "path": "svg/the-olympus-proxmox-lockup-horizontal-on-dark.svg",
+      "sha256": "c72709a49a42b4b4a6e21d08d0d447c4d2a9f46ada7bd87ca0ac01cbad4c8360"
+    },
+    {
+      "path": "svg/the-olympus-proxmox-lockup-vertical.svg",
+      "sha256": "f930a1403ad658aa6cadd3b9088eaaaa916857484c2ac89b155d67583e39c273"
+    },
+    {
+      "path": "svg/the-olympus-proxmox-lockup-vertical-white.svg",
+      "sha256": "be7ed03f74f3a67ce04c0ff61026dc1095b2e835cf731322f5549bdad597f85b"
+    },
+    {
+      "path": "svg/the-olympus-proxmox-lockup-vertical-on-light.svg",
+      "sha256": "2f4101a7db9ccc81890f74293d84949c4f074bae05817009e7c46c7edd374474"
+    },
+    {
+      "path": "svg/the-olympus-proxmox-lockup-vertical-on-dark.svg",
+      "sha256": "8036bd7b1f036408ca650a9c6032272b2ce7f3e41017bf26a1f8b9532bfe5496"
+    },
+    {
+      "path": "png/the-olympus-proxmox-crest-fine-512.png",
+      "sha256": "2dd302c5924eabfa112338290b6f6b6a95b8e3f33e686e207dcaf70b6596cde9"
+    },
+    {
+      "path": "png/the-olympus-proxmox-crest-fine-white-512.png",
+      "sha256": "8b79805ec31c965eeea8b35043ec47864f7d3da66b894f0635613624c6f2f731"
+    },
+    {
+      "path": "png/the-olympus-proxmox-emblem-fine-128.png",
+      "sha256": "b11d0424917bdc343bd34accb2d6c56bf2d4732747039cfbf11a1de2f150a2e3"
+    },
+    {
+      "path": "png/the-olympus-proxmox-emblem-fine-256.png",
+      "sha256": "70d42fbb86f81d9e052d9fc56c573e1a07cc37a5e98a90e6792fbda934aae1f1"
+    },
+    {
+      "path": "png/the-olympus-proxmox-seal-32.png",
+      "sha256": "9c05c89ce91231335f452b4019922d06b312e27039627058cf206ecd98108e8f"
+    },
+    {
+      "path": "png/the-olympus-proxmox-seal-64.png",
+      "sha256": "c506bd3da8f99f2941bfc42332608c006e633bd69885fe4b04bc800d7040b548"
+    },
+    {
+      "path": "png/the-olympus-proxmox-seal-180.png",
+      "sha256": "b1a95026a801b2f562d0a6012ae254aea094d06b5ee7f20f7f3de8e84803dfe0"
+    },
+    {
+      "path": "png/the-olympus-proxmox-seal-512.png",
+      "sha256": "e5e7ca18756979c3a485eabf8f82f1f0071907b1f80e3f4195aef15072d95b4f"
+    },
+    {
+      "path": "png/the-olympus-proxmox-lockup-horizontal-1600.png",
+      "sha256": "24956f7a6046f360478171c258476963899917134b92f4593d0af6d278e076b4"
+    },
+    {
+      "path": "png/the-olympus-proxmox-lockup-horizontal-white-1600.png",
+      "sha256": "8413e0dc418e8d49eb809b6184dbaef7cc79b6727572962ee454cea36117039e"
+    },
+    {
+      "path": "png/the-olympus-proxmox-lockup-vertical-800.png",
+      "sha256": "ac4a9a4d8215ffd9ae9125d27edc9268d855e223c221ad5910fce079f23d710b"
+    },
+    {
+      "path": "favicon.ico",
+      "sha256": "255273934d55e3569f6d84aeba728d54d29b10faf00dcf97202312fabd0dfa33"
+    },
+    {
+      "path": "preview.png",
+      "sha256": "96b923d5bb6821e4aa67f5149e3c3e863da2329eaaad19b2c39d0718ca51fca5"
+    }
+  ]
+}

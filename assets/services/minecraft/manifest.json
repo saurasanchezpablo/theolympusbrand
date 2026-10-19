@@ -1,0 +1,185 @@
+{
+  "service": {
+    "id": "minecraft",
+    "name": "Minecraft",
+    "category": "sandbox",
+    "patron": {
+      "god": "hephaestus"
+    },
+    "letter": "M",
+    "caption": "The Olympus · HEPHAESTUS",
+    "logo": null
+  },
+  "print": {
+    "variablePartsMinUnits": 4.05,
+    "minDiameterMM": 67,
+    "featureMM": 0.5
+  },
+  "warnings": [],
+  "files": [
+    {
+      "path": "svg/the-olympus-minecraft-crest-fine.svg",
+      "sha256": "9b75b8a6c891ac2ad7f4d8fccf085a588def5d7203fc820190d5ceb256a66116"
+    },
+    {
+      "path": "svg/the-olympus-minecraft-crest-fine-white.svg",
+      "sha256": "532477a527d6e5ff50e60031e54064b60f5fd071b8eec9166b71f85a4e3f0d0c"
+    },
+    {
+      "path": "svg/the-olympus-minecraft-crest-fine-on-light.svg",
+      "sha256": "f0a49912db56b45f71dd0b6fc4d9d121ecf42b0530555746bfb4e86610e7cde3"
+    },
+    {
+      "path": "svg/the-olympus-minecraft-crest-fine-on-dark.svg",
+      "sha256": "069259fd0a9eecf1692af9c924d731d697ceecea1b7318c7a231b607c77a943e"
+    },
+    {
+      "path": "svg/the-olympus-minecraft-crest-print.svg",
+      "sha256": "94b0581db28c36108277970c95a5e21cd3bf5a620d4f6697801568ef2c0e384f"
+    },
+    {
+      "path": "svg/the-olympus-minecraft-crest-print-white.svg",
+      "sha256": "d9ffef32138ae2e92e4b2a1e5a9ee20516fec8540933be7e3be21711400e0a56"
+    },
+    {
+      "path": "svg/the-olympus-minecraft-crest-print-on-light.svg",
+      "sha256": "7e15fab4187bb2ad155906940ba032947a819b331df5fc7e6a7c3e295ea058dd"
+    },
+    {
+      "path": "svg/the-olympus-minecraft-crest-print-on-dark.svg",
+      "sha256": "933fafc9398943140fa2c129af26c8c28ff6bd0c17cbf686101e7856fd7e8e06"
+    },
+    {
+      "path": "svg/the-olympus-minecraft-emblem-fine.svg",
+      "sha256": "1d068e6d8b3bfbe006dcbc70d5583f0bc4dd3e7e6a795b3fafbe6a8593cfbace"
+    },
+    {
+      "path": "svg/the-olympus-minecraft-emblem-fine-white.svg",
+      "sha256": "0f16249cb385c6e5541956dc9e0371b5f4e79c7e565a79ddfcfcb9f4b1204625"
+    },
+    {
+      "path": "svg/the-olympus-minecraft-emblem-fine-on-light.svg",
+      "sha256": "43d85ac3aefdfe6602030487f84d12e71f803f95260758aff60951fb29003b84"
+    },
+    {
+      "path": "svg/the-olympus-minecraft-emblem-fine-on-dark.svg",
+      "sha256": "0317c7edc72696654ddfb6815b8ff569b33e8c0b871463ae9ffc74d50fb48256"
+    },
+    {
+      "path": "svg/the-olympus-minecraft-emblem-print.svg",
+      "sha256": "a20853f5d921e1c40fb24761eef064cbddfae8e7898b53022e83c76b942695db"
+    },
+    {
+      "path": "svg/the-olympus-minecraft-emblem-print-white.svg",
+      "sha256": "a9135dd183184dd1ab28d7ae09a527a2408d42cc9df830be95b80e17587e759c"
+    },
+    {
+      "path": "svg/the-olympus-minecraft-emblem-print-on-light.svg",
+      "sha256": "6838fa8d0113e12a03d3e460157524176bbd0b1fc3da7e93afd8d4d15bfd046f"
+    },
+    {
+      "path": "svg/the-olympus-minecraft-emblem-print-on-dark.svg",
+      "sha256": "94dbb70cec1e4d41d3b96652c6ef975310927cd743c680f9b77380f8e6f05377"
+    },
+    {
+      "path": "svg/the-olympus-minecraft-seal.svg",
+      "sha256": "476f5a864f981a186945515039745cc8004ca07d48f8361414a9366683736dce"
+    },
+    {
+      "path": "svg/the-olympus-minecraft-seal-white.svg",
+      "sha256": "fcce7df81756d3a4f208bdd4d3b53650b0320efe81547dacb794cd9b40a9ad10"
+    },
+    {
+      "path": "svg/the-olympus-minecraft-seal-on-light.svg",
+      "sha256": "cfade3ec9c40fa837e8f819f4868c7a9f628380172179818f3766d68e9397c24"
+    },
+    {
+      "path": "svg/the-olympus-minecraft-seal-on-dark.svg",
+      "sha256": "649f14ca8fad395d335b52085d231e79116fce16b51b0ecc2afcc6673ee97adf"
+    },
+    {
+      "path": "svg/the-olympus-minecraft-lockup-horizontal.svg",
+      "sha256": "886a70d1e8baba0dad627425f03f3a662d4ca8b2dbd40d6bef2c44f84f6f3f3b"
+    },
+    {
+      "path": "svg/the-olympus-minecraft-lockup-horizontal-white.svg",
+      "sha256": "c58d1bc2eddd7bab71da6b069fcf0a780a4ab21afbb18add7c23f1992e931a2c"
+    },
+    {
+      "path": "svg/the-olympus-minecraft-lockup-horizontal-on-light.svg",
+      "sha256": "9f5baa054a96d4f980ce661dafa36d84b80289278153df929cc8acb474ca867f"
+    },
+    {
+      "path": "svg/the-olympus-minecraft-lockup-horizontal-on-dark.svg",
+      "sha256": "d1472197726f008f68d5e28cb6d9ea3eaeddff525fe43c4956499275fb7280aa"
+    },
+    {
+      "path": "svg/the-olympus-minecraft-lockup-vertical.svg",
+      "sha256": "844e2b1e2eee2dc43392d06b6ec981c246e8ee55351c6eb646f463f17fb9c5b0"
+    },
+    {
+      "path": "svg/the-olympus-minecraft-lockup-vertical-white.svg",
+      "sha256": "9a03e0cf2b66cde21872ea8df8699676fea8f392fc77983e51f60e98c494cd33"
+    },
+    {
+      "path": "svg/the-olympus-minecraft-lockup-vertical-on-light.svg",
+      "sha256": "de0b40602eb869f8cfc40b4c24747036f6b70923aaaf698caf62c13cbf61a698"
+    },
+    {
+      "path": "svg/the-olympus-minecraft-lockup-vertical-on-dark.svg",
+      "sha256": "1466b8909ff137a2516c30050852fb09cb7fa7473e181eb4b233edb353def4c2"
+    },
+    {
+      "path": "png/the-olympus-minecraft-crest-fine-512.png",
+      "sha256": "a373a471998463fec8d6e1508594c236cbd87e20bd7a2fd4431820a50ba7f0e9"
+    },
+    {
+      "path": "png/the-olympus-minecraft-crest-fine-white-512.png",
+      "sha256": "2ea6698d00d2658834e7c850215591ebddc316bd0c72c5c896c43503db9f6fe8"
+    },
+    {
+      "path": "png/the-olympus-minecraft-emblem-fine-128.png",
+      "sha256": "2581fe26793c072f78fc6e8d6f8a11ace8c9049526be662d063f0d7259e0a309"
+    },
+    {
+      "path": "png/the-olympus-minecraft-emblem-fine-256.png",
+      "sha256": "1cca395bc30f98751acb8315ad8f6f42f42eb1d6c4e9caea36fbfd5af3eafaf0"
+    },
+    {
+      "path": "png/the-olympus-minecraft-seal-32.png",
+      "sha256": "059c4613d92d46fab5ea03b9d199d7e495f39106d0fcfbdbfae8cc5465e0b4b9"
+    },
+    {
+      "path": "png/the-olympus-minecraft-seal-64.png",
+      "sha256": "4a494fe3be5d715cd46aac25950435ca7eceb9dcbbd6e8836f2353712540da8b"
+    },
+    {
+      "path": "png/the-olympus-minecraft-seal-180.png",
+      "sha256": "33231a33dc3ea25ae44831c4b72e64e546d20e5d2b1c7657b84d5fa3a353376a"
+    },
+    {
+      "path": "png/the-olympus-minecraft-seal-512.png",
+      "sha256": "84ecc3dfb83721f4df381accd7b5e7a048270459c8908b5740e06b4ce128c760"
+    },
+    {
+      "path": "png/the-olympus-minecraft-lockup-horizontal-1600.png",
+      "sha256": "fde3086d2b1ffe579e36633e0ac063bf33c93904cb10b57fcaebff1faaf40e14"
+    },
+    {
+      "path": "png/the-olympus-minecraft-lockup-horizontal-white-1600.png",
+      "sha256": "49ef187698b0d31cd0f64b0bef16005cda1592a3139adb637b396906cea325ed"
+    },
+    {
+      "path": "png/the-olympus-minecraft-lockup-vertical-800.png",
+      "sha256": "1d249b31fb5fc9071ff817d81df8268092f27e2ed5dd083f85d1b510d54514cf"
+    },
+    {
+      "path": "favicon.ico",
+      "sha256": "37c7b9193ae3cfd11234513d411e3c70014d6644fbabe9a600234937960b51b6"
+    },
+    {
+      "path": "preview.png",
+      "sha256": "fc38450dc872420556c976b7414a0cbace6958fdfdbdd5d2bc61d843bf292df1"
+    }
+  ]
+}

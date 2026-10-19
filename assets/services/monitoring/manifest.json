@@ -1,0 +1,185 @@
+{
+  "service": {
+    "id": "monitoring",
+    "name": "Monitoring",
+    "category": "monitoring",
+    "patron": {
+      "god": "argus"
+    },
+    "letter": "M",
+    "caption": "The Olympus · ARGUS",
+    "logo": null
+  },
+  "print": {
+    "variablePartsMinUnits": 4.05,
+    "minDiameterMM": 67,
+    "featureMM": 0.5
+  },
+  "warnings": [],
+  "files": [
+    {
+      "path": "svg/the-olympus-monitoring-crest-fine.svg",
+      "sha256": "b11c0dbf395016442bbc8056d0d8c32f646e7333d6b4b4ee31a38bba459fcb67"
+    },
+    {
+      "path": "svg/the-olympus-monitoring-crest-fine-white.svg",
+      "sha256": "5d7c6aafb4755169f5d8cd23990a0cf52a9f5b4ea5190ac30ca5d39fb3133ef7"
+    },
+    {
+      "path": "svg/the-olympus-monitoring-crest-fine-on-light.svg",
+      "sha256": "07c01a3c6f26e25b35b9efcf36ea3adf90356601e4aab623ada7ceaeea1e3d79"
+    },
+    {
+      "path": "svg/the-olympus-monitoring-crest-fine-on-dark.svg",
+      "sha256": "448f1045786a355942d05492931a3572a9f06135614f024a6155c1d429c199df"
+    },
+    {
+      "path": "svg/the-olympus-monitoring-crest-print.svg",
+      "sha256": "606fd1a63267310f653fdd2560eaa3f1718886de43a51feaa888abc7b33d8f09"
+    },
+    {
+      "path": "svg/the-olympus-monitoring-crest-print-white.svg",
+      "sha256": "ebbe344191db6e8b070d385a5f01a52f801ec21c6513509d1539f6dadb084f52"
+    },
+    {
+      "path": "svg/the-olympus-monitoring-crest-print-on-light.svg",
+      "sha256": "52c04d3c2f6b72d0c85838f1150e4946a6566fb4677dcfaf63457cd9a5d0668d"
+    },
+    {
+      "path": "svg/the-olympus-monitoring-crest-print-on-dark.svg",
+      "sha256": "02858e3d22bb414d934f75c3b12cc3bb40a08bc4f2fd7d92e2e23e5757074fed"
+    },
+    {
+      "path": "svg/the-olympus-monitoring-emblem-fine.svg",
+      "sha256": "098b74c4d6dc4638d44816b7432c5504533198c34386b8bc14afa7747c9c8c4f"
+    },
+    {
+      "path": "svg/the-olympus-monitoring-emblem-fine-white.svg",
+      "sha256": "e8993d64972c2dfd39607acb284112e1f1902c4e99fe02b71745c4ad183b07f4"
+    },
+    {
+      "path": "svg/the-olympus-monitoring-emblem-fine-on-light.svg",
+      "sha256": "7118ebc6aad038d53195a802f1451839e586b7012081f7cc4544d8a2b372fc8b"
+    },
+    {
+      "path": "svg/the-olympus-monitoring-emblem-fine-on-dark.svg",
+      "sha256": "e719fb80d37ac05c4d5cb8bcff81306af5bbfd2c4878520028687226bb09dabc"
+    },
+    {
+      "path": "svg/the-olympus-monitoring-emblem-print.svg",
+      "sha256": "282c5e8e760138e5e8347c3a6c1f73e4fd74d05961ee8592319c73b312043bb9"
+    },
+    {
+      "path": "svg/the-olympus-monitoring-emblem-print-white.svg",
+      "sha256": "c0c94bfb64515982a68de0d39940efeda82e91648f56a3e095438134474c844d"
+    },
+    {
+      "path": "svg/the-olympus-monitoring-emblem-print-on-light.svg",
+      "sha256": "8c365f87dce6c06d33cc54fbcd9c6185959a5ae294a72fc9bd262ac0476f5d5a"
+    },
+    {
+      "path": "svg/the-olympus-monitoring-emblem-print-on-dark.svg",
+      "sha256": "d9e57f227a17a0d292b3a419c5535f2fe426c1f417e45e5c3075574a9a252c63"
+    },
+    {
+      "path": "svg/the-olympus-monitoring-seal.svg",
+      "sha256": "f7c6fce600b2fe38ccc183fb26f69fbdfce829afd01c42f6e5a1ec7024b3446a"
+    },
+    {
+      "path": "svg/the-olympus-monitoring-seal-white.svg",
+      "sha256": "52ad183344c733433fbbc2ef349a8a366b4d9ca8931fc01cac8617a42c2716b3"
+    },
+    {
+      "path": "svg/the-olympus-monitoring-seal-on-light.svg",
+      "sha256": "76cd8a41ddb472e30990e5f7d0d059723c4a3063fcc3d6745bc367fdd8c9c857"
+    },
+    {
+      "path": "svg/the-olympus-monitoring-seal-on-dark.svg",
+      "sha256": "d3710cb60bcb5e22cdfdccc0de779192aae41a9e328c3779923dee7b8405bfe0"
+    },
+    {
+      "path": "svg/the-olympus-monitoring-lockup-horizontal.svg",
+      "sha256": "a07ded78b0c1436d10263b0190744ca6941f49c09feb1bcf14935e5e01b44c50"
+    },
+    {
+      "path": "svg/the-olympus-monitoring-lockup-horizontal-white.svg",
+      "sha256": "73a39cc24f2c409e4c94e688429436993f3df560eea157c9cac7e65f3fb1b103"
+    },
+    {
+      "path": "svg/the-olympus-monitoring-lockup-horizontal-on-light.svg",
+      "sha256": "ddc7132e72bdadd366eb8a1a2a39ddb7a42360c3bdf1f9ec8af24ff376e3fbe9"
+    },
+    {
+      "path": "svg/the-olympus-monitoring-lockup-horizontal-on-dark.svg",
+      "sha256": "9109a987ef37ce1486133a84fc682b003239fa540e7d730c226652c7d1939297"
+    },
+    {
+      "path": "svg/the-olympus-monitoring-lockup-vertical.svg",
+      "sha256": "8966cbbf1ad44788b685f6e8a93160f20ccaee372e801dd93770537cb054004d"
+    },
+    {
+      "path": "svg/the-olympus-monitoring-lockup-vertical-white.svg",
+      "sha256": "afada4929b8335931dc68c83b72b379e289181313ee17f65abe02d0a8bc6f15f"
+    },
+    {
+      "path": "svg/the-olympus-monitoring-lockup-vertical-on-light.svg",
+      "sha256": "1dead06d136096e1252565ba45acac95811d8c995233e5a3138cd8c16d685c6b"
+    },
+    {
+      "path": "svg/the-olympus-monitoring-lockup-vertical-on-dark.svg",
+      "sha256": "1acc7158c4b4338c880f077aabee1dacce3644829c2ba1b217eee4d25cb949c2"
+    },
+    {
+      "path": "png/the-olympus-monitoring-crest-fine-512.png",
+      "sha256": "fc90a80dc6c69f3707378e8e839c20cfa7625e07b504867eb6752579684e4d65"
+    },
+    {
+      "path": "png/the-olympus-monitoring-crest-fine-white-512.png",
+      "sha256": "4567b3a44b7f67d843c3854da1b09f434281ad3959389716acc04596c267cb0d"
+    },
+    {
+      "path": "png/the-olympus-monitoring-emblem-fine-128.png",
+      "sha256": "32b41e9c409f5c9612a793817cdc52f218f80b47c085ac6c874a04cd0e1479d7"
+    },
+    {
+      "path": "png/the-olympus-monitoring-emblem-fine-256.png",
+      "sha256": "54f9de61dd64508d578b8b963ba03051e0ad58cb413fe5a22374c68fd995c4cc"
+    },
+    {
+      "path": "png/the-olympus-monitoring-seal-32.png",
+      "sha256": "63a4e7ec3b22f55516c6cb40b471e0c7f30894071d41ae75fe8b5d0aeb2e0d14"
+    },
+    {
+      "path": "png/the-olympus-monitoring-seal-64.png",
+      "sha256": "4306d0c3761704dbe6bbee80cabe547a277435b5613cd943f62ad030868322d5"
+    },
+    {
+      "path": "png/the-olympus-monitoring-seal-180.png",
+      "sha256": "2ca0ae0a499e40bb7905b3a4ab13939ca0ff6314b37bd464d3a9acaade261e8c"
+    },
+    {
+      "path": "png/the-olympus-monitoring-seal-512.png",
+      "sha256": "2dd5aa1a3d86b3f461402df4d9d17d0d77d8ab5e8f5d80519537be799047a38c"
+    },
+    {
+      "path": "png/the-olympus-monitoring-lockup-horizontal-1600.png",
+      "sha256": "1720d00ad992d3384e5826098c24c117e0a6b0d714ee346a71041a7ee5f4ec1f"
+    },
+    {
+      "path": "png/the-olympus-monitoring-lockup-horizontal-white-1600.png",
+      "sha256": "6193a51ecdbbfcafc2b4b3e1926426e75c5d07bac39f2d53c029be97fa8df514"
+    },
+    {
+      "path": "png/the-olympus-monitoring-lockup-vertical-800.png",
+      "sha256": "45b3e8ca32c9080cb7cd5417d2c35889a157c67feea604d63f3ec85ccaaed450"
+    },
+    {
+      "path": "favicon.ico",
+      "sha256": "20cf463ccac205b15843d58ca24b1c5ce90f163aa41a54893fb82fce6bff0f6b"
+    },
+    {
+      "path": "preview.png",
+      "sha256": "95b3b9b0498d43bc1c0d130940aa66ccef08ccca70ad51d62735e5eeb4e0cf49"
+    }
+  ]
+}

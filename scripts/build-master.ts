@@ -16,6 +16,7 @@ import { productionSvg, treatmentSvg, type Ground } from '../src/render/svg.ts';
 import { geometryOf, minFeature, minDiameterMM } from '../src/print/printcheck.ts';
 import { ringsPath } from '../src/geometry/poly.ts';
 import { PALETTE } from '../src/brand/palette.ts';
+import { ico } from '../src/export/ico.ts';
 
 loadNodeFonts();
 
@@ -24,7 +25,7 @@ const OUT = join(ROOT, 'assets', 'master');
 rmSync(OUT, { recursive: true, force: true });
 
 const files: { path: string; bytes: number; sha256: string }[] = [];
-function write(rel: string, data: string | Buffer) {
+function write(rel: string, data: string | Uint8Array) {
   const path = join(OUT, rel);
   mkdirSync(dirname(path), { recursive: true });
   writeFileSync(path, data);
@@ -76,22 +77,7 @@ for (const { name, mark, tier } of MARKS) {
 {
   const sizes = [16, 32, 48];
   const images = sizes.map((s) => png(productionSvg(seal(), { ground: 'transparent' }), s));
-  const header = Buffer.alloc(6 + 16 * sizes.length);
-  header.writeUInt16LE(0, 0);
-  header.writeUInt16LE(1, 2);
-  header.writeUInt16LE(sizes.length, 4);
-  let offsetBytes = header.length;
-  sizes.forEach((s, i) => {
-    const e = 6 + 16 * i;
-    header.writeUInt8(s, e);
-    header.writeUInt8(s, e + 1);
-    header.writeUInt16LE(1, e + 4); // colour planes
-    header.writeUInt16LE(32, e + 6); // bits per pixel
-    header.writeUInt32LE(images[i].length, e + 8);
-    header.writeUInt32LE(offsetBytes, e + 12);
-    offsetBytes += images[i].length;
-  });
-  write('favicon.ico', Buffer.concat([header, ...images]));
+  write('favicon.ico', ico(sizes.map((size, i) => ({ size, png: images[i] }))));
 }
 
 /* ---------------------------------------------------------------- */
