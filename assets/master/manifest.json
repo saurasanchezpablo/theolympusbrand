@@ -1,0 +1,399 @@
+{
+  "name": "The Olympus — master identity",
+  "artboard": "512 × 512, rim Ø 504",
+  "print": {
+    "crest-print": {
+      "minFeatureUnits": 3.77,
+      "minDiameterMM": {
+        "at0.3mm": 41,
+        "at0.4mm": 54,
+        "at0.5mm": 67
+      }
+    },
+    "emblem-print": {
+      "minFeatureUnits": 3.77,
+      "minDiameterMM": {
+        "at0.3mm": 41,
+        "at0.4mm": 54,
+        "at0.5mm": 67
+      }
+    }
+  },
+  "files": [
+    {
+      "path": "svg/the-olympus-crest-fine.svg",
+      "bytes": 74753,
+      "sha256": "c16e481e001a1ab2641dc67b6c8be3ee02a3caa7b02fe5fb221d57389f99c268"
+    },
+    {
+      "path": "png/crest/the-olympus-crest-fine-256.png",
+      "bytes": 42119,
+      "sha256": "45069784f1bcc49be99f963333deba28d2950552a4c13b698ff06b3b70333c80"
+    },
+    {
+      "path": "png/crest/the-olympus-crest-fine-512.png",
+      "bytes": 99601,
+      "sha256": "04149250cc03c899c54270845bc455bb9f67ea2e99d281961e895a5ee83e87e0"
+    },
+    {
+      "path": "png/crest/the-olympus-crest-fine-1024.png",
+      "bytes": 221783,
+      "sha256": "4926c756fe5d4380486039c7a2f1ed423c29716dc5647c8e2775066ec49cb267"
+    },
+    {
+      "path": "png/crest/the-olympus-crest-fine-2048.png",
+      "bytes": 485811,
+      "sha256": "a3ba9dab035de68559c524d15ebbf74c599cfcae590460e5b453efd512f2459b"
+    },
+    {
+      "path": "svg/the-olympus-crest-fine-white.svg",
+      "bytes": 74753,
+      "sha256": "caf730a9e495896e1c3212061f4d8fe6e3d76730fe21d3a41e0ad01ffaf4a6ca"
+    },
+    {
+      "path": "png/crest/the-olympus-crest-fine-white-256.png",
+      "bytes": 41389,
+      "sha256": "1007e28d5c0487f08d4736d7da0f5c706c2f7861efc6898a880d6a3e6c0b523b"
+    },
+    {
+      "path": "png/crest/the-olympus-crest-fine-white-512.png",
+      "bytes": 95924,
+      "sha256": "0eb2a415b44a7b28a5c7c3656162ef38da1e2e7418453bf6f8c3ddb6dcbee5a9"
+    },
+    {
+      "path": "png/crest/the-olympus-crest-fine-white-1024.png",
+      "bytes": 212430,
+      "sha256": "fcf9d5debedba637da40bb35178ca3a7245fd5916a85e901f303493d17b932aa"
+    },
+    {
+      "path": "png/crest/the-olympus-crest-fine-white-2048.png",
+      "bytes": 456919,
+      "sha256": "beab772526d2ca81569906d2f4041a71ebb9ce863b5a5af303c073f28605ed68"
+    },
+    {
+      "path": "svg/the-olympus-crest-fine-on-light.svg",
+      "bytes": 74815,
+      "sha256": "afe22b8f1497ec66e4a96ef378c5355689cad8927503fd34b69bce57714a5a0b"
+    },
+    {
+      "path": "svg/the-olympus-crest-fine-on-dark.svg",
+      "bytes": 74815,
+      "sha256": "2fb56041758096b630801afe91f3d39c093f910d35074cd651f8b1e6eab36c24"
+    },
+    {
+      "path": "svg/the-olympus-crest-fine-slot.svg",
+      "bytes": 73315,
+      "sha256": "1134f56c37a07e8cbc86e5cdbbac0e7f47d8c5ba44aeb9e88e61ce44c075215b"
+    },
+    {
+      "path": "svg/the-olympus-crest-fine-slot-white.svg",
+      "bytes": 73315,
+      "sha256": "4e7f5d212757109eba420cfd54f58fb4ca87f7c4e3ce5a4dc9d4bad4ef3977b3"
+    },
+    {
+      "path": "svg/the-olympus-crest-fine-slot-on-light.svg",
+      "bytes": 73377,
+      "sha256": "53f2b534a0ea6056dde2f349e2bad5bd05331a401f1c8a1c17bb57a24c8633a8"
+    },
+    {
+      "path": "svg/the-olympus-crest-fine-slot-on-dark.svg",
+      "bytes": 73377,
+      "sha256": "dffd6bee23eca1f43f878fd12da69199a20997e74bc2548b25e8225fadecb3e0"
+    },
+    {
+      "path": "svg/the-olympus-crest-print.svg",
+      "bytes": 63280,
+      "sha256": "4d8761d49a579a3a4e487ccf662557a624212cdfb612f9e547fa83410fc302cc"
+    },
+    {
+      "path": "png/crest/the-olympus-crest-print-256.png",
+      "bytes": 42097,
+      "sha256": "f94c5b1eff88321571131e7f0b31c3d4335fa9820bdc0533bef09565f9de2f7d"
+    },
+    {
+      "path": "png/crest/the-olympus-crest-print-512.png",
+      "bytes": 93199,
+      "sha256": "af861590b3b4a0dda6d6b6b719f7da646e45a1c33e235b01cab6c5d43b71914d"
+    },
+    {
+      "path": "png/crest/the-olympus-crest-print-1024.png",
+      "bytes": 201306,
+      "sha256": "c4319fdddf85b7582f1b7647c57a36a50399f4b3a680a1234eb251460c3ecdce"
+    },
+    {
+      "path": "png/crest/the-olympus-crest-print-2048.png",
+      "bytes": 433016,
+      "sha256": "f2a5d8ae0036c8353d9c178b4c9802e53edb002760e1f51314c12e12d167cd3b"
+    },
+    {
+      "path": "svg/the-olympus-crest-print-white.svg",
+      "bytes": 63280,
+      "sha256": "7d9d6b735b0e3931373d29b87a2cacde0cfeaf40c9d4c32673e0661c856b220f"
+    },
+    {
+      "path": "png/crest/the-olympus-crest-print-white-256.png",
+      "bytes": 40317,
+      "sha256": "50f8c2fd011e8bf8cd9ecb57df7b23606a81a464081b2f22128119c0e56aa1c5"
+    },
+    {
+      "path": "png/crest/the-olympus-crest-print-white-512.png",
+      "bytes": 89951,
+      "sha256": "3cc466c04e165ad633515f52883bb011551493e1686d38e34f173058a33fc9d6"
+    },
+    {
+      "path": "png/crest/the-olympus-crest-print-white-1024.png",
+      "bytes": 192626,
+      "sha256": "5f70b4a2b1b1e843522f57afd4e514835c861ecf831317454f52f70ed621735f"
+    },
+    {
+      "path": "png/crest/the-olympus-crest-print-white-2048.png",
+      "bytes": 413443,
+      "sha256": "51c0bfff92e422ba975f3ab842431d4ec973e241932be0408169a3eac1b485db"
+    },
+    {
+      "path": "svg/the-olympus-crest-print-on-light.svg",
+      "bytes": 63342,
+      "sha256": "03be38a7680cf8890cb876ad8e7727e3fee68a6e03dc15fee9e85f3f091d8bb3"
+    },
+    {
+      "path": "svg/the-olympus-crest-print-on-dark.svg",
+      "bytes": 63342,
+      "sha256": "0c4fc3cabdcc54216cd2af55bcf2992f65b8802b85612bf2197de2b400fbdfc4"
+    },
+    {
+      "path": "svg/the-olympus-crest-print-slot.svg",
+      "bytes": 63021,
+      "sha256": "357ee82cb5b9c513bfa374bf924366f4f2199a1ff6bf61d8d87e7d5b11c1d0c8"
+    },
+    {
+      "path": "svg/the-olympus-crest-print-slot-white.svg",
+      "bytes": 63021,
+      "sha256": "414de7e0306bd33b8dce5de16505b60d33a772134ebf5af8de42a0b7d795b417"
+    },
+    {
+      "path": "svg/the-olympus-crest-print-slot-on-light.svg",
+      "bytes": 63083,
+      "sha256": "16bd8c7315db238a39405dd254d52e8931c6d385cc3fd3b6ff5047d06d69f880"
+    },
+    {
+      "path": "svg/the-olympus-crest-print-slot-on-dark.svg",
+      "bytes": 63083,
+      "sha256": "a2338f7be23dcd96455c0cd312c58c5d51f2d171219fda048b06419f9e3e53da"
+    },
+    {
+      "path": "svg/the-olympus-emblem-fine.svg",
+      "bytes": 10594,
+      "sha256": "3169cbf20e7dc1081cf6b30f1d276abee7198b5de412b9afa56b167618bd73c8"
+    },
+    {
+      "path": "png/emblem/the-olympus-emblem-fine-64.png",
+      "bytes": 3132,
+      "sha256": "0a2c7f9b398ab468f066d9ccc0af4727cf65be31df03c13bc6b212f368a39ae1"
+    },
+    {
+      "path": "png/emblem/the-olympus-emblem-fine-128.png",
+      "bytes": 8262,
+      "sha256": "eb8deef9929cf99ddb8f6fbff57636b7b9f8f2e45a7732dcf6159576e0923a75"
+    },
+    {
+      "path": "png/emblem/the-olympus-emblem-fine-256.png",
+      "bytes": 19496,
+      "sha256": "e385dda2db94b2bdc51a46d27e87b7d92813128bb0dca6ca07509ebac276a03f"
+    },
+    {
+      "path": "svg/the-olympus-emblem-fine-white.svg",
+      "bytes": 10594,
+      "sha256": "c32f315b1972c2654ede5e4fbc71c5f0ec6acc3b85f7b969701f7a77b234108c"
+    },
+    {
+      "path": "png/emblem/the-olympus-emblem-fine-white-64.png",
+      "bytes": 3093,
+      "sha256": "4b010ea041dc7b7c6849e3c433fbefa51814c3eda9557710ce4943a565f3966a"
+    },
+    {
+      "path": "png/emblem/the-olympus-emblem-fine-white-128.png",
+      "bytes": 7670,
+      "sha256": "455eb8c5c8365bc89b424c12a91e055044e456b42b99f38d94969bbb02573d2c"
+    },
+    {
+      "path": "png/emblem/the-olympus-emblem-fine-white-256.png",
+      "bytes": 17992,
+      "sha256": "fd6db2823b887ef195d5c4f03bb867698e4f8c460ed8be1c4548c2af3e61a94c"
+    },
+    {
+      "path": "svg/the-olympus-emblem-fine-on-light.svg",
+      "bytes": 10656,
+      "sha256": "02feebb14a1e2691e3798ea079ebb13f533e8ed5a87b7e0bef62cacf6c5ebd57"
+    },
+    {
+      "path": "svg/the-olympus-emblem-fine-on-dark.svg",
+      "bytes": 10656,
+      "sha256": "635135d3a7d1c20aa770e4e396a922e5e0ab67e6a157c608777ccd20f1c70589"
+    },
+    {
+      "path": "svg/the-olympus-emblem-print.svg",
+      "bytes": 7341,
+      "sha256": "27fe874d2d3d2af0d749074a8a15913d38020706ce80e8d28ef6baa1065bb339"
+    },
+    {
+      "path": "png/emblem/the-olympus-emblem-print-64.png",
+      "bytes": 3197,
+      "sha256": "8e51d686b2298effea571b7dce601159fd1fe3d1a09e6490b0f5ca56db336d77"
+    },
+    {
+      "path": "png/emblem/the-olympus-emblem-print-128.png",
+      "bytes": 8070,
+      "sha256": "2b7e32296f044d023699a7491d2875327633650e7310a1b6eeb427aaeba471a7"
+    },
+    {
+      "path": "png/emblem/the-olympus-emblem-print-256.png",
+      "bytes": 17250,
+      "sha256": "146647641d06ed19e5de5da5b3535642a14aa747d7a0b7148646002b263b37a5"
+    },
+    {
+      "path": "svg/the-olympus-emblem-print-white.svg",
+      "bytes": 7341,
+      "sha256": "17549fbc883408be7176c6a075227f53cab62cf16387179f81b1c23756c4bd0e"
+    },
+    {
+      "path": "png/emblem/the-olympus-emblem-print-white-64.png",
+      "bytes": 3086,
+      "sha256": "bc7a445bc9794e9555c56d7e84db9b635ffc9bb9cf55466cbca50e7c2f3ef5b6"
+    },
+    {
+      "path": "png/emblem/the-olympus-emblem-print-white-128.png",
+      "bytes": 7885,
+      "sha256": "5f69b62741141387100b73553b9391a5bd0c4448fb0a52ba5cce3ff5f830fb85"
+    },
+    {
+      "path": "png/emblem/the-olympus-emblem-print-white-256.png",
+      "bytes": 16889,
+      "sha256": "573d8259205c8c6b8c3fa6509562b52a1c50a7abce810534f33a269f82506b52"
+    },
+    {
+      "path": "svg/the-olympus-emblem-print-on-light.svg",
+      "bytes": 7403,
+      "sha256": "30cb69b085838b596a09c8c24f84f8ab3062a724cc97580fdcf5d0d08b9f5f17"
+    },
+    {
+      "path": "svg/the-olympus-emblem-print-on-dark.svg",
+      "bytes": 7403,
+      "sha256": "dcbda9e93c8e3803ca484dec9259e041dd0dec95ba0440f40fba5d37fae6e576"
+    },
+    {
+      "path": "svg/the-olympus-seal.svg",
+      "bytes": 1641,
+      "sha256": "9c6c086cf5e57b6bf28c5c9444bc728b4db514758fb212c926df834b739f6559"
+    },
+    {
+      "path": "png/seal/the-olympus-seal-16.png",
+      "bytes": 501,
+      "sha256": "fb9cd2a0ef177e3966a68711a16b0824161ced8d59b8daa3a9731b7068f69cbc"
+    },
+    {
+      "path": "png/seal/the-olympus-seal-32.png",
+      "bytes": 1161,
+      "sha256": "a94f65908f66f67ffdf696692be1eb47b589ce3f70c97cb63c0c8798dd844e3c"
+    },
+    {
+      "path": "png/seal/the-olympus-seal-48.png",
+      "bytes": 1804,
+      "sha256": "2e8a74c2ef1527a6391dc2b75cffddd0309aceb97239c67b51e05570f6714e9f"
+    },
+    {
+      "path": "png/seal/the-olympus-seal-64.png",
+      "bytes": 2627,
+      "sha256": "119b39c89f605964ba0af22ae089e39d0e9c340376b9edec4d1a374fde4b451a"
+    },
+    {
+      "path": "png/seal/the-olympus-seal-180.png",
+      "bytes": 6915,
+      "sha256": "dfb0ee4065c6fd6acbc2fbd06eb22a3ab01d61be03600fc34b0cd1e1ea27d346"
+    },
+    {
+      "path": "png/seal/the-olympus-seal-192.png",
+      "bytes": 8136,
+      "sha256": "8eb3a60535746871d7c55fdbd1394cabd1ce96ab173931fa7d767c89790fb6c0"
+    },
+    {
+      "path": "png/seal/the-olympus-seal-512.png",
+      "bytes": 22759,
+      "sha256": "dd4b29178a43a6a1d8dfed36c353626b571af3ff46f4d0738fe42e71c9018eba"
+    },
+    {
+      "path": "svg/the-olympus-seal-white.svg",
+      "bytes": 1641,
+      "sha256": "368e5e0f961db0bd7b4acbe20126ce9e04a8c33e39cb7f4baae29b1c0a2fc1d3"
+    },
+    {
+      "path": "png/seal/the-olympus-seal-white-16.png",
+      "bytes": 495,
+      "sha256": "df58cab42e7b074c1014339d0b7b8105fb9fb6a977febaf3de5d9423e3d05dbe"
+    },
+    {
+      "path": "png/seal/the-olympus-seal-white-32.png",
+      "bytes": 1159,
+      "sha256": "1fec2bccce577224ee71090421d5c5455fe7d06b2e4da4037ece533c2c95b42b"
+    },
+    {
+      "path": "png/seal/the-olympus-seal-white-48.png",
+      "bytes": 1731,
+      "sha256": "08a0163e25906c73aa8fdfab52b4b89cbcf82309fc3cd17c375511ec8c656565"
+    },
+    {
+      "path": "png/seal/the-olympus-seal-white-64.png",
+      "bytes": 2506,
+      "sha256": "d9f241a42958f217cd53fdaf56082d28aa9a94b567935fcd74281a80c4fee3c0"
+    },
+    {
+      "path": "png/seal/the-olympus-seal-white-180.png",
+      "bytes": 6720,
+      "sha256": "a34f21e483acecfa6adda22e31848c4b770c17c069c57b94a7be95012e194eea"
+    },
+    {
+      "path": "png/seal/the-olympus-seal-white-192.png",
+      "bytes": 7703,
+      "sha256": "1b8e27e2ee86f36517f009f4e3a1591781feb785223870b9ff161c5eb2697869"
+    },
+    {
+      "path": "png/seal/the-olympus-seal-white-512.png",
+      "bytes": 21257,
+      "sha256": "f24219be555f02d0672ce24c04671f231ec95f6522f2d6ba156baf5278c557c6"
+    },
+    {
+      "path": "svg/the-olympus-seal-on-light.svg",
+      "bytes": 1703,
+      "sha256": "c6e508c03f27093fb73869da0b2bb73a276cc3c16ad0c19c9fac0142f25ad4de"
+    },
+    {
+      "path": "svg/the-olympus-seal-on-dark.svg",
+      "bytes": 1703,
+      "sha256": "041684ecefafc5ac7ef3204eaca12b7d4e4148ca5ae4027aaf67d3a1b52d128a"
+    },
+    {
+      "path": "favicon.ico",
+      "bytes": 3520,
+      "sha256": "3ec50d44b1e611f9ac3eca6f5b91a89a2c86fabb4b18327290ec32fe2b37db20"
+    },
+    {
+      "path": "presentation/the-olympus-crest-relief-black.png",
+      "bytes": 668845,
+      "sha256": "8ee96835b672089340966212d66407d7c4ce2a7d4a8c936ba2a6b1584c309c3f"
+    },
+    {
+      "path": "presentation/the-olympus-crest-relief-white.png",
+      "bytes": 700198,
+      "sha256": "52cd80c63077ef39c2eff1eac638f3250d073123344a3bd9e7a36720da6a9253"
+    },
+    {
+      "path": "presentation/the-olympus-crest-engraved.png",
+      "bytes": 684205,
+      "sha256": "2c6ef2b04875873f902d5b33ea4623174e7ed60012b30c9290b9094f19a98676"
+    },
+    {
+      "path": "presentation/the-olympus-crest-flat-light.png",
+      "bytes": 158635,
+      "sha256": "c21066b1f66c021f1cc8ed2e240501bbaa822041d084eb438ad489b7c3876561"
+    }
+  ]
+}

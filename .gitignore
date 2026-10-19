@@ -1,0 +1,7 @@
+node_modules/
+dist/
+.DS_Store
+*.log
+
+# Design explorations are kept locally; their boards live in docs/creative-directions/.
+explorations/
