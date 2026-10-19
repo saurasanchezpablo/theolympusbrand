@@ -16,7 +16,8 @@
     "app": "vite --config app/vite.config.ts",
     "app:build": "vite build --config app/vite.config.ts",
     "app:preview": "vite preview --config app/vite.config.ts",
-    "app:check": "node scripts/app-check.ts"
+    "app:check": "node scripts/app-check.ts",
+    "model": "node scripts/model.ts"
   },
   "devDependencies": {
     "@fontsource/cinzel": "5.2.8",
@@ -29,6 +30,7 @@
     "@types/react-dom": "19.3.0",
     "@vitejs/plugin-react": "6.1.2",
     "clipper-lib": "6.4.2",
+    "earcut": "3.2.4",
     "fast-xml-parser": "5.11.2",
     "fflate": "0.8.3",
     "opentype.js": "1.3.4",

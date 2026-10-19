@@ -9,6 +9,7 @@ import { resolve, validateSpec, slugify, type Service, type ServiceSpec } from '
 import { baseMarks, lockups, type MarkKey } from '../../src/catalog/fileset.ts';
 import { checkPrint, type PrintReport } from '../../src/print/service.ts';
 import type { Design } from '../../src/catalog/design.ts';
+import { markFor, type MarkSource } from '../../src/manufacturing/files.ts';
 
 export type Origin = { kind: 'new' } | { kind: 'house'; id: string } | { kind: 'mine'; key: string };
 
@@ -107,3 +108,7 @@ export function letteringIssues(service: Service): string[] {
 export const GOD_LIST = (Object.values(GODS) as (typeof GODS)[GodId][]).filter((g) => g.id !== 'zeus');
 export const CATEGORY_LIST = Object.entries(CATEGORIES) as [Category, string][];
 export const defaultGodOf = (c: Category) => GOD_LIST.find((g) => g.categories.includes(c))?.id;
+
+/** The print-edition mark a printable product carries (memoised: measuring the seal takes a moment). */
+export const markOf = (kind: 'crest' | 'seal', patron: Patron | undefined, id: string): MarkSource =>
+  memo(`mark:${kind}|${patron ? patronKey(patron) : 'master'}|${id}`, () => markFor(kind, patron, id));

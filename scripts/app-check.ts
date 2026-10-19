@@ -13,6 +13,12 @@ import assert from 'node:assert/strict';
 import { chromium, type Page } from 'playwright-core';
 import { unzipSync, strFromU8 } from 'fflate';
 import { ROOT } from './lib/build-service.ts';
+import { loadNodeFonts } from '../src/node/fonts.ts';
+import { loadCatalog } from '../src/node/catalog.ts';
+import { markFor, modelFiles } from '../src/manufacturing/files.ts';
+import { suggestedParams } from '../src/manufacturing/products.ts';
+
+loadNodeFonts();
 
 const PORT = 4179;
 const URL_ = `http://127.0.0.1:${PORT}/`;
@@ -171,6 +177,25 @@ try {
   assert.equal(await page.getByLabel('Name', { exact: true }).inputValue(), 'Nextcloud copy');
   await page.getByRole('radio', { name: 'Black marble' }).click();
   step('duplicate a house design into my designs');
+
+  // 3D print: the website's STL is the same mesh the command line writes.
+  await page.getByRole('button', { name: /^Jellyfin Apollo · media/ }).click();
+  await page.getByRole('radio', { name: '3D print' }).click();
+  await page.getByRole('radio', { name: 'Token' }).click();
+  await page.getByText(/Valid · [\d,]+ triangles/).waitFor({ timeout: 30000 });
+  const stlFile = await downloadOf(page, () => page.getByRole('button', { name: 'STL', exact: true }).click());
+  assert.equal(stlFile.name, 'the-olympus-jellyfin-token.stl');
+  const jellyfin = loadCatalog().find((x) => x.id === 'jellyfin')!;
+  const mark = markFor('seal', jellyfin.patron, 'jellyfin');
+  const expected = modelFiles('jellyfin', 'The Olympus — Jellyfin', 'token', suggestedParams('token', mark.minDiameterMM), mark, null).files.find((f) => f.path.endsWith('.stl'))!;
+  assert.ok(stlFile.data.equals(Buffer.from(expected.data as Uint8Array)), 'browser STL differs from the Node build');
+  await page.getByRole('radio', { name: 'Two-colour medallion' }).click();
+  await page.getByText(/Valid · [\d,]+ triangles · 2 parts/).waitFor({ timeout: 30000 });
+  await shot(page, '7-model');
+  const modelPack = await downloadOf(page, () => page.getByRole('button', { name: 'Model pack (.zip)' }).click());
+  const modelZip = Object.keys(unzipSync(new Uint8Array(modelPack.data))).map((n) => n.split('/').pop());
+  for (const f of ['the-olympus-jellyfin-two-colour-plate.stl', 'the-olympus-jellyfin-two-colour-relief.stl', 'the-olympus-jellyfin-two-colour.3mf', 'the-olympus-jellyfin-two-colour.scad', 'the-olympus-jellyfin-crest-print.svg', 'the-olympus-jellyfin-two-colour-preview.png', 'the-olympus-jellyfin-two-colour.md']) assert.ok(modelZip.includes(f), f);
+  step('3D print: valid models, STL byte-identical to the Node build, full model pack');
 
   await page.setViewportSize({ width: 820, height: 1100 });
   await shot(page, '6-narrow');

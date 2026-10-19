@@ -165,6 +165,19 @@ export function offset(rings: Ring[], delta: number): Ring[] {
 const r2 = (v: number) => Math.round(v * 100) / 100;
 export const ringsPath = (rings: Ring[]): string => rings.map((r) => `M${r.map(([x, y]) => `${r2(x)} ${r2(y)}`).join('L')}Z`).join('');
 
+/**
+ * Union into strictly simple rings: no ring touches itself or another at a
+ * vertex. Solid meshes need this — a pinch point would be a non-manifold vertex.
+ */
+export function strictlySimple(rings: Ring[]): Ring[] {
+  const c = new ClipperLib.Clipper();
+  c.StrictlySimple = true;
+  c.AddPaths(toC(rings), ClipperLib.PolyType.ptSubject, true);
+  const out = new ClipperLib.Paths();
+  c.Execute(ClipperLib.ClipType.ctUnion, out, ClipperLib.PolyFillType.pftNonZero, ClipperLib.PolyFillType.pftNonZero);
+  return fromC(out);
+}
+
 /** Drop microscopic islands left behind by boolean cuts. */
 export const noSpecks = (rings: Ring[], min = 1): Ring[] => rings.filter((r) => Math.abs(signedArea(r)) >= min);
 

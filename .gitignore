@@ -5,3 +5,7 @@ dist/
 
 # Design explorations are kept locally; their boards live in docs/creative-directions/.
 explorations/
+# Printable models are generated on demand (npm run model, or the Atelier);
+# only the master's are kept.
+manufacturing/3d/*
+!manufacturing/3d/master/

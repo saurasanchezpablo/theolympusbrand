@@ -242,6 +242,9 @@ check. The Fine SVGs keep their curves.
 | `src/catalog/fileset.ts` | The files a service is delivered as, shared by the command line and the web app |
 | `src/print/service.ts` | The print gate for a service crest |
 | `src/export/ico.ts` | favicon.ico writer |
+| `src/manufacturing/` | Printable models: layered meshes and their validation, products, OpenSCAD sources, model files ([guide](05-3d-printing.md)) |
+| `src/export/{stl,threemf}.ts` | STL and 3MF writers |
+| `src/render/mesh-render.ts` | Previews of the printable models, drawn from their meshes |
 | `app/` | The Atelier, the web generator ([guide](04-generator.md)) |
 | `src/geometry/border.ts` | Greek key and bead-and-reel bands |
 | `src/geometry/ornament.ts` | Laurel and engraved clouds |
@@ -257,6 +260,7 @@ npm run typecheck
 npm run build:master        # assets/master/
 npm run service -- help     # the service catalogue: add, build, list, check, remove
 npm run app                 # the Atelier, the web generator
+npm run model -- master     # printable models → manufacturing/3d/
 npm run build:docs          # docs/design-system/*.png
 npm run test:update-golden  # only after an intended change to the geometry; review the boards first
 ```

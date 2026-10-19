@@ -3,7 +3,8 @@ declare module 'clipper-lib' {
   type Path = { X: number; Y: number }[];
   interface Paths extends Array<Path> {}
   const ClipperLib: {
-    Clipper: new () => {
+    Clipper: new (initOptions?: number) => {
+      StrictlySimple: boolean;
       AddPaths(paths: Path[], polyType: number, closed: boolean): void;
       Execute(clipType: number, solution: Paths, subjFill: number, clipFill: number): boolean;
     };

@@ -5,7 +5,11 @@ import { designFile, libraryFile, parseDesigns, type Design } from '../../src/ca
 import type { MarkKey } from '../../src/catalog/fileset.ts';
 import type { Mark } from '../../src/geometry/crest.ts';
 import { HOUSE, loadLibrary, newKey, nowIso, saveLibrary, type Saved } from './library.ts';
-import { MASTER, draftOf, letteringIssues, marksFor, newDraft, printFor, readLogo, renderableService, specIssues, type Draft } from './model.ts';
+import { MASTER, draftOf, letteringIssues, markOf, marksFor, newDraft, printFor, readLogo, renderableService, specIssues, type Draft } from './model.ts';
+import { PRODUCTS, defaults, suggestedParams, type ParamKey, type Params, type ProductId } from '../../src/manufacturing/products.ts';
+import { modelFiles, modelName } from '../../src/manufacturing/files.ts';
+import { ModelView } from './components/ModelView.tsx';
+import { ModelPanel, type ModelBuild } from './components/ModelPanel.tsx';
 import { assetPack, download } from './exporters.ts';
 import { Library, Icon, type Current, type Entry } from './components/Library.tsx';
 import { Canvas, type CanvasState } from './components/Canvas.tsx';
@@ -40,6 +44,11 @@ export function App() {
   const [toast, setToast] = useState<string | null>(null);
   const [packProgress, setPackProgress] = useState<number | null>(null);
   const importRef = useRef<HTMLInputElement>(null);
+  const [product, setProduct] = useState<ProductId>('medallion');
+  const [overrides, setOverrides] = useState<Partial<Record<ProductId, Params>>>({});
+  const [build, setBuild] = useState<ModelBuild | null>(null);
+  const [buildError, setBuildError] = useState<string | null>(null);
+  const [building, setBuilding] = useState(false);
 
   const say = useCallback((msg: string) => {
     setToast(msg);
@@ -76,6 +85,43 @@ export function App() {
     if (idClash) w.push(`Another of your designs already uses the identifier “${draft!.spec.id}”; exports would share file names.`);
     return w;
   }, [service, logo, print, idClash, draft]);
+
+  /* ---------- the printable model ---------- */
+  const modelId = service?.id ?? 'master';
+  const modelTitle = service ? `The Olympus — ${service.name}` : 'The Olympus';
+  const patron = service?.patron;
+  const markKind = PRODUCTS[product].mark;
+  const showModel = canvas.view === 'model';
+  const mark = useMemo(() => (showModel && markKind ? markOf(markKind, patron, modelId) : null), [showModel, markKind, patron, modelId]);
+  const suggested = useMemo(() => {
+    const s = suggestedParams(product, mark?.minDiameterMM);
+    if (product === 'stand') {
+      // The stand fits the medallion as it is set up.
+      const med = { ...defaults('medallion'), ...overrides.medallion };
+      s.diameter = med.diameter;
+      s.slot = Math.round((med.base + med.relief) * 100) / 100;
+    }
+    return s;
+  }, [product, mark, overrides.medallion]);
+  const values = { ...suggested, ...overrides[product] } as Record<ParamKey, number>;
+  const valuesKey = JSON.stringify(values);
+  useEffect(() => {
+    if (!showModel) return;
+    setBuilding(true);
+    const t = window.setTimeout(() => {
+      try {
+        const r = modelFiles(modelId, modelTitle, product, JSON.parse(valuesKey), mark, null);
+        setBuild({ model: r.model, files: r.files, base: modelName(modelId, product) });
+        setBuildError(null);
+      } catch (e) {
+        setBuild(null);
+        setBuildError(`The model could not be built: ${(e as Error).message}`);
+      } finally {
+        setBuilding(false);
+      }
+    }, 120);
+    return () => window.clearTimeout(t);
+  }, [showModel, modelId, modelTitle, product, valuesKey, mark]);
 
   const current: Current = open.kind === 'master' ? { kind: 'master' } : open.draft.origin.kind === 'house' ? { kind: 'house', id: open.draft.origin.id } : open.draft.origin.kind === 'mine' ? { kind: 'mine', key: open.draft.origin.key } : { kind: 'new' };
 
@@ -247,12 +293,32 @@ export function App() {
         onDelete={onDelete}
       />
 
-      <Canvas state={canvas} onChange={setCanvas} marks={marks} isMaster={!draft} name={service?.name ?? 'The Olympus'} print={print} />
+      <Canvas
+        model={<ModelView parts={build && build.model.product === product ? build.model.parts : null} busy={building} />}
+        state={canvas}
+        onChange={setCanvas}
+        marks={marks}
+        isMaster={!draft}
+        name={service?.name ?? 'The Olympus'}
+        print={print}
+      />
 
       <div className="side">
         <div className="side__scroll">
+          {showModel && (
+            <ModelPanel
+              product={product}
+              values={values}
+              build={build && build.model.product === product ? build : null}
+              error={buildError}
+              markMin={mark?.minDiameterMM ?? null}
+              onProduct={setProduct}
+              onParam={(k, v) => setOverrides((o) => ({ ...o, [product]: { ...o[product], [k]: v } }))}
+              onReset={() => setOverrides((o) => ({ ...o, [product]: {} }))}
+            />
+          )}
           {draft && service ? <Config draft={draft} service={service} logo={logo} issues={issues} warnings={warnings} onChange={(d) => setOpen({ ...open, kind: 'draft', draft: d, saved: open.kind === 'draft' ? open.saved : '' })} /> : <MasterCard onNew={onNew} />}
-          <ExportPanel
+          {!showModel && <ExportPanel
             canvas={canvas}
             marks={marks}
             id={service?.id ?? 'master'}
@@ -261,7 +327,7 @@ export function App() {
             onDesignFile={draft ? () => exportDesign(designOf(draft, savedDesign)) : null}
             packProgress={packProgress}
             disabledReason={issues.length ? 'Fix the problems above before exporting the pack.' : null}
-          />
+          />}
         </div>
         <footer className="savebar">
           <span className={`savebar__status${dirty ? ' is-dirty' : ''}`} aria-live="polite">

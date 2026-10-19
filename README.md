@@ -13,6 +13,8 @@ Mount Olympus is the server, and every service is a god with a domain.
   patron god, and how to add a new one.
 - [The Atelier](docs/04-generator.md): the web app for making and exporting
   new designs.
+- [3D printing](docs/05-3d-printing.md): medallions, tokens and a desk stand,
+  as validated STL and 3MF with OpenSCAD sources.
 - [Creative directions](docs/01-creative-directions.md): how the mark was
   arrived at.
 
@@ -61,6 +63,7 @@ npm run build:master   # regenerate assets/master/
 npm run service -- build   # regenerate assets/services/ and the catalogue
 npm run app            # the Atelier (web app), with live reload
 npm run app:build      # the Atelier as a static site in app/dist/
+npm run model -- master   # printable models into manufacturing/3d/
 npm run build:docs     # regenerate the design-system boards
 ```
 
