@@ -2,5 +2,6 @@
   "id": "jellyfin",
   "name": "Jellyfin",
   "category": "media",
+  "url": "https://jellyfin.theolympus.cloud",
   "description": "Personal media streaming"
 }

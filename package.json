@@ -2,6 +2,7 @@
   "name": "theolympusbrand",
   "version": "0.1.0",
   "private": true,
+  "license": "UNLICENSED",
   "description": "The Olympus \u2014 visual identity system for a private server ecosystem",
   "type": "module",
   "scripts": {

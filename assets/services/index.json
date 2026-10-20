@@ -7,6 +7,7 @@
       "god": "kronos"
     },
     "caption": "The Olympus · KRONOS",
+    "url": "https://backup.theolympus.cloud",
     "path": "backup/"
   },
   {
@@ -17,6 +18,7 @@
       "god": "dionysus"
     },
     "caption": "The Olympus · DIONYSUS",
+    "url": "https://community.theolympus.cloud",
     "path": "community/"
   },
   {
@@ -27,6 +29,7 @@
       "god": "poseidon"
     },
     "caption": "The Olympus · POSEIDON",
+    "url": "https://containers.theolympus.cloud",
     "path": "containers/"
   },
   {
@@ -37,6 +40,7 @@
       "god": "nike"
     },
     "caption": "The Olympus · NIKE",
+    "url": "https://game-server.theolympus.cloud",
     "path": "game-server/"
   },
   {
@@ -47,6 +51,7 @@
       "god": "hestia"
     },
     "caption": "The Olympus · HESTIA",
+    "url": "https://home-assistant.theolympus.cloud",
     "path": "home-assistant/"
   },
   {
@@ -57,6 +62,7 @@
       "god": "apollo"
     },
     "caption": "The Olympus · APOLLO",
+    "url": "https://jellyfin.theolympus.cloud",
     "path": "jellyfin/"
   },
   {
@@ -67,6 +73,7 @@
       "god": "hephaestus"
     },
     "caption": "The Olympus · HEPHAESTUS",
+    "url": "https://minecraft.theolympus.cloud",
     "path": "minecraft/"
   },
   {
@@ -77,6 +84,7 @@
       "god": "argus"
     },
     "caption": "The Olympus · ARGUS",
+    "url": "https://monitoring.theolympus.cloud",
     "path": "monitoring/"
   },
   {
@@ -87,6 +95,7 @@
       "god": "ares"
     },
     "caption": "The Olympus · ARES",
+    "url": "https://multiplayer.theolympus.cloud",
     "path": "multiplayer/"
   },
   {
@@ -97,6 +106,7 @@
       "god": "iris"
     },
     "caption": "The Olympus · IRIS",
+    "url": "https://network.theolympus.cloud",
     "path": "network/"
   },
   {
@@ -107,6 +117,7 @@
       "god": "nephele"
     },
     "caption": "The Olympus · NEPHELE",
+    "url": "https://nextcloud.theolympus.cloud",
     "path": "nextcloud/"
   },
   {
@@ -117,6 +128,7 @@
       "god": "atlas"
     },
     "caption": "The Olympus · ATLAS",
+    "url": "https://proxmox.theolympus.cloud",
     "path": "proxmox/"
   },
   {
@@ -127,6 +139,7 @@
       "god": "hermes"
     },
     "caption": "The Olympus · HERMES",
+    "url": "https://reverse-proxy.theolympus.cloud",
     "path": "reverse-proxy/"
   },
   {
@@ -137,6 +150,7 @@
       "god": "hades"
     },
     "caption": "The Olympus · HADES",
+    "url": "https://storage.theolympus.cloud",
     "path": "storage/"
   },
   {
@@ -147,6 +161,7 @@
       "god": "athena"
     },
     "caption": "The Olympus · ATHENA",
+    "url": "https://vpn.theolympus.cloud",
     "path": "vpn/"
   },
   {
@@ -157,6 +172,7 @@
       "god": "arachne"
     },
     "caption": "The Olympus · ARACHNE",
+    "url": "https://web.theolympus.cloud",
     "path": "web/"
   }
 ]

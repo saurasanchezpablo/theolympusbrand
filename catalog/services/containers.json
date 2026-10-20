@@ -2,5 +2,6 @@
   "id": "containers",
   "name": "Containers",
   "category": "containers",
+  "url": "https://containers.theolympus.cloud",
   "description": "Container host and stacks"
 }

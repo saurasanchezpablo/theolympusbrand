@@ -94,7 +94,7 @@ export function buildIndex(services: Service[]): void {
   mkdirSync(SERVICES_OUT, { recursive: true });
   writeFileSync(
     join(SERVICES_OUT, 'index.json'),
-    JSON.stringify(services.map((s) => ({ id: s.id, name: s.name, category: s.category, patron: s.patron, caption: s.caption, path: `${s.id}/` })), null, 2) + '\n',
+    JSON.stringify(services.map((s) => ({ id: s.id, name: s.name, category: s.category, patron: s.patron, caption: s.caption, url: s.url ?? null, path: `${s.id}/` })), null, 2) + '\n',
   );
   // Overview board: every service's crest with its name and patron.
   const cols = 4;

@@ -2,5 +2,6 @@
   "id": "vpn",
   "name": "VPN",
   "category": "security",
+  "url": "https://vpn.theolympus.cloud",
   "description": "Private access from anywhere"
 }

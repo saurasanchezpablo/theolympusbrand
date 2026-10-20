@@ -2,5 +2,6 @@
   "id": "monitoring",
   "name": "Monitoring",
   "category": "monitoring",
+  "url": "https://monitoring.theolympus.cloud",
   "description": "Metrics, logs and alerts"
 }

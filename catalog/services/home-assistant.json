@@ -2,5 +2,6 @@
   "id": "home-assistant",
   "name": "Home Assistant",
   "category": "home",
+  "url": "https://home-assistant.theolympus.cloud",
   "description": "Home automation"
 }

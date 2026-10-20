@@ -1,0 +1,44 @@
+THE OLYMPUS — PROPRIETARY LICENCE
+
+Copyright (c) 2026 Pablo Saura. All rights reserved.
+
+This repository and everything in it — source code, scripts, the web
+application, designs, logos, marks, artwork, typography layouts, documents,
+images, 3D models, sticker files and every file generated from them (together,
+"the Work") — is the exclusive property of Pablo Saura.
+
+1. No licence is granted. Nothing in this repository, and no act of
+   publishing it, grants anyone any right or licence to the Work, whether by
+   implication, estoppel or otherwise.
+
+2. Without the prior written permission of Pablo Saura, no one may:
+   a. use the Work, or any part of it, for any purpose;
+   b. copy, reproduce, download for reuse, or store the Work, except as
+      strictly necessary to view it on the platform where it is hosted;
+   c. modify, adapt, translate, or create derivative works of the Work;
+   d. distribute, publish, sublicense, sell, lease or otherwise make the Work
+      available to anyone;
+   e. print, manufacture, or produce physical objects (including stickers,
+      prints and 3D-printed objects) from the Work;
+   f. use the Work, or any part of it, to train or evaluate machine-learning
+      or other automated systems.
+
+3. Marks. "The Olympus", the Pantheon Crest, its emblem, seals, lockups and
+   every service variant are the marks and trade dress of Pablo Saura. No
+   right to use them, or anything confusingly similar, is granted.
+
+4. Viewing on GitHub. Where this repository is publicly visible, viewing it
+   on GitHub, and forking it within GitHub as GitHub's Terms of Service
+   allow, does not grant any of the rights reserved above.
+
+5. Third-party components. Components made by others are not part of the
+   Work and remain under their own licences, which this licence does not
+   change: the typefaces Cinzel, Jost and JetBrains Mono (SIL Open Font
+   License 1.1) and the open-source packages listed in package.json and
+   package-lock.json, each under its own licence.
+
+6. No warranty. The Work is provided "as is", without warranty of any kind.
+   In no event shall the author be liable for any claim, damages or other
+   liability arising from it.
+
+For permission requests, contact Pablo Saura.

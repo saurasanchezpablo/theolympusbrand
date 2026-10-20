@@ -2,5 +2,6 @@
   "id": "nextcloud",
   "name": "Nextcloud",
   "category": "cloud",
+  "url": "https://nextcloud.theolympus.cloud",
   "description": "Files, calendars and contacts"
 }

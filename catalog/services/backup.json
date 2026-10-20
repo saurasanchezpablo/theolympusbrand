@@ -2,5 +2,6 @@
   "id": "backup",
   "name": "Backup",
   "category": "backup",
+  "url": "https://backup.theolympus.cloud",
   "description": "Snapshots and off-site copies"
 }

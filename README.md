@@ -88,6 +88,11 @@ npm run build:docs     # regenerate the design-system boards
 Every file is generated from the geometry in `src/`. The same configuration
 always produces the same mark.
 
-## Licences
+## Licence
 
-Cinzel, Jost and JetBrains Mono are used under the SIL Open Font License 1.1.
+Copyright © 2026 Pablo Saura. **All rights reserved.** This is not open
+source: nothing here may be used, copied, modified, distributed or
+manufactured without written permission. See [LICENSE](LICENSE).
+
+Third-party components keep their own licences: Cinzel, Jost and JetBrains
+Mono under the SIL Open Font License 1.1, and the npm packages under theirs.

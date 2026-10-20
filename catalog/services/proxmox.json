@@ -2,5 +2,6 @@
   "id": "proxmox",
   "name": "Proxmox",
   "category": "virtualization",
+  "url": "https://proxmox.theolympus.cloud",
   "description": "Hypervisor carrying every machine"
 }
