@@ -5,7 +5,7 @@
 // The STL and 3MF files are generated and validated separately (mesh.ts);
 // this file is their source, not their proof.
 
-import { PRODUCTS, KEYHOLE_SPEC, type Model } from './products.ts';
+import { PRODUCTS, KEYHOLE_SPEC, RACK_SPEC, type Model } from './products.ts';
 
 const snake = (k: string) => k.replace(/[A-Z]/g, (c) => `_${c.toLowerCase()}`);
 const n = (v: number) => (Number.isInteger(v) ? String(v) : v.toFixed(3).replace(/0+$/, ''));
@@ -136,6 +136,50 @@ linear_extrude(base) difference() {
 translate([0, 0, base]) linear_extrude(relief) mark(diameter - 2 * flange);
 `;
       break;
+    case 'rack': {
+      const slots = (model.openings ?? []).map((o) => `[${n(o.x)}, ${n(o.y)}, ${n(o.w)}, ${n(o.h)}]`);
+      body = `
+// The panel's height follows the rack units (${model.size[1]} mm here); the mounting slots
+// and vents are where the generator placed them: [x, y, width, height].
+panel = [${n(model.size[0])}, units * ${n(RACK_SPEC.unit)} - ${n(RACK_SPEC.gap)}];
+openings = [
+  ${slots.join(',\n  ')}
+];
+
+module stadium(w, h) offset(r = min(w, h) / 2 - 0.01) square([max(0.02, w - min(w, h) + 0.02), max(0.02, h - min(w, h) + 0.02)], center = true);
+
+difference() {
+  linear_extrude(base) offset(r = corner) offset(delta = -corner) square(panel, center = true);
+  for (o = openings) translate([o[0], o[1], -0.01]) linear_extrude(base + 0.02) stadium(o[2], o[3]);
+}
+translate([0, 0, base]) linear_extrude(relief) import("${files.art}", center = true);
+`;
+      break;
+    }
+    case 'stamp': {
+      const l = model.lathe!;
+      body = `
+// Which part to export: "die" and "handle" for two STLs, "both" to preview.
+part = "both"; // [both, die, handle]
+
+socket_depth = min(5, base - 1.6);
+peg_r = min(4.5, diameter / 2 * 0.3);
+
+// The handle's profile, [r, z] from its knob (on the bed) to the tip of its peg.
+profile = [${l.profile.map(([z, r]) => `[${n(r)}, ${n(z)}]`).join(', ')}];
+
+if (part != "handle") {
+  difference() {
+    cylinder(d = diameter, h = base);
+    translate([0, 0, -0.01]) cylinder(r = peg_r + clearance / 2, h = socket_depth + 0.01);
+  }
+  // Mirrored, so the impression reads the right way.
+  translate([0, 0, base]) linear_extrude(relief) mirror([1, 0]) mark(diameter - 2 * flange);
+}
+if (part != "die") translate([${n(l.x)}, 0, 0]) rotate_extrude($fn = ${l.segments}) polygon(concat([[0, 0]], profile, [[0, profile[len(profile) - 1][1]]]));
+`;
+      break;
+    }
     case 'stand':
       body = `
 slot_w = slot + clearance;

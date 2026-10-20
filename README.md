@@ -15,9 +15,9 @@ Mount Olympus is the server, and every service is a god with a domain.
   patron god, and how to add a new one.
 - [The Atelier](docs/04-generator.md): the web app for making and exporting
   new designs.
-- [3D printing](docs/05-3d-printing.md): medallions, nameplates, coasters,
-  a marble lithophane, tokens and a desk stand, as validated STL and 3MF with
-  OpenSCAD sources.
+- [3D printing](docs/05-3d-printing.md): medallions, nameplates, a 10-inch
+  rack panel, coasters, a marble lithophane, tokens, a wax-seal stamp and a
+  desk stand, as validated STL and 3MF with OpenSCAD sources.
 - [Stickers](docs/06-stickers.md): die-cut stickers and sheets, as layered
   PDF and SVG with a separate cut path.
 - [Integrations](docs/08-integrations.md): the catalogue as Homepage, Dashy

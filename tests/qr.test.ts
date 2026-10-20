@@ -82,6 +82,25 @@ test('a nameplate’s QR code reads from its raised layer, and the solid is vali
   assert.equal(jsQR(px, cov.size, cov.size)?.data, url);
 });
 
+test('a rack panel’s QR code reads from its raised layer', () => {
+  const mark = markFor('seal', { god: 'apollo' }, 'jellyfin');
+  const url = 'https://jellyfin.theolympus.cloud';
+  const m = buildModel('rack', { ...suggestedParams('rack', mark.minDiameterMM), qr: 1, units: 2 }, { mark, name: 'Jellyfin', url });
+  assert.ok(m.parts[0].report.ok);
+  // Only the code: the relief right of the name.
+  const relief = m.parts[0].layers!.at(-1)!.rings;
+  const right = Math.max(...relief.flat().map((p) => p[0]));
+  const code = relief.filter((r) => Math.min(...r.map((p) => p[0])) > right - 75);
+  const cov = rasterise(code.map((r) => r.map(([x, y]): [number, number] => [x - (right - 40), y])), 60, 0.25);
+  const px = new Uint8ClampedArray(cov.size * cov.size * 4);
+  for (let i = 0; i < cov.data.length; i++) {
+    const g = cov.data[i] > 0.5 ? 0 : 255;
+    px[4 * i] = px[4 * i + 1] = px[4 * i + 2] = g;
+    px[4 * i + 3] = 255;
+  }
+  assert.equal(jsQR(px, cov.size, cov.size)?.data, url);
+});
+
 test('service addresses are validated', () => {
   assert.equal(validateSpec({ id: 'a', name: 'A', category: 'web', url: 'https://a.theolympus.cloud' }).url, 'https://a.theolympus.cloud');
   assert.throws(() => validateSpec({ id: 'a', name: 'A', category: 'web', url: 'javascript:alert(1)' }), /url/);

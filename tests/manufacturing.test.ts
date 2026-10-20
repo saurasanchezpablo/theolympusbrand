@@ -10,7 +10,7 @@ import { unzipSync, strFromU8 } from 'fflate';
 import { XMLParser } from 'fast-xml-parser';
 import './helpers.ts';
 import { GODS, type GodId } from '../src/geometry/pantheon.ts';
-import { buildModel, estimate, PRODUCTS, defaults, suggestedParams, textRings, DEFAULT_SETTINGS, type ProductId, type Params } from '../src/manufacturing/products.ts';
+import { buildModel, estimate, PRODUCTS, defaults, suggestedParams, textRings, stampHandle, markRings, RACK_SPEC, DEFAULT_SETTINGS, type ProductId, type Params } from '../src/manufacturing/products.ts';
 import { markFor, modelFiles, type MarkSource } from '../src/manufacturing/files.ts';
 import { stack, validate, area, type Layer } from '../src/manufacturing/mesh.ts';
 import { readStl } from '../src/export/stl.ts';
@@ -196,6 +196,84 @@ test('the OpenSCAD source declares every parameter, reads its files and cuts the
     const magnets = model.back.find((f) => f.kind === 'magnets');
     if (magnets && magnets.kind === 'magnets') for (const [x] of magnets.centres) assert.ok(scad.includes(String(Math.round(x * 1000) / 1000).replace(/\.?0+$/, '')), `${id}: magnet at ${x}`);
   }
+});
+
+test('the wax-seal stamp: a mirrored die, and a handle that prints without supports and fits its socket', () => {
+  // An asymmetric design: the impression must read the right way, so the die carries its mirror image.
+  const mark = markFor('seal', { monogram: 'R' }, 'r');
+  const m = buildModel('stamp', suggestedParams('stamp', mark.minDiameterMM), { mark, name: 'R' });
+  assert.deepEqual(m.parts.map((p) => p.name), ['die', 'handle']);
+  for (const p of m.parts) assert.ok(p.report.ok, `${p.name}: ${JSON.stringify(p.report)}`);
+  const relief = m.parts[0].layers!.at(-1)!.rings;
+  const plain = markRings(mark.d, m.params.diameter - 2 * m.params.flange);
+  const cx = (rings: typeof plain) => {
+    let a = 0, x = 0;
+    for (const r of rings) for (let i = 0; i < r.length; i++) {
+      const [p, q] = [r[i], r[(i + 1) % r.length]];
+      const c = p[0] * q[1] - q[0] * p[1];
+      a += c;
+      x += (p[0] + q[0]) * c;
+    }
+    return x / (3 * a);
+  };
+  assert.ok(Math.abs(cx(plain)) > 0.2, 'the R is off-centre');
+  assert.ok(Math.abs(cx(relief) + cx(plain)) < 0.05, `mirrored: ${cx(relief)} vs ${cx(plain)}`);
+  assert.ok(m.notes.some((n) => n.includes('60 °C')), 'the sheet says PLA softens');
+
+  // Every outward slope under 45°, at every size the parameters allow.
+  for (const dieR of [10, 17, 30]) for (const length of [30, 60, 100]) {
+    const prof = stampHandle(dieR, length, 5, Math.min(4.5, dieR * 0.3));
+    for (let i = 0; i + 1 < prof.length; i++) {
+      const [[z0, r0], [z1, r1]] = [prof[i], prof[i + 1]];
+      assert.ok(z1 >= z0, 'z never goes down');
+      if (z1 > z0) assert.ok((r1 - r0) / (z1 - z0) <= 1 + 1e-9, `R${dieR} L${length}: slope ${((r1 - r0) / (z1 - z0)).toFixed(2)} at z ${z0}`);
+    }
+    assert.ok(Math.max(...prof.map(([, r]) => r)) <= Math.max(14, dieR), 'the handle is no wider than its knob');
+  }
+  // The peg is shorter than the socket is deep, and narrower by the clearance.
+  const prof = m.lathe!.profile;
+  const socketDepth = Math.min(5, m.params.base - 1.6);
+  const pegR = prof.at(-2)![1];
+  const shoulder = prof.find(([, r], i) => i > 0 && r === pegR)![0];
+  assert.ok(prof.at(-1)![0] - shoulder < socketDepth);
+  const die = m.parts[0].layers![0];
+  const hole = die.rings.find((r) => area([r]) < 0)!;
+  assert.ok(Math.abs(Math.hypot(hole[0][0], hole[0][1]) - (pegR + m.params.clearance / 2)) < 1e-6);
+  // The handle stands beside the die, not on it.
+  assert.ok(m.lathe!.x - Math.max(...prof.map(([, r]) => r)) > m.params.diameter / 2);
+});
+
+test('the rack panel: 10-inch, its slots where the rack’s holes are, vents clear of the design', () => {
+  const mark = markFor('seal', { god: 'apollo' }, 'jellyfin');
+  for (const units of [1, 2, 3]) {
+    const m = buildModel('rack', { ...suggestedParams('rack', mark.minDiameterMM), units }, { mark, name: 'Jellyfin', caption: 'The Olympus · APOLLO' });
+    assert.ok(m.parts[0].report.ok, JSON.stringify(m.parts[0].report));
+    assert.equal(m.size[0], 254);
+    assert.ok(Math.abs(m.parts[0].report.size[1] - (units * 44.45 - 0.79)) < 1e-6);
+    const mounts = m.openings!.filter((o) => o.kind === 'mount');
+    assert.equal(mounts.length, 4 * units);
+    // Hole centres: ±spacing/2 across, and 31.75 mm apart within a unit (the EIA outer holes).
+    assert.deepEqual([...new Set(mounts.map((o) => o.x))].sort((a, b) => a - b), [-118.25, 118.25]);
+    const ys = [...new Set(mounts.map((o) => Math.round(o.y * 1000) / 1000))].sort((a, b) => a - b);
+    assert.ok(Math.abs(ys[1] - ys[0] - (RACK_SPEC.holes[1] - RACK_SPEC.holes[0])) < 1e-6);
+    // Vents stay between the design and the slots.
+    const art = m.art!.flat();
+    const artX = Math.max(...art.map((p) => Math.abs(p[0])));
+    for (const v of m.openings!.filter((o) => o.kind === 'vent')) {
+      assert.ok(Math.abs(v.x) - v.w / 2 > artX + 4, `vent at ${v.x} is clear of the design (to ${artX.toFixed(1)})`);
+      assert.ok(Math.abs(v.x) + v.w / 2 < 118.25 - mounts[0].w / 2, `vent at ${v.x} is clear of the slots`);
+    }
+  }
+  // A long name is made smaller to fit between the slots, and says so.
+  const long = buildModel('rack', suggestedParams('rack', mark.minDiameterMM), { mark, name: 'Very Long Service Name Indeed' });
+  assert.ok(long.notes.some((w) => w.includes('smaller to fit')));
+  assert.ok(long.parts[0].report.ok);
+  // The master's seal needs more than 1U to print cleanly: the suggestion grows to fit it.
+  assert.equal(suggestedParams('rack', markFor('seal', undefined, 'master').minDiameterMM).units, 2);
+  // A QR code on the panel reads from its raised layer.
+  const withQr = buildModel('rack', { ...suggestedParams('rack', mark.minDiameterMM), qr: 1, vents: 0 }, { mark, name: 'Jellyfin', url: 'https://jellyfin.theolympus.cloud' });
+  assert.ok(withQr.parts[0].report.ok);
+  assert.ok(withQr.notes.some((n) => n.includes('https://jellyfin.theolympus.cloud')));
 });
 
 test('previews are grayscale renders of the mesh, from the front and the back', () => {

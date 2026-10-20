@@ -228,7 +228,20 @@ try {
   await page.getByText(/Valid · [\d,]+ triangles/).waitFor({ timeout: 60000 });
   await page.getByRole('radio', { name: '3D', exact: true }).click();
   await shot(page, '10-nameplate');
-  step('back features, layer inspector, backlit lithophane, vertical nameplate');
+  // The stamp (die and turned handle) and the rack panel build in the browser too.
+  await page.getByRole('radio', { name: 'Wax-seal stamp' }).click();
+  await page.getByText(/Valid · [\d,]+ triangles · 2 parts/).waitFor({ timeout: 60000 });
+  await page.getByRole('radio', { name: 'Layers' }).click();
+  await page.getByText(/Layer \d+ of \d+/).waitFor();
+  await page.getByRole('radio', { name: '3D', exact: true }).click();
+  await shot(page, '10b-stamp');
+  await page.getByRole('radio', { name: 'Rack panel' }).click();
+  await page.getByText(/Valid · [\d,]+ triangles/).waitFor({ timeout: 60000 });
+  const rackStl = await downloadOf(page, () => page.getByRole('button', { name: 'STL', exact: true }).click());
+  const rackNode = modelFiles({ id: 'jellyfin', title: 'The Olympus — Jellyfin', name: jellyfin.name, caption: jellyfin.caption, url: jellyfin.url }, 'rack', suggestedParams('rack', mark.minDiameterMM), mark).files.find((f) => f.path.endsWith('.stl'))!;
+  assert.ok(rackStl.data.equals(Buffer.from(rackNode.data as Uint8Array)), 'browser rack STL differs from the Node build');
+  await shot(page, '10c-rack');
+  step('back features, layer inspector, backlit lithophane, vertical nameplate, stamp, rack panel');
 
   // Stickers: the website's PDF is the Node build's PDF, byte for byte — marble ground included.
   await page.getByRole('button', { name: /^Jellyfin Apollo · media/ }).click();

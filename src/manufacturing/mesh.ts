@@ -363,3 +363,38 @@ export function surfaceArea(m: Mesh): number {
   }
   return a;
 }
+
+/**
+ * A solid of revolution about a vertical axis through (cx, cy): `profile` is
+ * [z, r] from the bottom up (z never decreasing, r > 0), turned through
+ * `segments` steps. Closed by flat caps. Returns the mesh and its exact
+ * volume (a stack of frustums of regular polygons), to validate it against.
+ */
+export function lathe(profile: [number, number][], segments: number, cx = 0, cy = 0): { mesh: Mesh; volume: number } {
+  const n = segments;
+  const positions: number[] = [];
+  const triangles: number[] = [];
+  for (const [z, r] of profile)
+    for (let j = 0; j < n; j++) {
+      const a = (2 * Math.PI * j) / n;
+      positions.push(cx + r * Math.cos(a), cy + r * Math.sin(a), z);
+    }
+  const v = (i: number, j: number) => i * n + (j % n);
+  for (let i = 0; i + 1 < profile.length; i++)
+    for (let j = 0; j < n; j++) triangles.push(v(i, j), v(i, j + 1), v(i + 1, j + 1), v(i, j), v(i + 1, j + 1), v(i + 1, j));
+  const bottom = positions.length / 3;
+  positions.push(cx, cy, profile[0][0]);
+  const top = bottom + 1;
+  positions.push(cx, cy, profile[profile.length - 1][0]);
+  const last = profile.length - 1;
+  for (let j = 0; j < n; j++) triangles.push(bottom, v(0, j + 1), v(0, j), top, v(last, j), v(last, j + 1));
+  const polygon = (r: number) => (n / 2) * r * r * Math.sin((2 * Math.PI) / n);
+  let vol = 0;
+  for (let i = 0; i + 1 < profile.length; i++) {
+    const [z0, r0] = profile[i];
+    const [z1, r1] = profile[i + 1];
+    const [a0, a1] = [polygon(r0), polygon(r1)];
+    vol += ((z1 - z0) / 3) * (a0 + a1 + Math.sqrt(a0 * a1));
+  }
+  return { mesh: { positions, triangles }, volume: vol };
+}

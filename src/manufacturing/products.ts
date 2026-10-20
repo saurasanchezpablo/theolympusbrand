@@ -11,10 +11,10 @@ import { isClean, problemsAt } from '../print/printcheck.ts';
 import { PRINTER_MM } from '../print/service.ts';
 import { NAME, DOMAIN } from '../brand/identity.ts';
 import { qr, qrPath } from '../geometry/qr.ts';
-import { area, cleanRings, stack, surfaceArea, validate, type Layer, type Mesh, type MeshReport } from './mesh.ts';
+import { area, cleanRings, lathe, stack, surfaceArea, validate, type Layer, type Mesh, type MeshReport } from './mesh.ts';
 import { lithophaneMesh, rasterise, type LithophaneSpec, type Raster } from './lithophane.ts';
 
-export type ProductId = 'medallion' | 'engraved' | 'two-colour' | 'coaster' | 'nameplate' | 'lithophane' | 'token' | 'stand';
+export type ProductId = 'medallion' | 'engraved' | 'two-colour' | 'coaster' | 'nameplate' | 'rack' | 'lithophane' | 'token' | 'stamp' | 'stand';
 
 export type ParamKey =
   | 'diameter' | 'flange' | 'base' | 'relief' | 'thickness' | 'depth'
@@ -22,7 +22,8 @@ export type ParamKey =
   | 'recess' | 'recessDepth'
   | 'height' | 'margin' | 'corner' | 'layout' | 'caption' | 'qr' | 'bed'
   | 'frame' | 'minThickness' | 'maxThickness' | 'resolution' | 'veins'
-  | 'hole' | 'slot' | 'clearance';
+  | 'hole' | 'slot' | 'clearance'
+  | 'units' | 'spacing' | 'vents';
 export type Params = Partial<Record<ParamKey, number>>;
 export type ParamSpec = {
   key: ParamKey;
@@ -59,6 +60,14 @@ const KEYHOLE_DEPTH = KEYHOLE.lip + KEYHOLE.chamber;
 /** Material left over any pocket, so it bridges cleanly: four 0.2 mm layers. */
 const ROOF = 0.8;
 const INSCRIPTION_DEPTH = 0.6;
+/**
+ * A 10-inch rack: the panel's width, one rack unit, the gap a panel leaves
+ * to clear its neighbours, the mounting holes used in each unit (from the
+ * unit's bottom: the outer two of the EIA-310 three), and the margin kept
+ * around the design.
+ */
+const RACK = { width: 254, unit: 44.45, gap: 0.79, holes: [6.35, 38.1], margin: 4 } as const;
+export const RACK_SPEC = RACK;
 
 const BACK: ParamSpec[] = [
   N('magnets', 'Magnet pockets', '', 0, 4, 1, 0, 'Round pockets for disc magnets: hangs on a rack door, a fridge, a steel panel. Glue the magnets in after printing.', 'back'),
@@ -140,6 +149,23 @@ export const PRODUCTS: Record<ProductId, Product> = {
       ...BACK,
     ],
   },
+  rack: {
+    id: 'rack',
+    name: 'Rack panel',
+    summary: 'A front panel for a 10-inch rack — the seal and the service’s name raised between the mounting slots, with vents either side.',
+    mark: 'seal',
+    params: [
+      N('units', 'Height', 'U', 1, 3, 1, 1, 'Rack units: 1U is 44.45 mm (the panel is 0.79 mm less, to clear its neighbours).'),
+      N('spacing', 'Hole spacing', 'mm', 220, 245, 0.1, 236.5, 'Between the mounting holes’ centres. Most 10-inch racks: 236.5 mm — measure yours.'),
+      N('hole', 'Slot width', 'mm', 4, 7, 0.1, 6.5, 'Mounting slots: 6.5 mm for M6 screws and cage nuts, 5.5 mm for M5.'),
+      T('vents', 'Vents', 1, 'Slots through the panel either side of the design, for air.'),
+      T('caption', 'Caption', 0, 'The line under the name. At 1U it is small: it may print too fine.'),
+      T('qr', 'QR code', 0, 'The service’s address as a QR code beside the name. Print the relief in a contrasting colour so phones can read it.'),
+      N('corner', 'Corner radius', 'mm', 0, 5, 0.5, 1.5, 'Rounding of the panel’s corners.'),
+      N('base', 'Panel thickness', 'mm', 2.4, 8, 0.1, 4, 'Thick enough not to flex across 254 mm.'),
+      N('relief', 'Relief height', 'mm', 0.4, 3, 0.1, 1.2, 'How far the design stands proud of the panel.'),
+    ],
+  },
   lithophane: {
     id: 'lithophane',
     name: 'Marble lithophane',
@@ -167,6 +193,20 @@ export const PRODUCTS: Record<ProductId, Product> = {
       N('hole', 'Keyring hole', 'mm', 2.5, 8, 0.1, 4.5, 'Diameter of the hole in the lug.'),
     ],
   },
+  stamp: {
+    id: 'stamp',
+    name: 'Wax-seal stamp',
+    summary: 'The seal, mirrored, on a die with a turned handle — to seal letters in wax with the house’s mark.',
+    mark: 'seal',
+    params: [
+      N('diameter', 'Die diameter', 'mm', 20, 60, 0.5, 30, 'Diameter of the die; the impression is this size.'),
+      N('flange', 'Flange', 'mm', 0.4, 3, 0.1, 0.8, 'Die left around the seal’s ring.'),
+      N('base', 'Die thickness', 'mm', 4, 14, 0.1, 7, 'The handle’s peg sits in a socket in it.'),
+      N('relief', 'Relief depth', 'mm', 0.6, 2.5, 0.1, 1.2, 'How deep the impression is: 1–1.5 mm suits wax.'),
+      N('height', 'Handle length', 'mm', 30, 100, 1, 60, 'From the knob to the die (the peg adds to it).'),
+      N('clearance', 'Peg clearance', 'mm', 0, 0.6, 0.05, 0.25, 'Added to the socket; the peg is glued in.'),
+    ],
+  },
   stand: {
     id: 'stand',
     name: 'Desk stand',
@@ -191,6 +231,7 @@ export function suggestedParams(id: ProductId, minDiameterMM?: number): Required
   const p = defaults(id);
   if (!minDiameterMM || !PRODUCTS[id].mark) return p;
   if (id === 'nameplate') p.height = Math.max(p.height, Math.ceil(minDiameterMM * 1.02 + 2 * p.margin));
+  else if (id === 'rack') p.units = Math.min(3, Math.max(p.units, Math.ceil((minDiameterMM + 2 * RACK.margin + RACK.gap) / RACK.unit)));
   else if (id === 'lithophane') p.diameter = Math.max(p.diameter, Math.ceil(minDiameterMM + 2 * p.frame + 2));
   else p.diameter = Math.max(p.diameter, Math.ceil(minDiameterMM + 2 * p.flange));
   return p;
@@ -456,7 +497,54 @@ export type Model = {
   back: BackFeature[];
   /** The raised or engraved design in millimetres (for the OpenSCAD source of shapes it cannot rebuild). */
   art?: Ring[];
+  /** Stadium-shaped openings through the plate (rack panel: mounting slots and vents). */
+  openings?: Opening[];
+  /** A turned part (the stamp's handle): its profile, [z, r] from the bed up, and where it stands. */
+  lathe?: { profile: [number, number][]; x: number; segments: number };
 };
+
+export type Opening = { x: number; y: number; w: number; h: number; kind: 'mount' | 'vent' };
+
+/** A stadium (a rectangle with fully rounded ends). */
+const stadium = (o: Opening): Ring => roundedRect(o.w, o.h, Math.min(o.w, o.h) / 2, o.x, o.y);
+
+/**
+ * The stamp's handle, printed standing on its knob: a flat-topped knob, a
+ * waist, a collar that sits on the die, and a peg for the socket. Every
+ * outward slope is under 45°, so it prints without supports.
+ */
+export function stampHandle(dieR: number, length: number, socketDepth: number, pegR: number): [number, number][] {
+  const knob = Math.min(14, Math.max(9, dieR * 0.72));
+  const neck = Math.max(pegR + 1.5, knob * 0.55);
+  const collar = Math.min(dieR - 0.5, knob * 0.95);
+  const L = length;
+  const keys: [number, number][] = [
+    [0, knob * 0.8],
+    [0.16 * L, knob],
+    [0.3 * L, knob * 0.92],
+    [0.45 * L, neck],
+    [0.58 * L, neck],
+    [0.9 * L, collar * 0.9],
+    [L, collar],
+  ];
+  // Eased between the key points, every half millimetre.
+  const out: [number, number][] = [];
+  for (let i = 0; i + 1 < keys.length; i++) {
+    const [z0, r0] = keys[i];
+    const [z1, r1] = keys[i + 1];
+    const steps = Math.max(2, Math.ceil((z1 - z0) / 0.5));
+    for (let s = 0; s < steps; s++) {
+      const t = s / steps;
+      const e = (1 - Math.cos(Math.PI * t)) / 2;
+      out.push([z0 + (z1 - z0) * t, r0 + (r1 - r0) * e]);
+    }
+  }
+  out.push([L, collar]);
+  // The peg: a shoulder, then a chamfered tip.
+  const peg = socketDepth - 0.4;
+  out.push([L, pegR], [L + peg - 0.5, pegR], [L + peg, pegR - 0.5]);
+  return out.map(([z, r]) => [Math.round(z * 1000) / 1000, Math.round(r * 1000) / 1000]);
+}
 
 export type ModelInput = {
   /** The print-edition mark (crest or seal) and the smallest diameter it prints at. */
@@ -587,6 +675,66 @@ export function buildModel(id: ProductId, input: Params, src: ModelInput = {}, s
       heights.push(['plate', p.base], ['relief', p.relief]);
       break;
     }
+    case 'rack': {
+      const H = p.units * RACK.unit - RACK.gap;
+      const W = RACK.width;
+      // Mounting slots, elongated sideways to take up the rack's tolerance.
+      const openings: Opening[] = [];
+      for (let u = 0; u < p.units; u++)
+        for (const off of RACK.holes)
+          for (const side of [-1, 1]) openings.push({ x: (side * p.spacing) / 2, y: -(p.units * RACK.unit) / 2 + u * RACK.unit + off, w: p.hole + 3, h: p.hole, kind: 'mount' });
+      // The design: the seal and the name (and the code), as on the nameplate, centred between the slots.
+      const inner = p.spacing / 2 - (p.hole + 3) / 2 - 4;
+      const lock = lockupParts({ id: 'seal', d: mark!.d }, { name, caption: p.caption ? (src.caption ?? '') : '', layout: 'horizontal' });
+      const QR_SIDE = 512;
+      const QR_GAP = 72;
+      const artW = lock.width + (p.qr ? QR_GAP + QR_SIDE : 0);
+      const artH = lock.height;
+      let k = (H - 2 * RACK.margin) / artH;
+      if (artW * k > 2 * inner) {
+        k = (2 * inner) / artW;
+        notes.push('The name is long for the panel: the design was made smaller to fit between the mounting slots.');
+      }
+      checkSize(2 * RIM * k);
+      const [ox, oy] = [artW / 2, artH / 2];
+      const seal = pathRings(lock.crest, k, ox, oy);
+      const text = [...pathRings(lock.name, k, ox, oy, { grow: 0.12 }), ...(lock.caption ? pathRings(lock.caption, k, ox, oy, { grow: 0.08 }) : [])];
+      let code: Ring[] = [];
+      if (p.qr) {
+        const url = src.url ?? `https://${DOMAIN}`;
+        if (!src.url) warnings.push(`No address is set for this service; the QR code points to https://${DOMAIN}.`);
+        const c = qr(url, 'Q');
+        const module = QR_SIDE / (c.size + 4);
+        code = pathRings(qrPath(c, lock.width + QR_GAP, (artH - QR_SIDE) / 2, module, 2), k, ox, oy);
+        const mm = module * k;
+        if (mm < 1) warnings.push(`The QR code’s modules are ${mm.toFixed(2)} mm; phones read printed codes best from 1 mm — use a taller panel.`);
+        notes.push(`The QR code opens ${url} (modules ${mm.toFixed(2)} mm). Change filament at z = ${p.base.toFixed(2)} mm so it reads.`);
+      }
+      if (!isClean(problemsAt(union(text), PRINTER_MM, { topology: true }))) warnings.push(`At this size some lettering falls below a 0.4 mm nozzle’s reach${p.caption ? ' — the caption first; turn it off' : ''}.`);
+      const art = cleanRings(strictlySimple(union(seal, text, code)), MESH_TOLERANCE / 4);
+      artRings = art;
+      // Vents: upright slots filling the room between the design and the slots.
+      if (p.vents) {
+        const from = (artW * k) / 2 + 8;
+        const to = inner - 2;
+        const pitch = 7;
+        const count = Math.floor((to - from - 3) / pitch) + 1;
+        if (count >= 2) {
+          const start = (from + to) / 2 - ((count - 1) * pitch) / 2;
+          for (let i = 0; i < count; i++) for (const side of [-1, 1]) openings.push({ x: side * (start + i * pitch), y: 0, w: 3, h: H - 2 * 7, kind: 'vent' });
+        } else notes.push('There is no room for vents beside this design.');
+      }
+      const outline = roundedRect(W, H, p.corner);
+      const holes = cleanRings(strictlySimple(union(openings.map(stadium))), MESH_TOLERANCE / 4);
+      parts = [part('panel', [{ rings: [outline, ...holes.map(rev)], z0: 0, z1: p.base }, { rings: art, z0: p.base, z1: p.base + p.relief }], 'light')];
+      size = [W, round1(H), p.base + p.relief];
+      heights.push(['panel', p.base], ['relief', p.relief]);
+      notes.push(
+        `The panel is ${W} mm long: it fits a 256 mm bed straight, or a 220 mm bed laid on the diagonal.`,
+        `Mounting slots ${p.hole} × ${(p.hole + 3).toFixed(1)} mm, ${p.spacing} mm apart. 10-inch racks are not all alike: check the spacing against yours before printing.`,
+      );
+      return finish({ openings });
+    }
     case 'lithophane': {
       const spec: LithophaneSpec = { diameter: p.diameter, frame: p.frame, minThickness: p.minThickness, maxThickness: Math.max(p.maxThickness, p.minThickness + 0.4), resolution: p.resolution, veins: p.veins / 100 };
       const art = markRings(mark!.d, p.diameter - 2 * p.frame - 2);
@@ -616,6 +764,33 @@ export function buildModel(id: ProductId, input: Params, src: ModelInput = {}, s
       notes.push('A tough filament (PETG) wears better on a keyring than PLA.');
       break;
     }
+    case 'stamp': {
+      checkSize(markD);
+      // Mirrored, so the impression in the wax reads the right way.
+      const art = pathRings(mark!.d, markD / (2 * RIM), C, C, { mirror: true });
+      const socketDepth = Math.min(5, p.base - 1.6);
+      const pegR = Math.min(4.5, R * 0.3);
+      const socket = circle(pegR + p.clearance / 2);
+      const die = part('die', [{ rings: [plate, rev(socket)], z0: 0, z1: socketDepth }, { rings: [plate], z0: socketDepth, z1: p.base }, { rings: art, z0: p.base, z1: p.base + p.relief }], 'light');
+      const profile = stampHandle(R, p.height, socketDepth, pegR);
+      const maxR = Math.max(...profile.map(([, r]) => r));
+      const x = R + 6 + maxR;
+      const segments = 96;
+      const turned = lathe(profile, segments, x, 0);
+      // Cross-sections for the layer view; the mesh is checked against the lathe's exact volume.
+      const sections: Layer[] = [];
+      for (let i = 0; i + 1 < profile.length; i++) if (profile[i + 1][0] > profile[i][0]) sections.push({ rings: [circle(profile[i][1], x, 0, segments)], z0: profile[i][0], z1: profile[i + 1][0] });
+      const handle: Part = { name: 'handle', mesh: turned.mesh, report: validate(turned.mesh, turned.volume), tone: 'dark', layers: sections };
+      parts = [die, handle];
+      size = [round1(x + maxR + R), round1(2 * Math.max(R, maxR)), round1(Math.max(p.base + p.relief, profile[profile.length - 1][0]))];
+      heights.push(['die', p.base], ['relief', p.relief]);
+      notes.push(
+        'Two parts: the die, design up, and the handle, standing on its knob (a brim helps it stay put). Glue the handle’s peg into the socket under the die.',
+        'The design is mirrored on the die, so the impression reads the right way.',
+        'PLA softens at about 60 °C and sealing wax is poured at 80–100 °C: chill the die (a minute on an ice pack) before each impression, press for a few seconds and lift once the wax has set. Glue-gun sealing wax runs cooler. For many impressions, print in PETG — or have the die cast in brass from this model.',
+      );
+      return finish({ lathe: { profile, x, segments } });
+    }
     case 'stand': {
       const slotW = p.slot + p.clearance;
       const R0 = p.diameter / 2;
@@ -632,13 +807,17 @@ export function buildModel(id: ProductId, input: Params, src: ModelInput = {}, s
       break;
     }
   }
-  if (id !== 'lithophane') notes.unshift('Print flat on the bed, design facing up. No supports needed.', `Layers of ${layer} mm: ${heights.length ? 'the heights below are whole numbers of layers unless noted.' : 'any height works.'}`);
-  for (const [label, h] of heights) {
-    const n = h / layer;
-    if (Math.abs(n - Math.round(n)) > 0.01) warnings.push(`The ${label} (${h} mm) is not a whole number of ${layer} mm layers; the slicer will make it ${(Math.max(1, Math.round(n)) * layer).toFixed(2)} mm.`);
+  return finish({});
+
+  function finish(extra: Pick<Model, 'openings' | 'lathe'>): Model {
+    if (id !== 'lithophane') notes.unshift(id === 'stamp' ? 'No supports needed.' : 'Print flat on the bed, design facing up. No supports needed.', `Layers of ${layer} mm: ${heights.length ? 'the heights below are whole numbers of layers unless noted.' : 'any height works.'}`);
+    for (const [label, h] of heights) {
+      const n = h / layer;
+      if (Math.abs(n - Math.round(n)) > 0.01) warnings.push(`The ${label} (${h} mm) is not a whole number of ${layer} mm layers; the slicer will make it ${(Math.max(1, Math.round(n)) * layer).toFixed(2)} mm.`);
+    }
+    for (const pt of parts) if (!pt.report.ok) warnings.push(`The ${pt.name} mesh failed validation (${pt.report.badEdges} bad edges, ${pt.report.degenerate} degenerate triangles, ${pt.report.overlaps} overlapping layers).`);
+    return { product: id, params: p, settings, parts, size: [round1(size[0]), round1(size[1]), round1(size[2])], warnings, notes, lithophane, back: placed, art: artRings, ...extra };
   }
-  for (const pt of parts) if (!pt.report.ok) warnings.push(`The ${pt.name} mesh failed validation (${pt.report.badEdges} bad edges, ${pt.report.degenerate} degenerate triangles, ${pt.report.overlaps} overlapping layers).`);
-  return { product: id, params: p, settings, parts, size: [round1(size[0]), round1(size[1]), round1(size[2])], warnings, notes, lithophane, back: placed, art: artRings };
 }
 
 /** Total printed volume (cm³). */

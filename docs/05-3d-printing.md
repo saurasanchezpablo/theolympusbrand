@@ -13,8 +13,10 @@ nozzle — so what is fine enough on screen is never asked of the printer.
 | **Two-colour medallion** | Plate and relief as separate parts: one filament change, or a multi-material printer. | Ø 100 × 4.2 mm |
 | **Coaster** | The crest engraved flush, so a glass stands level, with a recess underneath for a felt or cork pad. | Ø 100 × 5 mm |
 | **Nameplate** | The crest with the service's name and caption — for a server, a rack, a door. Horizontal or vertical; sized to your bed; optionally with a QR code to the service. | 80 mm tall |
+| **Rack panel** | A front panel for a 10-inch rack: the seal and the service's name raised between the mounting slots, vents either side, optionally a QR code. | 254 mm × 1U |
 | **Marble lithophane** | A thin disc whose thickness carries the crest and a marble veining: held to the light it glows like backlit stone. | Ø 100 × 0.8–3 mm |
 | **Token** | A service's seal raised on a disc with a keyring lug. | Ø 40 mm (59 mm for the master) |
+| **Wax-seal stamp** | The seal, mirrored, on a die, with a turned handle — to seal letters in wax. Two parts, glued. | Ø 34 mm die (58 mm for the master) |
 | **Desk stand** | A slotted foot that holds a medallion or lithophane upright. Sized from the medallion. | 88 × 28 × 13 mm |
 
 The master's set is in [`manufacturing/3d/master/`](../manufacturing/3d/master/);
@@ -78,6 +80,8 @@ npm run model -- jellyfin --product token
 npm run model -- vpn --product medallion --magnets 2 --keyhole on --base 4.4
 npm run model -- vpn --product nameplate --layout vertical --caption off
 npm run model -- master --product lithophane --diameter 120 --veins 70
+npm run model -- jellyfin --product rack --units 2 --spacing 236.5 --qr on
+npm run model -- jellyfin --product stamp --diameter 36 --height 70
 npm run model -- master --layer 0.16 --infill 20 # print settings
 npm run model -- products                        # every parameter and its range
 ```
@@ -118,6 +122,39 @@ line.
 - **Stand:** print it first and test the fit; adjust the clearance (0.3 mm by
   default) to your printer.
 
+### The rack panel
+
+A blanking panel for a 10-inch rack, 254 mm wide and 1, 2 or 3 units tall
+(1U = 44.45 mm; the panel is 0.79 mm less so it clears its neighbours).
+
+- **Mounting slots** sit at the outer two of each unit's three hole positions,
+  elongated sideways to take up the rack's tolerance — 6.5 mm wide for M6
+  screws and cage nuts, 5.5 mm for M5. 10-inch racks are not covered by the
+  EIA-310 standard and differ: the default spacing between hole centres is
+  236.5 mm, the most common; **measure yours** and set it before printing.
+- **The design** — the seal and the name, as on a horizontal nameplate — is
+  centred between the slots, and made smaller if a long name needs it. The
+  seal is used rather than the crest: a 1U panel leaves 36 mm of height, and
+  the crest needs 67 mm to print cleanly. The master's seal needs 56 mm, so
+  its panel is 2U.
+- **Vents** fill the room either side of the design, if there is any.
+- **Bed:** 254 mm fits a 256 mm bed straight, or a 220 mm bed on the diagonal.
+  4 mm keeps it from flexing; PETG copes better than PLA with the warmth
+  of a rack.
+
+### The wax-seal stamp
+
+The seal is cut mirrored on the die, so the impression reads the right way.
+The handle is a separate, turned part: print the die design up and the handle
+standing on its knob (every outward slope is under 45°, so no supports; a
+brim helps), then glue the handle's peg into the socket under the die.
+
+Sealing wax is poured at 80–100 °C and PLA softens at about 60 °C. Chill the
+die before each impression — a minute on an ice pack — press for a few
+seconds, and lift once the wax has set. Glue-gun sealing wax runs cooler;
+PETG lasts longer. For a stamp that will see a lot of use, have the die cast
+in brass from the model: the STL is a good pattern.
+
 ### The marble lithophane
 
 The brand's marble is a look, not a material — except here. A lithophane is
@@ -148,7 +185,9 @@ veined marble pattern (seeded, so identical on every build).
 
 Most products are stacks of flat layers — plate, pockets, relief — extruded and
 joined exactly, rather than combined with 3D booleans. The lithophane is a
-heightfield on a polar grid, so its edge is a true circle. The design is
+heightfield on a polar grid, so its edge is a true circle; the stamp's handle
+is turned — a profile swept round its axis — and checked against the exact
+volume of the solid it describes. The design is
 cleaned first: parts that would touch at a single point are separated by
 0.02 mm, fifty times finer than anything the nozzle draws.
 
