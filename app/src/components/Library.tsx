@@ -128,9 +128,12 @@ export function Library({ house, mine, current, storageAvailable, onOpenMaster, 
   );
 }
 
-export function Icon({ name }: { name: 'copy' | 'download' | 'trash' | 'plus' | 'upload' }) {
+export function Icon({ name }: { name: 'copy' | 'download' | 'trash' | 'plus' | 'upload' | 'undo' | 'redo' | 'link' }) {
   const paths: Record<typeof name, string> = {
     copy: 'M8 8h11v11H8zM5 16V5h11',
+    undo: 'M9 14 4 9l5-5M4 9h10a6 6 0 0 1 0 12h-3',
+    redo: 'm15 14 5-5-5-5m5 5H10a6 6 0 0 0 0 12h3',
+    link: 'M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1',
     download: 'M12 4v11m-5-5 5 5 5-5M5 20h14',
     trash: 'M5 7h14M10 7V4h4v3m-7 0 1 13h8l1-13',
     plus: 'M12 5v14M5 12h14',

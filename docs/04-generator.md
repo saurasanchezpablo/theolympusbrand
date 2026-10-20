@@ -34,7 +34,7 @@ logic and no account: open it from any static host, or run
 5. Optionally put an **application logo** in the logo slot (an SVG file).
 6. Optionally change the **caption**, the lockup's second line.
 7. **Save** (or Ctrl+S). Each save increments the design's version.
-8. **Export**.
+8. **Export** — or **share** it as a link.
 
 What the system lets a design change is exactly what keeps the family
 consistent: the god in the central bay, the logo slot, and the lockup's
@@ -49,8 +49,9 @@ shown read-only.
 | **SVG** (this view) | The production file for the current view, on any of the four grounds: transparent with dark ink, transparent with white ink, on light, on dark. |
 | **PNG** (this view) | The same, rasterised at the chosen width. |
 | **Presentation render** | With a marble or engraved surface: a 2048 px PNG of that render, named `…-mockup.png`. |
-| **Asset pack (.zip)** | Everything `npm run service -- build` makes for a service — 28 SVGs, 11 PNGs, `favicon.ico`, the `web/` icon set, `manifest.json` — plus `catalog/services/<id>.json`, the logo in `catalog/logos/`, and the design file. |
-| **Design file (.json)** | The design itself, to back up, share or import elsewhere. |
+| **Asset pack (.zip)** | Everything `npm run service -- build` makes for a service — 28 SVGs, 11 PNGs, `favicon.ico`, the `web/` icon set, `manifest.json` — plus `catalog/services/<id>.json`, the logo in `catalog/logos/`, the design file, and a `dashboard/` folder with the service's coin icons and its entries for Homepage, Dashy and Homer (see [Integrations](08-integrations.md)). |
+| **Design file (.json)** | The design itself, with its history, to back up, share or import elsewhere. |
+| **Link to this design** | The design in an address — see below. |
 | **Sticker** view | Production PDF and SVG (Bleed, Artwork, White, CutContour layers), the cut path alone, a sheet, mockups. See [Stickers](06-stickers.md). |
 | **3D print** view | STL, 3MF and OpenSCAD source of every printable product, or the whole model pack. See [3D printing](05-3d-printing.md). |
 
@@ -64,6 +65,34 @@ The geometry is identical; anti-aliasing can differ by a hair.
 **Marble, relief and engraving are presentation mockups.** They are rendered
 effects for previews and documentation. The production file is always the flat
 vector, and a marble texture is not printable geometry.
+
+## Sharing a design
+
+**Link to this design** (under Export) puts the whole design — its settings,
+and its logo if it has one — into an address and copies it. Whoever opens it
+gets the design in their Atelier as an unsaved copy, to look at, change or
+save as theirs.
+
+- **Nothing is uploaded.** The design travels in the part of the address
+  after `#`, which the browser keeps to itself: the server never sees it.
+- Copying needs a secure (https) page; on a plain-http network the link is
+  shown to select and copy by hand.
+- A design is a few hundred characters; a logo makes the link longer, and
+  very long links can be cut short by chat apps — the panel warns, and the
+  design file is the alternative.
+- What a link carries is checked like an imported file, and a damaged or
+  foreign link is refused with a reason.
+
+## History, undo and redo
+
+- **Undo and redo** — the arrows beside Save, or Ctrl+Z and Ctrl+Shift+Z
+  (Ctrl+Y) when you are not typing in a field — step through every change to
+  the open design since it was opened. A burst of typing is one step.
+- **History** — each save keeps the version before it (the last 15). The
+  History panel lists them with what changed; **Restore** opens a version as
+  unsaved changes, so saving it makes a new version and nothing is lost.
+  History is part of the design: it is kept in the browser and travels in
+  the design and library files.
 
 ## Print check
 

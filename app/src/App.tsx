@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { productionSvg } from '../../src/render/svg.ts';
 import { slugify } from '../../src/catalog/service.ts';
-import { designFile, libraryFile, parseDesigns, type Design } from '../../src/catalog/design.ts';
+import { designFile, libraryFile, nextVersion, parseDesigns, type Design, type DesignVersion } from '../../src/catalog/design.ts';
+import { readShareCode, shareCode } from '../../src/catalog/share.ts';
 import type { MarkKey } from '../../src/catalog/fileset.ts';
 import type { Mark } from '../../src/geometry/crest.ts';
 import { HOUSE, loadLibrary, newKey, nowIso, saveLibrary, type Saved } from './library.ts';
@@ -26,6 +27,7 @@ import { Canvas, type CanvasState } from './components/Canvas.tsx';
 import { Config, MasterCard } from './components/Config.tsx';
 import { ExportPanel } from './components/ExportPanel.tsx';
 import { SvgImage } from './components/ui.tsx';
+import { History } from './components/History.tsx';
 
 type Open = { kind: 'master' } | { kind: 'draft'; draft: Draft; saved: string };
 
@@ -36,17 +38,21 @@ const STICKER_KEY = 'the-olympus/sticker';
 const fingerprint = (d: Draft) => JSON.stringify([d.spec, d.logoSvg ?? null]);
 
 /** The design a draft saves as. */
-function designOf(d: Draft, previous?: Design): Design {
-  const now = nowIso();
-  const { logo: _, ...spec } = d.spec;
-  return {
-    spec: d.logoSvg ? { ...spec, logo: `logos/${spec.id}.svg` } : spec,
-    logoSvg: d.logoSvg,
-    version: previous ? previous.version + 1 : 1,
-    created: previous?.created ?? now,
-    updated: now,
-  };
+const designOf = (d: Draft, previous?: Design): Design => nextVersion(d, previous, nowIso());
+
+/** Edits to these fields are typed: a burst of keystrokes is one step to undo. */
+const TYPED = new Set(['name', 'id', 'caption', 'description', 'url', 'monogram']);
+
+/** Which parts of a draft differ — to word and group the steps of undo. */
+function changed(a: Draft, b: Draft): string {
+  const keys = new Set([...Object.keys(a.spec), ...Object.keys(b.spec)]);
+  const out = [...keys].filter((k) => (a.spec as Record<string, unknown>)[k] !== (b.spec as Record<string, unknown>)[k]);
+  if ((a.logoSvg ?? '') !== (b.logoSvg ?? '')) out.push('logo');
+  return out.sort().join(',');
 }
+
+/** Keys handled by the browser while typing in a field. */
+const editable = (t: EventTarget | null) => t instanceof HTMLElement && (t.isContentEditable || (t instanceof HTMLInputElement && !['checkbox', 'radio', 'range', 'file', 'button'].includes(t.type)) || t instanceof HTMLTextAreaElement);
 
 export function App() {
   const [route, navigate] = useRoute();
@@ -78,6 +84,39 @@ export function App() {
     },
     [say],
   );
+
+  /* ---------- undo and redo, for the open design ---------- */
+  const [steps, setSteps] = useState<{ past: Draft[]; future: Draft[] }>({ past: [], future: [] });
+  const lastEdit = useRef({ what: '', at: 0 });
+  const resetSteps = () => {
+    setSteps({ past: [], future: [] });
+    lastEdit.current = { what: '', at: 0 };
+  };
+  const edit = (d: Draft) => {
+    if (open.kind !== 'draft') return;
+    const what = changed(open.draft, d);
+    if (!what && d.autoId === open.draft.autoId) return;
+    const now = Date.now();
+    const burst = what !== '' && what === lastEdit.current.what && what.split(',').every((k) => TYPED.has(k)) && now - lastEdit.current.at < 1500;
+    lastEdit.current = { what, at: now };
+    const before = open.draft;
+    setSteps((h) => ({ past: burst ? h.past : [...h.past, before].slice(-100), future: [] }));
+    setOpen({ ...open, draft: d });
+  };
+  const undo = () => {
+    if (open.kind !== 'draft' || !steps.past.length) return;
+    const prev = steps.past[steps.past.length - 1];
+    setSteps({ past: steps.past.slice(0, -1), future: [open.draft, ...steps.future] });
+    lastEdit.current = { what: '', at: 0 };
+    setOpen({ ...open, draft: prev });
+  };
+  const redo = () => {
+    if (open.kind !== 'draft' || !steps.future.length) return;
+    const [next, ...rest] = steps.future;
+    setSteps({ past: [...steps.past, open.draft], future: rest });
+    lastEdit.current = { what: '', at: 0 };
+    setOpen({ ...open, draft: next });
+  };
 
   const dirty = open.kind === 'draft' && fingerprint(open.draft) !== open.saved;
   const guard = () => !dirty || window.confirm('Discard the unsaved changes to this design?');
@@ -206,12 +245,19 @@ export function App() {
   const current: Current = open.kind === 'master' ? { kind: 'master' } : open.draft.origin.kind === 'house' ? { kind: 'house', id: open.draft.origin.id } : open.draft.origin.kind === 'mine' ? { kind: 'mine', key: open.draft.origin.key } : { kind: 'new' };
 
   /* ---------- actions ---------- */
-  const openDraft = (d: Draft) => setOpen({ kind: 'draft', draft: d, saved: fingerprint(d) });
+  const openDraft = (d: Draft) => {
+    resetSteps();
+    setOpen({ kind: 'draft', draft: d, saved: fingerprint(d) });
+  };
+  const openMaster = () => {
+    resetSteps();
+    setOpen({ kind: 'master' });
+  };
 
   const onNew = () => {
     if (!guard()) return;
-    const d = newDraft();
-    setOpen({ kind: 'draft', draft: d, saved: '' });
+    resetSteps();
+    setOpen({ kind: 'draft', draft: newDraft(), saved: '' });
     setCanvas((c) => ({ ...c, view: 'crest' }));
   };
 
@@ -235,7 +281,7 @@ export function App() {
     if (!d || !window.confirm(`Delete “${d.spec.name}” from your designs? This cannot be undone.`)) return;
     const { [key]: _, ...rest } = mine;
     persist(rest);
-    if (current.kind === 'mine' && current.key === key) setOpen({ kind: 'master' });
+    if (current.kind === 'mine' && current.key === key) openMaster();
     say(`Deleted “${d.spec.name}”.`);
   };
 
@@ -244,7 +290,9 @@ export function App() {
     const key = draft.origin.kind === 'mine' ? draft.origin.key : newKey();
     const design = designOf(draft, draft.origin.kind === 'mine' ? mine[key] : undefined);
     persist({ ...mine, [key]: design });
-    openDraft({ ...draft, origin: { kind: 'mine', key } });
+    // Saving keeps the steps: what was saved can still be undone, and saved again.
+    const saved = { ...draft, origin: { kind: 'mine', key } as const };
+    setOpen({ kind: 'draft', draft: saved, saved: fingerprint(saved) });
     say(draft.origin.kind === 'mine' ? `Saved — version ${design.version}.` : `Saved to your designs.`);
   };
 
@@ -255,8 +303,37 @@ export function App() {
     else if (o.kind === 'house') {
       const h = HOUSE.find((x) => x.spec.id === o.id);
       if (h) openDraft(draftOf(h, o));
-    } else setOpen({ kind: 'draft', draft: newDraft(), saved: '' });
+    } else {
+      resetSteps();
+      setOpen({ kind: 'draft', draft: newDraft(), saved: '' });
+    }
   };
+
+  /** An earlier version, opened as unsaved changes to the design (undoable). */
+  const onRestore = (v: DesignVersion) => {
+    if (!draft) return;
+    edit(draftOf({ spec: v.spec, logoSvg: v.logoSvg, version: v.version, created: v.updated, updated: v.updated }, draft.origin));
+    say(`Version ${v.version} restored — save to keep it.`);
+  };
+
+  /* ---------- a design in a link ---------- */
+  const shareUrl = draft && !issues.length ? () => `${location.origin}${location.pathname}#/atelier/share/${shareCode(draft)}` : null;
+  useEffect(() => {
+    if (route.page !== 'atelier' || !route.arg?.startsWith('share/')) return;
+    const code = route.arg.slice('share/'.length);
+    // The link has done its work: the address goes back to the Atelier (a reload will not reopen it).
+    location.replace('#/atelier');
+    try {
+      const shared = readShareCode(code);
+      if (!guard()) return;
+      resetSteps();
+      setOpen({ kind: 'draft', draft: { spec: shared.spec, logoSvg: shared.logoSvg, origin: { kind: 'new' }, autoId: shared.spec.id === slugify(shared.spec.name) }, saved: '' });
+      setCanvas((c) => ({ ...c, view: 'crest' }));
+      say(`Opened “${shared.spec.name}” from a link — save it to keep it.`);
+    } catch (e) {
+      say(`This link could not be opened. ${(e as Error).message}`);
+    }
+  }, [route.page, route.arg]);
 
   const exportDesign = (d: Design) => download(`${d.spec.id}.olympus.json`, designFile(d), 'application/json');
 
@@ -300,14 +377,20 @@ export function App() {
       }
     : null;
 
-  // Ctrl/Cmd + S saves.
-  const saveRef = useRef(onSave);
-  saveRef.current = onSave;
+  // Ctrl/Cmd + S saves; Ctrl/Cmd + Z undoes and Shift+Z or Y redoes — except while typing, where the field has its own.
+  const keysRef = useRef({ onSave, undo, redo });
+  keysRef.current = { onSave, undo, redo };
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
+      if (!(e.ctrlKey || e.metaKey)) return;
+      const k = e.key.toLowerCase();
+      if (k === 's') {
         e.preventDefault();
-        saveRef.current();
+        keysRef.current.onSave();
+      } else if ((k === 'z' || k === 'y') && !editable(e.target) && location.hash.startsWith('#/atelier')) {
+        e.preventDefault();
+        if (k === 'y' || e.shiftKey) keysRef.current.redo();
+        else keysRef.current.undo();
       }
     };
     window.addEventListener('keydown', onKey);
@@ -380,7 +463,7 @@ export function App() {
         mine={mine}
         current={current}
         storageAvailable={storageOk}
-        onOpenMaster={() => guard() && setOpen({ kind: 'master' })}
+        onOpenMaster={() => guard() && openMaster()}
         onOpen={onOpen}
         onDuplicate={onDuplicate}
         onExport={(e) => exportDesign(e.design)}
@@ -414,7 +497,8 @@ export function App() {
               onReset={() => setOverrides((o) => ({ ...o, [product]: {} }))}
             />
           )}
-          {draft && service ? <Config draft={draft} service={service} logo={logo} issues={issues} warnings={warnings} onChange={(d) => setOpen({ ...open, kind: 'draft', draft: d, saved: open.kind === 'draft' ? open.saved : '' })} /> : <MasterCard onNew={onNew} />}
+          {draft && service ? <Config draft={draft} service={service} logo={logo} issues={issues} warnings={warnings} onChange={edit} /> : <MasterCard onNew={onNew} />}
+          {draft && savedDesign && !showModel && !showSticker && <History design={savedDesign} onRestore={onRestore} />}
           {showSticker && <StickerPanel spec={stickerSpec} paper={paper} build={stickerBuild} error={stickerError} onSpec={setStickerSpec} onPaper={setPaper} />}
           {!showModel && !showSticker && <ExportPanel
             canvas={canvas}
@@ -423,6 +507,7 @@ export function App() {
             name={service?.name ?? 'Master'}
             onPack={onPack}
             onDesignFile={draft ? () => exportDesign(designOf(draft, savedDesign)) : null}
+            shareUrl={shareUrl}
             packProgress={packProgress}
             disabledReason={issues.length ? 'Fix the problems above before exporting the pack.' : null}
           />}
@@ -433,6 +518,12 @@ export function App() {
           </span>
           {draft && (
             <span className="savebar__actions">
+              <button type="button" className="btn btn--ghost btn--sm btn--icon" disabled={!steps.past.length} onClick={undo} aria-label="Undo" title="Undo (Ctrl+Z)">
+                <Icon name="undo" />
+              </button>
+              <button type="button" className="btn btn--ghost btn--sm btn--icon" disabled={!steps.future.length} onClick={redo} aria-label="Redo" title="Redo (Ctrl+Shift+Z)">
+                <Icon name="redo" />
+              </button>
               {dirty && (
                 <button type="button" className="btn btn--ghost btn--sm" onClick={onRevert}>
                   Discard

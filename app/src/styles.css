@@ -582,10 +582,15 @@ a.btn--primary {
 }
 
 .config,
-.export {
+.export,
+.versions {
   display: grid;
   gap: 4px;
   padding: 8px 20px;
+}
+
+.versions {
+  border-top: 1px solid var(--line);
 }
 
 .export {
@@ -804,6 +809,63 @@ p.notes {
 .savebar__actions {
   display: flex;
   gap: 6px;
+}
+
+.btn--icon {
+  padding-inline: 8px;
+}
+
+/* History of a saved design */
+.history {
+  display: grid;
+  gap: 2px;
+  margin: 0 0 10px;
+  padding: 0;
+  list-style: none;
+}
+
+.history__row {
+  display: grid;
+  grid-template-columns: 30px 1fr auto;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 6px;
+  border-radius: var(--radius);
+}
+
+.history__row.is-current {
+  background: var(--panel);
+}
+
+.history__seal {
+  width: 30px;
+  height: 30px;
+}
+
+.history__text {
+  display: grid;
+  gap: 1px;
+  min-width: 0;
+  font-size: 12px;
+  color: var(--slate);
+}
+
+.history__text strong {
+  color: var(--charcoal);
+  font-weight: 500;
+}
+
+.history__note {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Share */
+.share__link {
+  width: 100%;
+  margin-top: 10px;
+  font-size: 11px;
 }
 
 .toast {
@@ -1779,6 +1841,7 @@ p.notes {
   /* Marks drawn in charcoal ink on the interface itself read light here. */
   .item__thumb,
   .patron__seal,
+  .history__seal,
   .brand__seal,
   .home__god img,
   .slot__preview img {

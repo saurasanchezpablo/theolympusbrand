@@ -13,7 +13,33 @@ export type Design = {
   version: number;
   created: string;
   updated: string;
+  /** Earlier versions, oldest first — the last HISTORY_LIMIT saves before this one. */
+  history?: DesignVersion[];
 };
+
+/** A design as it was at one save. */
+export type DesignVersion = { version: number; updated: string; spec: ServiceSpec; logoSvg?: string };
+
+export const HISTORY_LIMIT = 15;
+
+/**
+ * The design a save makes: version one, or the next version of `previous`,
+ * which joins the history (the oldest fall away past HISTORY_LIMIT).
+ */
+export function nextVersion(d: { spec: ServiceSpec; logoSvg?: string }, previous: Design | undefined, now: string): Design {
+  const { logo: _, ...spec } = d.spec;
+  const history = previous ? [...(previous.history ?? []), versionOf(previous)].slice(-HISTORY_LIMIT) : undefined;
+  return {
+    spec: d.logoSvg ? { ...spec, logo: `logos/${spec.id}.svg` } : spec,
+    logoSvg: d.logoSvg,
+    version: previous ? previous.version + 1 : 1,
+    created: previous?.created ?? now,
+    updated: now,
+    ...(history?.length ? { history } : {}),
+  };
+}
+
+const versionOf = (d: Design): DesignVersion => ({ version: d.version, updated: d.updated, spec: d.spec, ...(d.logoSvg ? { logoSvg: d.logoSvg } : {}) });
 
 export const DESIGN_FORMAT = 'the-olympus/design';
 export const LIBRARY_FORMAT = 'the-olympus/library';
@@ -46,12 +72,26 @@ function asDesign(raw: unknown, where: string, now: string): Design {
   if (o.logoSvg !== undefined && typeof o.logoSvg !== 'string') throw new Error(`${where}: "logoSvg" must be SVG text`);
   // A logo path without its SVG cannot be used here; keep the design, drop the reference.
   const { logo: _, ...rest } = spec;
+  const version = Number.isInteger(o.version) && (o.version as number) > 0 ? (o.version as number) : 1;
+  // Earlier versions: kept when they are sound and older than this one; a damaged entry is dropped, not fatal.
+  const history: DesignVersion[] = [];
+  if (Array.isArray(o.history))
+    for (const h of o.history.slice(-HISTORY_LIMIT) as Partial<DesignVersion>[]) {
+      try {
+        if (!Number.isInteger(h.version) || h.version! < 1 || h.version! >= version || (h.logoSvg !== undefined && typeof h.logoSvg !== 'string')) continue;
+        const { logo: _l, ...hs } = validateSpec(h.spec, `${where}, version ${h.version}`);
+        history.push({ version: h.version!, updated: typeof h.updated === 'string' ? h.updated : now, spec: h.logoSvg ? { ...hs, logo: `logos/${hs.id}.svg` } : hs, ...(h.logoSvg ? { logoSvg: h.logoSvg } : {}) });
+      } catch {
+        /* skip */
+      }
+    }
   return {
     spec: o.logoSvg ? { ...rest, logo: `logos/${spec.id}.svg` } : rest,
     logoSvg: o.logoSvg,
-    version: Number.isInteger(o.version) && (o.version as number) > 0 ? (o.version as number) : 1,
+    version,
     created: typeof o.created === 'string' ? o.created : now,
     updated: typeof o.updated === 'string' ? o.updated : now,
+    ...(history.length ? { history } : {}),
   };
 }
 

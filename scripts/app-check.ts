@@ -130,6 +130,47 @@ try {
   assert.equal(await page.getByLabel('Caption', { exact: true }).inputValue(), 'The Olympus · Vault');
   step('designs persist across a reload');
 
+  // History: restore version 1 (before the description), undo it by button, redo, undo by keyboard.
+  const desc = () => page.getByLabel('Description', { exact: true }).inputValue();
+  await page.getByRole('button', { name: 'Restore version 1' }).click();
+  assert.equal(await desc(), '');
+  await page.getByText('Unsaved changes', { exact: true }).waitFor();
+  await shot(page, '3b-history');
+  await page.getByRole('button', { name: 'Undo', exact: true }).click();
+  assert.equal(await desc(), 'Password manager');
+  await page.getByText('Saved · version 2').waitFor();
+  await page.getByRole('button', { name: 'Redo', exact: true }).click();
+  assert.equal(await desc(), '');
+  await page.evaluate(() => (document.activeElement as HTMLElement | null)?.blur());
+  await page.keyboard.press('Control+z');
+  assert.equal(await desc(), 'Password manager');
+  // Typing is one step to undo, not one per key.
+  await page.getByLabel('Description', { exact: true }).fill('Password manager and vault');
+  await page.getByLabel('Description', { exact: true }).press('End');
+  await page.keyboard.type(' too');
+  await page.getByRole('button', { name: 'Undo', exact: true }).click();
+  assert.equal(await desc(), 'Password manager');
+  step('history: restore a version; undo and redo by button and keyboard');
+
+  // A design in a link opens, unsaved, in a fresh tab; a damaged link says so.
+  await page.getByRole('radio', { name: 'Crest' }).click();
+  await page.getByRole('button', { name: 'Link to this design' }).click();
+  const link = await page.getByLabel('Link to this design').inputValue();
+  await shot(page, '3c-share');
+  assert.match(link, /#\/atelier\/share\/1\.[A-Za-z0-9_-]+$/);
+  const other = await browser.newContext({ viewport: { width: 1520, height: 940 } });
+  const tab = await other.newPage();
+  await tab.goto(link);
+  await tab.getByText('Opened “Vaultwarden” from a link').waitFor();
+  assert.equal(await tab.getByLabel('Caption', { exact: true }).inputValue(), 'The Olympus · Vault');
+  assert.equal(await tab.getByLabel('Description', { exact: true }).inputValue(), 'Password manager');
+  await tab.getByText('Unsaved changes', { exact: true }).waitFor();
+  assert.ok(tab.url().endsWith('#/atelier'), tab.url());
+  await tab.goto(link.replace(/share\/1\..*/, 'share/1.AAAA'));
+  await tab.getByText(/This link could not be opened/).waitFor();
+  await other.close();
+  step('share: a link opens the design in another browser; a damaged link is refused');
+
   // Marble presentation and the small-size sheet.
   await page.getByRole('radio', { name: 'Crest' }).click();
   await page.getByRole('radio', { name: 'Black marble' }).click();

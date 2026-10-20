@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { SHARE_LONG_LINK } from '../../../src/catalog/share.ts';
 import { GROUNDS, type MarkKey } from '../../../src/catalog/fileset.ts';
 import type { Mark } from '../../../src/geometry/crest.ts';
 import { download, fileName, markSvg, presentationSvg, svgToPng } from '../exporters.ts';
@@ -21,11 +22,13 @@ type Props = {
   /** Null for the master, whose full set already lives in assets/master. */
   onPack: (() => Promise<void>) | null;
   onDesignFile: (() => void) | null;
+  /** The design as a link; null for the master or a design with problems. */
+  shareUrl: (() => string) | null;
   packProgress: number | null;
   disabledReason: string | null;
 };
 
-export function ExportPanel({ canvas, marks, id, name, onPack, onDesignFile, packProgress, disabledReason }: Props) {
+export function ExportPanel({ canvas, marks, id, name, onPack, onDesignFile, shareUrl, packProgress, disabledReason }: Props) {
   const key = markKeyOf(canvas.view, canvas.edition);
   const mark = key ? marks[key] : undefined;
   const [variant, setVariant] = useState('');
@@ -108,6 +111,42 @@ export function ExportPanel({ canvas, marks, id, name, onPack, onDesignFile, pac
         )}
         {(error || disabledReason) && <p className="notes notes--error">{error ?? disabledReason}</p>}
       </Section>
+      {shareUrl && <Share url={shareUrl} />}
     </div>
+  );
+}
+
+/** The design as a link: made on request, copied if the browser allows, always shown to copy by hand. */
+function Share({ url }: { url: () => string }) {
+  const [link, setLink] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
+  const make = async () => {
+    const u = url();
+    setLink(u);
+    setCopied(false);
+    try {
+      // The clipboard is only offered on secure (https) pages; on a plain-http network the field below is the way.
+      await navigator.clipboard.writeText(u);
+      setCopied(true);
+    } catch {
+      /* copy by hand */
+    }
+  };
+  return (
+    <Section title="Share">
+      <button type="button" className="btn btn--sm" onClick={make}>
+        <Icon name="link" /> Link to this design
+      </button>
+      {link && (
+        <>
+          <input className="input input--mono share__link" readOnly value={link} aria-label="Link to this design" onFocus={(e) => e.currentTarget.select()} />
+          <p className="field__hint">
+            {copied ? 'Copied. ' : 'Select it and copy. '}
+            The link carries the design itself — nothing is uploaded. Whoever opens it gets an unsaved copy in their Atelier.
+            {link.length > SHARE_LONG_LINK ? ' It is long (the logo travels in it): some chat apps cut long links short — send the design file instead.' : ''}
+          </p>
+        </>
+      )}
+    </Section>
   );
 }
