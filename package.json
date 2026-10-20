@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "license": "UNLICENSED",
-  "description": "The Olympus \u2014 visual identity system for a private server ecosystem",
+  "description": "The Olympus — visual identity system for a private server ecosystem",
   "type": "module",
   "scripts": {
     "test": "node --test 'tests/**/*.test.ts'",
@@ -13,7 +13,7 @@
     "build:docs": "node scripts/build-docs.ts",
     "service": "node scripts/service.ts",
     "build:services": "node scripts/service.ts build",
-    "build": "npm run build:master && npm run build:services && npm run build:docs && npm run brandbook",
+    "build": "npm run build:master && npm run build:services && npm run build:docs && npm run brandbook && npm run integrations",
     "app": "vite --config app/vite.config.ts",
     "app:build": "vite build --config app/vite.config.ts",
     "app:preview": "vite preview --config app/vite.config.ts",
@@ -21,6 +21,7 @@
     "model": "node scripts/model.ts",
     "sticker": "node scripts/sticker.ts",
     "site": "vite build --config app/vite.config.ts",
+    "integrations": "node scripts/integrations.ts",
     "brandbook": "node scripts/brandbook.ts"
   },
   "devDependencies": {
@@ -46,6 +47,7 @@
     "react-dom": "19.3.1",
     "svgpath": "2.6.0",
     "typescript": "5.9.3",
-    "vite": "8.3.4"
+    "vite": "8.3.4",
+    "yaml": "2.8.1"
   }
 }

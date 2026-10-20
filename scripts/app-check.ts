@@ -18,6 +18,7 @@ import { loadNodeFonts } from '../src/node/fonts.ts';
 import { loadCatalog } from '../src/node/catalog.ts';
 import { markFor, modelFiles } from '../src/manufacturing/files.ts';
 import { suggestedParams } from '../src/manufacturing/products.ts';
+import { coinSvg } from '../src/integrations/kit.ts';
 import { baseMarks } from '../src/catalog/fileset.ts';
 import { buildSticker, stickerPdf, STICKER_DEFAULTS } from '../src/manufacturing/stickers.ts';
 import { Resvg } from '@resvg/resvg-js';
@@ -163,7 +164,11 @@ try {
   assert.deepEqual(spec, { id: 'vaultwarden', name: 'Vaultwarden', category: 'security', god: 'hades', logo: 'logos/vaultwarden.svg', caption: 'The Olympus · Vault', description: 'Password manager' });
   const png = zip['the-olympus-vaultwarden/assets/services/vaultwarden/png/the-olympus-vaultwarden-seal-512.png'];
   assert.deepEqual([...png.slice(1, 4)], [80, 78, 71]); // "PNG"
-  step(`asset pack: ${names.length} files — SVGs, PNGs, favicon, manifest, catalogue entry, logo`);
+  // Dashboard icons: the coin is the command line's, byte for byte.
+  assert.equal(strFromU8(zip['the-olympus-vaultwarden/dashboard/olympus-vaultwarden.svg']), coinSvg(baseMarks({ god: 'hades' }).seal, 'dark', 'The Olympus — Vaultwarden'));
+  assert.ok(strFromU8(zip['the-olympus-vaultwarden/dashboard/README.md']).includes('https://vaultwarden.theolympus.cloud'));
+  for (const p of ['dashboard/olympus-vaultwarden.png', 'dashboard/olympus-vaultwarden-light.png']) assert.ok(inPack(p), p);
+  step(`asset pack: ${names.length} files — SVGs, PNGs, favicon, manifest, catalogue entry, logo, dashboard icons`);
 
   // Export the design, delete it, import it back.
   const designJson = await downloadOf(page, () => page.getByRole('button', { name: 'Design file (.json)' }).click());

@@ -8,6 +8,8 @@ import { svgFiles, rasterJobs, FAVICON, type MarkKey } from '../../src/catalog/f
 import { designFile, catalogFile, libraryFile, type Design } from '../../src/catalog/design.ts';
 import { ico } from '../../src/export/ico.ts';
 import { webIcons } from '../../src/catalog/webicons.ts';
+import { coinSvg } from '../../src/integrations/kit.ts';
+import { dashboardSnippets, iconName } from '../../src/integrations/dashboards.ts';
 import { PRINTER_MM, type PrintReport } from '../../src/print/service.ts';
 import type { Mark } from '../../src/geometry/crest.ts';
 import type { Service } from '../../src/catalog/service.ts';
@@ -106,6 +108,12 @@ export async function assetPack(design: Design, service: Service, marks: Record<
   files[`catalog/services/${id}.json`] = strToU8(catalogFile(design));
   if (design.logoSvg) files[`catalog/logos/${id}.svg`] = strToU8(design.logoSvg);
   files[`${id}.olympus.json`] = strToU8(designFile(design));
+  // Dashboard icons and entries, for a start page that already lists the house.
+  const entry = { id, name: service.name, category: service.category, description: service.description, url: service.url };
+  files[`dashboard/${iconName(id, '', 'svg')}`] = strToU8(coinSvg(marks.seal, 'dark', `The Olympus — ${service.name}`));
+  files[`dashboard/${iconName(id)}`] = await svgToPng(coinSvg(marks.seal, 'dark', `The Olympus — ${service.name}`), 256);
+  files[`dashboard/${iconName(id, '-light')}`] = await svgToPng(coinSvg(marks.seal, 'light', `The Olympus — ${service.name}`), 256);
+  files['dashboard/README.md'] = strToU8(dashboardSnippets(entry));
 
   return zipSync(Object.fromEntries(Object.entries(files).map(([p, d]) => [`${root}/${p}`, d])), { level: 6 });
 }

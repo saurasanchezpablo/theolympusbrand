@@ -1,0 +1,98 @@
+# The Olympus — Homepage services
+# Generated from the catalogue (npm run integrations). Copy to the config folder as services.yaml.
+
+- "Virtualisation":
+    - "Proxmox":
+        icon: "/icons/olympus-proxmox.png"
+        href: "https://proxmox.theolympus.cloud"
+        description: "Hypervisor carrying every machine"
+
+- "Network":
+    - "Network":
+        icon: "/icons/olympus-network.png"
+        href: "https://network.theolympus.cloud"
+        description: "Routing, switching and DNS"
+
+- "Gateways":
+    - "Reverse Proxy":
+        icon: "/icons/olympus-reverse-proxy.png"
+        href: "https://reverse-proxy.theolympus.cloud"
+        description: "Gateway and certificates"
+
+- "Storage":
+    - "Storage":
+        icon: "/icons/olympus-storage.png"
+        href: "https://storage.theolympus.cloud"
+        description: "Disks, pools and shares"
+
+- "Backup":
+    - "Backup":
+        icon: "/icons/olympus-backup.png"
+        href: "https://backup.theolympus.cloud"
+        description: "Snapshots and off-site copies"
+
+- "Monitoring":
+    - "Monitoring":
+        icon: "/icons/olympus-monitoring.png"
+        href: "https://monitoring.theolympus.cloud"
+        description: "Metrics, logs and alerts"
+
+- "Security":
+    - "VPN":
+        icon: "/icons/olympus-vpn.png"
+        href: "https://vpn.theolympus.cloud"
+        description: "Private access from anywhere"
+
+- "Cloud":
+    - "Nextcloud":
+        icon: "/icons/olympus-nextcloud.png"
+        href: "https://nextcloud.theolympus.cloud"
+        description: "Files, calendars and contacts"
+
+- "Media":
+    - "Jellyfin":
+        icon: "/icons/olympus-jellyfin.png"
+        href: "https://jellyfin.theolympus.cloud"
+        description: "Personal media streaming"
+
+- "Home":
+    - "Home Assistant":
+        icon: "/icons/olympus-home-assistant.png"
+        href: "https://home-assistant.theolympus.cloud"
+        description: "Home automation"
+
+- "Containers":
+    - "Containers":
+        icon: "/icons/olympus-containers.png"
+        href: "https://containers.theolympus.cloud"
+        description: "Container host and stacks"
+
+- "Web":
+    - "Web":
+        icon: "/icons/olympus-web.png"
+        href: "https://web.theolympus.cloud"
+        description: "Websites and web apps"
+
+- "Game servers":
+    - "Game Server":
+        icon: "/icons/olympus-game-server.png"
+        href: "https://game-server.theolympus.cloud"
+        description: "Game hosting"
+
+- "Sandbox games":
+    - "Minecraft":
+        icon: "/icons/olympus-minecraft.png"
+        href: "https://minecraft.theolympus.cloud"
+        description: "Minecraft worlds"
+
+- "Multiplayer":
+    - "Multiplayer":
+        icon: "/icons/olympus-multiplayer.png"
+        href: "https://multiplayer.theolympus.cloud"
+        description: "Competitive matches"
+
+- "Community":
+    - "Community":
+        icon: "/icons/olympus-community.png"
+        href: "https://community.theolympus.cloud"
+        description: "Chat and community spaces"

@@ -1,0 +1,17 @@
+name,url,group,description,icon
+Proxmox,https://proxmox.theolympus.cloud,Virtualisation,Hypervisor carrying every machine,olympus-proxmox.png
+Network,https://network.theolympus.cloud,Network,"Routing, switching and DNS",olympus-network.png
+Reverse Proxy,https://reverse-proxy.theolympus.cloud,Gateways,Gateway and certificates,olympus-reverse-proxy.png
+Storage,https://storage.theolympus.cloud,Storage,"Disks, pools and shares",olympus-storage.png
+Backup,https://backup.theolympus.cloud,Backup,Snapshots and off-site copies,olympus-backup.png
+Monitoring,https://monitoring.theolympus.cloud,Monitoring,"Metrics, logs and alerts",olympus-monitoring.png
+VPN,https://vpn.theolympus.cloud,Security,Private access from anywhere,olympus-vpn.png
+Nextcloud,https://nextcloud.theolympus.cloud,Cloud,"Files, calendars and contacts",olympus-nextcloud.png
+Jellyfin,https://jellyfin.theolympus.cloud,Media,Personal media streaming,olympus-jellyfin.png
+Home Assistant,https://home-assistant.theolympus.cloud,Home,Home automation,olympus-home-assistant.png
+Containers,https://containers.theolympus.cloud,Containers,Container host and stacks,olympus-containers.png
+Web,https://web.theolympus.cloud,Web,Websites and web apps,olympus-web.png
+Game Server,https://game-server.theolympus.cloud,Game servers,Game hosting,olympus-game-server.png
+Minecraft,https://minecraft.theolympus.cloud,Sandbox games,Minecraft worlds,olympus-minecraft.png
+Multiplayer,https://multiplayer.theolympus.cloud,Multiplayer,Competitive matches,olympus-multiplayer.png
+Community,https://community.theolympus.cloud,Community,Chat and community spaces,olympus-community.png

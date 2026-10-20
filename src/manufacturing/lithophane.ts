@@ -35,7 +35,7 @@ function noise(x: number, y: number, seed: number): number {
   return a + (b - a) * sx + (c - a) * sy + (a - b - c + d) * sx * sy;
 }
 
-function fbm(x: number, y: number, seed: number, octaves = 5): number {
+export function fbm(x: number, y: number, seed: number, octaves = 5): number {
   let sum = 0;
   let amp = 0.5;
   let f = 1;

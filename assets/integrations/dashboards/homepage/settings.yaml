@@ -1,0 +1,11 @@
+# The Olympus — Homepage settings
+# Generated from the catalogue (npm run integrations). Merge into settings.yaml.
+
+title: "The Olympus"
+description: "theolympus.cloud"
+favicon: "/icons/olympus.png"
+theme: dark
+color: neutral
+headerStyle: clean
+background:
+  image: "/images/olympus-background.png"

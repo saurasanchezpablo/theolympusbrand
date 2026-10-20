@@ -1,0 +1,114 @@
+# The Olympus — Dashy
+# Generated from the catalogue (npm run integrations). Copy to user-data/conf.yml.
+
+pageInfo:
+  title: "The Olympus"
+  description: "theolympus.cloud"
+  logo: "/item-icons/olympus.png"
+appConfig:
+  theme: olympus
+  cssThemes: [olympus]
+  customColors:
+    olympus:
+      primary: "#EDEDED"
+      background: "#0E0E0E"
+      background-darker: "#000000"
+  layout: auto
+  iconSize: large
+sections:
+  - name: "Virtualisation"
+    items:
+      - title: "Proxmox"
+        description: "Hypervisor carrying every machine"
+        icon: "olympus-proxmox.png"
+        url: "https://proxmox.theolympus.cloud"
+  - name: "Network"
+    items:
+      - title: "Network"
+        description: "Routing, switching and DNS"
+        icon: "olympus-network.png"
+        url: "https://network.theolympus.cloud"
+  - name: "Gateways"
+    items:
+      - title: "Reverse Proxy"
+        description: "Gateway and certificates"
+        icon: "olympus-reverse-proxy.png"
+        url: "https://reverse-proxy.theolympus.cloud"
+  - name: "Storage"
+    items:
+      - title: "Storage"
+        description: "Disks, pools and shares"
+        icon: "olympus-storage.png"
+        url: "https://storage.theolympus.cloud"
+  - name: "Backup"
+    items:
+      - title: "Backup"
+        description: "Snapshots and off-site copies"
+        icon: "olympus-backup.png"
+        url: "https://backup.theolympus.cloud"
+  - name: "Monitoring"
+    items:
+      - title: "Monitoring"
+        description: "Metrics, logs and alerts"
+        icon: "olympus-monitoring.png"
+        url: "https://monitoring.theolympus.cloud"
+  - name: "Security"
+    items:
+      - title: "VPN"
+        description: "Private access from anywhere"
+        icon: "olympus-vpn.png"
+        url: "https://vpn.theolympus.cloud"
+  - name: "Cloud"
+    items:
+      - title: "Nextcloud"
+        description: "Files, calendars and contacts"
+        icon: "olympus-nextcloud.png"
+        url: "https://nextcloud.theolympus.cloud"
+  - name: "Media"
+    items:
+      - title: "Jellyfin"
+        description: "Personal media streaming"
+        icon: "olympus-jellyfin.png"
+        url: "https://jellyfin.theolympus.cloud"
+  - name: "Home"
+    items:
+      - title: "Home Assistant"
+        description: "Home automation"
+        icon: "olympus-home-assistant.png"
+        url: "https://home-assistant.theolympus.cloud"
+  - name: "Containers"
+    items:
+      - title: "Containers"
+        description: "Container host and stacks"
+        icon: "olympus-containers.png"
+        url: "https://containers.theolympus.cloud"
+  - name: "Web"
+    items:
+      - title: "Web"
+        description: "Websites and web apps"
+        icon: "olympus-web.png"
+        url: "https://web.theolympus.cloud"
+  - name: "Game servers"
+    items:
+      - title: "Game Server"
+        description: "Game hosting"
+        icon: "olympus-game-server.png"
+        url: "https://game-server.theolympus.cloud"
+  - name: "Sandbox games"
+    items:
+      - title: "Minecraft"
+        description: "Minecraft worlds"
+        icon: "olympus-minecraft.png"
+        url: "https://minecraft.theolympus.cloud"
+  - name: "Multiplayer"
+    items:
+      - title: "Multiplayer"
+        description: "Competitive matches"
+        icon: "olympus-multiplayer.png"
+        url: "https://multiplayer.theolympus.cloud"
+  - name: "Community"
+    items:
+      - title: "Community"
+        description: "Chat and community spaces"
+        icon: "olympus-community.png"
+        url: "https://community.theolympus.cloud"

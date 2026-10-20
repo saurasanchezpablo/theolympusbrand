@@ -1,0 +1,13 @@
+# The Olympus — Grafana (open-source edition).
+# Merge into the compose file that runs Grafana (rename "grafana" to your
+# service's name), with this folder beside it as ./the-olympus/grafana.
+# Grafana serves these files as its logo, favicon and home-screen icon; they
+# are replaced at start-up, so updates keep them. Remove the lines to undo.
+services:
+  grafana:
+    volumes:
+      - ./the-olympus/grafana/grafana_icon.svg:/usr/share/grafana/public/img/grafana_icon.svg:ro
+      - ./the-olympus/grafana/fav32.png:/usr/share/grafana/public/img/fav32.png:ro
+      - ./the-olympus/grafana/apple-touch-icon.png:/usr/share/grafana/public/img/apple-touch-icon.png:ro
+    environment:
+      GF_USERS_DEFAULT_THEME: dark

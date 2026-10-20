@@ -20,6 +20,9 @@ Mount Olympus is the server, and every service is a god with a domain.
   OpenSCAD sources.
 - [Stickers](docs/06-stickers.md): die-cut stickers and sheets, as layered
   PDF and SVG with a separate cut path.
+- [Integrations](docs/08-integrations.md): the catalogue as Homepage, Dashy
+  and Homer start pages and browser bookmarks, and theme kits for Nextcloud,
+  Jellyfin, Proxmox VE, Grafana and Uptime Kuma.
 - [The site on your server](docs/07-self-hosting.md): everything above as one
   static website — build it, or run it with Docker.
 - [Creative directions](docs/01-creative-directions.md): how the mark was
@@ -82,6 +85,7 @@ npm run app            # the Atelier (web app), with live reload
 npm run app:build      # the Atelier as a static site in app/dist/
 npm run model -- master   # printable models into manufacturing/3d/
 npm run sticker -- master # stickers into manufacturing/stickers/
+npm run integrations   # dashboards and theme kits into assets/integrations/
 npm run build:docs     # regenerate the design-system boards
 ```
 

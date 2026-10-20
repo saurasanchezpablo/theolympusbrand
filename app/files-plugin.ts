@@ -11,6 +11,7 @@ import type { Plugin } from 'vite';
 export const PUBLISHED = [
   { dir: 'assets/master', group: 'master', label: 'The master identity' },
   { dir: 'assets/services', group: 'services', label: 'Service logos' },
+  { dir: 'assets/integrations', group: 'integrations', label: 'Dashboards and themes' },
   { dir: 'manufacturing/3d/master', group: '3d', label: 'Printable models (master)' },
   { dir: 'manufacturing/stickers/master', group: 'stickers', label: 'Stickers (master)' },
   { dir: 'manufacturing/stickers/sheets', group: 'stickers', label: 'Sticker sheets' },
@@ -30,6 +31,11 @@ const TYPES: Record<string, string> = {
   '.stl': 'model/stl',
   '.3mf': 'model/3mf',
   '.scad': 'text/plain; charset=utf-8',
+  '.yaml': 'text/plain; charset=utf-8',
+  '.yml': 'text/plain; charset=utf-8',
+  '.css': 'text/css; charset=utf-8',
+  '.csv': 'text/csv; charset=utf-8',
+  '.sh': 'text/plain; charset=utf-8',
 };
 
 function walk(root: string, dir: string, out: { path: string; size: number }[]) {
