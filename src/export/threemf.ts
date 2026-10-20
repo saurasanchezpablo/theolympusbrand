@@ -53,7 +53,9 @@ ${assembly}
       ),
       '3D/3dmodel.model': strToU8(model),
     },
-    // A fixed timestamp: the same model always gives the same bytes.
-    { level: 6, mtime: '1980-01-01T00:00:00Z' },
+    // A fixed timestamp: the same model always gives the same bytes. Zip
+    // times are local, so the date is built from local fields — the same
+    // bytes in every time zone.
+    { level: 6, mtime: new Date(1980, 0, 1) },
   );
 }

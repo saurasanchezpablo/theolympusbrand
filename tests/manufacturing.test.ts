@@ -158,9 +158,13 @@ test('STL and 3MF carry the validated mesh; generation is deterministic', async 
   const mark = markOf('two-colour', 'athena')!;
   const subject = { id: 'athena', title: 'The Olympus — Athena', name: 'VPN' };
   const a = modelFiles(subject, 'two-colour', defaults('two-colour'), mark);
-  // Across a second boundary: archive timestamps must not leak into the files.
+  // Across a second boundary and in another time zone: archive timestamps must not leak into the files.
   await new Promise((r) => setTimeout(r, 1100));
+  const tz = process.env.TZ;
+  process.env.TZ = process.env.TZ === 'Pacific/Auckland' ? 'America/Los_Angeles' : 'Pacific/Auckland';
   const b = modelFiles(subject, 'two-colour', defaults('two-colour'), mark);
+  if (tz === undefined) delete process.env.TZ;
+  else process.env.TZ = tz;
   const hash = (d: Uint8Array | string) => createHash('sha256').update(d).digest('hex');
   assert.deepEqual(a.files.map((f) => hash(f.data)), b.files.map((f) => hash(f.data)));
 
