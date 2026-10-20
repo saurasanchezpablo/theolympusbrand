@@ -100,6 +100,31 @@ function Installer({ label, folder, sha256, sudo }: { label: string; folder: str
   );
 }
 
+/** The one command: a menu of everything the house can install on a machine. */
+function Launcher({ index }: { index: FileIndex }) {
+  const entry = index.files.find((f) => f.path === 'assets/install.sh');
+  if (!entry) return null;
+  const site = location.href.replace(/[#?].*$/, '').replace(/\/(index\.html)?$/, '');
+  return (
+    <section className="dl dl--launcher" aria-labelledby="launcher-title">
+      <h2 id="launcher-title">One command for a machine</h2>
+      <p>
+        Run it on any Linux machine, a Mac, or WSL: a menu shows everything the house can install there — the boot screens and the crest at login, your own terminal, the themes of the applications it finds (Proxmox VE, Nextcloud, Home Assistant, Vaultwarden) — and installs what you choose, or undoes it. Every file is checked against its SHA-256 before it is used. <a href="#/guide/12-one-command">How it works</a>.
+      </p>
+      <Command label="One command" command={`curl -fsSL ${site}/install.sh | OLYMPUS_SITE=${site} sh`} />
+      {entry.sha256 && (
+        <details className="dl__verify">
+          <summary>Check it before it runs</summary>
+          <p>
+            The script’s SHA-256 is <code>{entry.sha256}</code>. This saves it, checks it, and only then runs it:
+          </p>
+          <Command label="One command, checked first" command={`f=$(mktemp) && curl -fsSLo "$f" ${site}/install.sh && echo "${entry.sha256}  $f" | sha256sum -c && OLYMPUS_SITE=${site} sh "$f"`} />
+        </details>
+      )}
+    </section>
+  );
+}
+
 /** The screens' one-command installs, addressed to this very site. */
 function InstallCommand({ index }: { index: FileIndex }) {
   const sum = (path: string) => index.files.find((f) => f.path === path)?.sha256;
@@ -161,6 +186,7 @@ export function DownloadsPage() {
         <p>Everything the house has made, straight from its repository. Folders are zipped in your browser.</p>
         <BuildStatus />
       </header>
+      {index && <Launcher index={index} />}
       {error && <p className="notes notes--error">{error}</p>}
       {index?.groups.map((g) => {
         const all = filesUnder(index, g.dir);

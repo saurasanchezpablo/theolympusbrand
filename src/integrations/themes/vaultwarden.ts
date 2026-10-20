@@ -161,6 +161,7 @@ export const vaultwarden: ThemeKit = {
   label: 'Vaultwarden',
   match: { ids: ['vaultwarden', 'bitwarden', 'passwords'] },
   how: '`apply.sh` installs `user.vaultwarden.scss.hbs` in the data folder: greys for the web vault, the house’s logo',
+  installer: { summary: 'greys for the web vault, and the house’s logo', detect: 'c=$( (docker ps --format \'{{.Names}} {{.Image}}\' 2>/dev/null || sudo -n docker ps --format \'{{.Names}} {{.Image}}\' 2>/dev/null) | awk \'tolower($2) ~ /vaultwarden/ { print $1; exit }\'); [ -n "$c" ] && echo "$c"', ask: { env: 'VAULTWARDEN_CONTAINER', prompt: 'Vaultwarden’s Docker container' }, root: true },
   guide: (t) => ({
     title: 'Vaultwarden',
     intro: `Vaultwarden reads a stylesheet of your own from its data folder and adds it to the web vault's. The kit's turns every blue of the vault grey, in the light and the dark theme, and puts ${t.name}'s banner and seal where the vault's logo was.`,

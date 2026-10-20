@@ -32,4 +32,22 @@ export type ThemeKit = {
   files: (ctx: ThemeContext) => Promise<[path: string, data: string | Uint8Array][]>;
   /** Its step-by-step guide: the folder's README, and a chapter of the site's guide. */
   guide: (ctx: ThemeContext) => Guide;
+  /** For the one-command installer: how to find the application on a machine and apply the kit. Kits set up by hand have none. */
+  installer?: KitInstaller;
+};
+
+export type KitInstaller = {
+  /** What the menu says it does. */
+  summary: string;
+  /**
+   * A shell test: is the application on this machine? It may print a value
+   * (a container's name, a folder) that becomes the default answer to `ask`.
+   */
+  detect: string;
+  /** A question for the person installing: its answer goes to apply.sh in this environment variable. */
+  ask?: { env: string; prompt: string };
+  /** Options for apply.sh. */
+  args?: string;
+  /** apply.sh needs root (the system's files, or Docker). */
+  root: boolean;
 };

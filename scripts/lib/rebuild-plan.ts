@@ -23,6 +23,7 @@ export type Step =
   | { kind: 'remove-services'; ids: string[] }
   | { kind: 'index' }
   | { kind: 'integrations' }
+  | { kind: 'installer' }
   | { kind: 'site' };
 
 export type Plan = { steps: Step[]; why: string[] };
@@ -61,6 +62,8 @@ export function plan(before: Snapshot | null, now: Snapshot): Plan {
   if (changed.length || removed.length) steps.push({ kind: 'integrations' });
   // A renamed or redrawn service: its boot screens, wallpapers and terminal kit carry the name and seal.
   if (changed.length) steps.push({ kind: 'screens', ids: changed });
+  // The one-command installer lists every service and every kit's files: made again after them.
+  if (changed.length || removed.length) steps.push({ kind: 'installer' });
   if (before.content !== now.content) why.push('the published content changed');
   if (steps.length || before.content !== now.content) steps.push({ kind: 'site' });
   return { steps, why };
@@ -84,6 +87,8 @@ export function command(step: Step, out: string): string[] {
       return ['node', 'scripts/service.ts', 'index'];
     case 'integrations':
       return ['node', 'scripts/integrations.ts'];
+    case 'installer':
+      return ['node', 'scripts/installer.ts'];
     case 'site':
       return ['node_modules/.bin/vite', 'build', '--config', 'app/vite.config.ts', '--outDir', out, '--emptyOutDir'];
   }

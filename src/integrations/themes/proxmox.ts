@@ -151,6 +151,7 @@ export const proxmox: ThemeKit = {
   label: 'Proxmox VE',
   match: { ids: ['proxmox', 'pve'], category: 'virtualization' },
   how: '`apply.sh` turns the web interface grey, installs the logo and favicon, and keeps them after updates (`--restore` undoes)',
+  installer: { summary: 'the whole web interface in greys, the logo and the favicon', detect: 'command -v pveversion >/dev/null 2>&1', root: true },
   guide: (t) => ({
     title: 'Proxmox VE',
     intro: `The whole Proxmox VE web interface in the house's greys, with ${t.name}'s seal and name in the header and as the favicon. The theme is made on the node itself from the dark theme Proxmox ships: every blue and blue-grey becomes the grey of the same lightness, while the colours that report something — a running guest, a warning, an error — keep their meaning. Because it is made from the installed release, it matches whatever version the node runs, and it is made again after every update.`,

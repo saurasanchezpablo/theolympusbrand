@@ -21,14 +21,14 @@ test('code or dependencies changed: everything is rebuilt', () => {
 });
 
 test('a service added, changed or renamed: only it — its files and its screens — then what lists every service, then the site', () => {
-  assert.deepEqual(kinds(base, { ...base, services: { ...base.services, vault: 'v1' } }), ['build-services:vault', 'integrations', 'screens:vault', 'site']);
-  assert.deepEqual(kinds(base, { ...base, services: { ...base.services, jellyfin: 'j2' } }), ['build-services:jellyfin', 'integrations', 'screens:jellyfin', 'site']);
+  assert.deepEqual(kinds(base, { ...base, services: { ...base.services, vault: 'v1' } }), ['build-services:vault', 'integrations', 'screens:vault', 'installer', 'site']);
+  assert.deepEqual(kinds(base, { ...base, services: { ...base.services, jellyfin: 'j2' } }), ['build-services:jellyfin', 'integrations', 'screens:jellyfin', 'installer', 'site']);
 });
 
 test('a service removed: its files go, the lists are rebuilt without it', () => {
-  assert.deepEqual(kinds(base, { ...base, services: { nextcloud: 'n1' } }), ['remove-services:jellyfin', 'index', 'integrations', 'site']);
+  assert.deepEqual(kinds(base, { ...base, services: { nextcloud: 'n1' } }), ['remove-services:jellyfin', 'index', 'integrations', 'installer', 'site']);
   // Removed and another changed at once: the build of the changed one rebuilds the index too.
-  assert.deepEqual(kinds(base, { ...base, services: { nextcloud: 'n2' } }), ['remove-services:jellyfin', 'build-services:nextcloud', 'integrations', 'screens:nextcloud', 'site']);
+  assert.deepEqual(kinds(base, { ...base, services: { nextcloud: 'n2' } }), ['remove-services:jellyfin', 'build-services:nextcloud', 'integrations', 'screens:nextcloud', 'installer', 'site']);
 });
 
 test('only the published content changed (a pulled commit): just the site', () => {

@@ -174,6 +174,7 @@ export const homeAssistant: ThemeKit = {
   label: 'Home Assistant',
   match: { ids: ['home-assistant', 'homeassistant', 'hass'], category: 'home' },
   how: '`apply.sh` installs the theme (light and dark) and the images; `picture-card.yaml` puts the seal on a dashboard',
+  installer: { summary: 'the theme, light and dark, and the dashboard images', detect: 'c=$( (docker ps --format \'{{.Names}} {{.Image}}\' 2>/dev/null || sudo -n docker ps --format \'{{.Names}} {{.Image}}\' 2>/dev/null) | awk \'tolower($2) ~ /home-?assistant/ { print $1; exit }\'); [ -n "$c" ] && echo "$c"', ask: { env: 'HA_CONTAINER', prompt: 'Home Assistant’s Docker container' }, root: true },
   guide: (t) => ({
     title: 'Home Assistant',
     intro: `A Home Assistant theme: the house's greys for the whole interface, in a light and a dark mode that follow each user's own setting, with ${t.name}'s banner for a dashboard card.`,

@@ -60,8 +60,13 @@ function walk(root: string, dir: string, out: Published[]) {
 }
 
 /** Every published file, with its size. */
+/** The one-command installer: in the index (with its checksum), and at the site's root as /install.sh. */
+export const LAUNCHER = 'assets/install.sh';
+
 export function publishedFiles(root: string) {
   const files: Published[] = [];
+  const launcher = join(root, LAUNCHER);
+  if (existsSync(launcher)) files.push({ path: LAUNCHER, size: statSync(launcher).size, sha256: createHash('sha256').update(readFileSync(launcher)).digest('hex') });
   for (const p of PUBLISHED) if (existsSync(join(root, p.dir))) walk(root, join(root, p.dir), files);
   return { groups: PUBLISHED.map((p) => ({ dir: p.dir, group: p.group, label: p.label })), files };
 }
@@ -102,6 +107,11 @@ export function filesPlugin(root: string): Plugin {
         res.setHeader('Content-Type', 'application/manifest+json');
         res.end(siteManifest());
       });
+      server.middlewares.use('/install.sh', (req, res, next) => {
+        if ((req.url ?? '/').split('?')[0] !== '/' || !existsSync(join(root, LAUNCHER))) return next();
+        res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+        res.end(readFileSync(join(root, LAUNCHER)));
+      });
       server.middlewares.use('/files/', (req, res, next) => {
         const path = decodeURIComponent((req.url ?? '/').split('?')[0]).replace(/^\/+/, '');
         if (path === 'index.json') {
@@ -109,7 +119,7 @@ export function filesPlugin(root: string): Plugin {
           res.end(JSON.stringify(publishedFiles(root)));
           return;
         }
-        const ok = PUBLISHED.some((p) => path === p.dir || path.startsWith(`${p.dir}/`)) && !path.includes('..');
+        const ok = (path === LAUNCHER || PUBLISHED.some((p) => path === p.dir || path.startsWith(`${p.dir}/`))) && !path.includes('..');
         const full = join(root, path);
         if (!ok || !existsSync(full) || statSync(full).isDirectory()) return next();
         res.setHeader('Content-Type', TYPES[extname(full)] ?? 'application/octet-stream');
@@ -127,6 +137,7 @@ export function filesPlugin(root: string): Plugin {
       }
       writeIndex(join(outDir, 'files', 'index.json'), index);
       writeFileSync(join(outDir, 'site.webmanifest'), siteManifest());
+      if (existsSync(join(root, LAUNCHER))) copyFileSync(join(root, LAUNCHER), join(outDir, 'install.sh'));
     },
   };
 }

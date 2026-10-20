@@ -119,6 +119,7 @@ export const nextcloud: ThemeKit = {
   label: 'Nextcloud',
   match: { ids: ['nextcloud'], category: 'cloud' },
   how: '`apply.sh` sets the Theming app with `occ`, and the dark themes’ accent through the Custom CSS app (`--with-css`)',
+  installer: { summary: 'name, colours, logos and background, through occ', detect: 'c=$( (docker ps --format \'{{.Names}} {{.Image}}\' 2>/dev/null || sudo -n docker ps --format \'{{.Names}} {{.Image}}\' 2>/dev/null) | awk \'tolower($2) ~ /nextcloud/ { print $1; exit }\'); [ -n "$c" ] && echo "$c"', ask: { env: 'NEXTCLOUD_CONTAINER', prompt: 'Nextcloud’s Docker container' }, args: '--with-css', root: true },
   guide: (t) => ({
     title: 'Nextcloud',
     intro: `Nextcloud's Theming app takes a name, colours and images; the kit's script sets them all with \`occ\`, and adds a small stylesheet so that the accent stays visible in the dark themes. Every user sees the house's look, whatever theme they pick.`,

@@ -145,14 +145,17 @@ if [ -n "$FROM" ]; then
   if command -v curl >/dev/null 2>&1; then get() { curl -fsSL "$1" -o "$2"; }
   elif command -v wget >/dev/null 2>&1; then get() { wget -qO "$2" "$1"; }
   else echo "neither curl nor wget is installed" >&2; exit 1; fi
-  command -v sha256sum >/dev/null 2>&1 || { echo "sha256sum is needed to check the files" >&2; exit 1; }
+  # sha256sum on Linux, shasum on macOS.
+  if command -v sha256sum >/dev/null 2>&1; then digest() { sha256sum "$1" | cut -d' ' -f1; }
+  elif command -v shasum >/dev/null 2>&1; then digest() { shasum -a 256 "$1" | cut -d' ' -f1; }
+  else echo "sha256sum (or shasum) is needed to check the files" >&2; exit 1; fi
   fetch() { # fetch <part> [scripts-only]
     echo "$MANIFEST" | while read -r part path sum; do
       [ "$part" = "$1" ] || continue
       [ -z "${2:-}" ] || [ "${path##*/}" = install.sh ] || continue
       mkdir -p "$SRC/$(dirname "$path")"
       get "${FROM%/}/$path" "$SRC/$path" || { echo "could not fetch ${FROM%/}/$path" >&2; exit 1; }
-      echo "$sum  $SRC/$path" | sha256sum -c --status || { echo "$path does not match its checksum: not installing" >&2; exit 1; }
+      [ "$(digest "$SRC/$path")" = "$sum" ] || { echo "$path does not match its checksum: not installing" >&2; exit 1; }
     done
   }
 else
