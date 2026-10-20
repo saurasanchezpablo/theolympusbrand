@@ -1,14 +1,37 @@
-import { useEffect, useId, useState, type ReactNode } from 'react';
+import { useEffect, useId, useRef, useState, type ReactNode } from 'react';
 
 /** An SVG document shown as an image (keeps each document's ids and filters isolated). */
 export function SvgImage({ svg, alt, className }: { svg: string; alt: string; className?: string }) {
   const [url, setUrl] = useState<string>();
+  // Earlier documents' addresses stay valid until the new one has loaded: the image
+  // still shows the old one until then, and a revoked address fails to load.
+  const made = useRef<string[]>([]);
+  // Once an image has loaded, the addresses made before it are done with — not any made since.
+  const settle = (loaded: string) => {
+    const i = made.current.indexOf(loaded);
+    if (i <= 0) return;
+    for (const u of made.current.slice(0, i)) URL.revokeObjectURL(u);
+    made.current = made.current.slice(i);
+  };
   useEffect(() => {
     const u = URL.createObjectURL(new Blob([svg], { type: 'image/svg+xml' }));
+    made.current.push(u);
     setUrl(u);
-    return () => URL.revokeObjectURL(u);
   }, [svg]);
-  return url ? <img src={url} alt={alt} className={className} draggable={false} /> : <span className={className} role="img" aria-label={alt} />;
+  // Gone from the page: an image may still be loading from its address, so let it finish first.
+  useEffect(
+    () => () => {
+      const all = made.current;
+      made.current = [];
+      window.setTimeout(() => all.forEach((u) => URL.revokeObjectURL(u)), 10_000);
+    },
+    [],
+  );
+  return url ? (
+    <img src={url} alt={alt} className={className} draggable={false} onLoad={() => settle(url)} onError={() => settle(url)} />
+  ) : (
+    <span className={className} role="img" aria-label={alt} />
+  );
 }
 
 export type Option<T extends string> = { value: T; label: string; disabled?: boolean; hint?: string };

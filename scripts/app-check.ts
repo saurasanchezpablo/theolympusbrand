@@ -85,7 +85,8 @@ try {
   const context = await browser.newContext({ viewport: { width: 1520, height: 940 }, acceptDownloads: true });
   const page = await context.newPage();
   const errors: string[] = [];
-  page.on('console', (m) => m.type() === 'error' && errors.push(m.text()));
+  page.on('console', (m) => m.type() === 'error' && errors.push(`${m.text()} (${m.location().url})`));
+  page.on('requestfailed', (r) => /^(blob|file):/.test(r.url()) && errors.push(`${r.failure()?.errorText} ${r.url().slice(0, 60)}`));
   page.on('pageerror', (e) => errors.push(e.message));
   page.on('response', (r) => r.status() >= 400 && errors.push(`${r.status()} ${r.url()}`));
 
@@ -387,8 +388,13 @@ try {
   await sp.goto(`${URL_}#/`);
   await sp.locator('.hero__stage[data-state="live"][data-stone="ready"]').waitFor({ timeout: 60000 });
   await sp.waitForTimeout(300);
-  const [r1, r2] = await frames(sp);
-  assert.ok(r1.equals(r2), 'under reduced motion the medallion holds still');
+  // Held still, it may still redraw once as the page settles; motion would differ on every look.
+  let held = false;
+  for (let i = 0; i < 5 && !held; i++) {
+    const [r1, r2] = await frames(sp);
+    held = r1.equals(r2);
+  }
+  assert.ok(held, 'under reduced motion the medallion holds still');
   await still.close();
   step('home: the medallion is drawn from its STL, moves, and holds still under reduced motion');
 
