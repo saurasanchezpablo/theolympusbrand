@@ -241,11 +241,11 @@ try {
   // A QR label made by the website scans.
   await page.getByLabel('Design', { exact: true }).selectOption('qr-label');
   await page.waitForFunction(() => !document.querySelector('.modelview__busy'), null, { timeout: 60000 });
-  await page.getByText(/opens https:\/\/theolympus\.cloud/).waitFor({ timeout: 60000 });
+  await page.getByText(`opens ${jellyfin.url}`).waitFor({ timeout: 60000 });
   const label = await downloadOf(page, () => page.getByRole('button', { name: 'SVG', exact: true }).click());
   const scanned = new Resvg(label.data.toString('utf8'), { fitTo: { mode: 'width', value: 900 }, background: '#FFFFFF' }).render();
   // The production file has a black-marble ground under a light panel: the code reads dark on light.
-  assert.equal(jsQR(new Uint8ClampedArray(scanned.pixels), scanned.width, scanned.height)?.data, 'https://theolympus.cloud');
+  assert.equal(jsQR(new Uint8ClampedArray(scanned.pixels), scanned.width, scanned.height)?.data, jellyfin.url);
   await page.getByLabel('Design', { exact: true }).selectOption('crest');
   await page.getByRole('radio', { name: 'Sheet' }).click();
   await shot(page, '12-sticker-sheet');

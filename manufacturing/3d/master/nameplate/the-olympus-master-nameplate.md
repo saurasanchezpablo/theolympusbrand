@@ -24,6 +24,7 @@ The crest with the service’s name and caption on a plate — for a server, a r
 | Height | 80 mm | Height of the plate; the length follows the name. |
 | Layout | Horizontal | The name beside the crest, or beneath it. |
 | Caption | on | The line under the name (“The Olympus · …”). |
+| QR code | off | The service’s address as a QR code beside the name. Print the relief in a contrasting colour (a filament change) so phones can read it. |
 | Margin | 5 mm | Plate left around the design. |
 | Corner radius | 6 mm | Rounding of the plate’s corners. |
 | Plate thickness | 3 mm | A multiple of your layer height keeps the relief crisp. |

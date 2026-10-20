@@ -10,6 +10,7 @@
 height = 80;              // [40:1:200] Height (mm)
 layout = 0;               // [0:Horizontal, 1:Vertical] Layout
 caption = 1;              // [0:off, 1:on] Caption
+qr = 0;                   // [0:off, 1:on] QR code
 margin = 5;               // [3:0.5:20] Margin (mm)
 corner = 6;               // [0:0.5:20] Corner radius (mm)
 base = 3;                 // [1.6:0.1:10] Plate thickness (mm)
