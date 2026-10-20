@@ -9,6 +9,7 @@ nozzle — so what is fine enough on screen is never asked of the printer.
 | Product | What it is | Default |
 |---|---|---|
 | **Medallion** | The crest raised on a round backing plate — a wall or desk piece, or a rack badge with magnets. | Ø 100 × 4.2 mm |
+| **Layered medallion** | The crest in tiers of relief: rim, border ornament, temple, name plinth, laurels and clouds each at its own height, like a struck coin. One filament, or a colour per tier. | Ø 100 mm, relief up to 2.4 mm |
 | **Engraved medallion** | The crest cut into a solid plate. Quiet and stone-like; best in one light filament. | Ø 100 × 4 mm |
 | **Two-colour medallion** | Plate and relief as separate parts: one filament change, or a multi-material printer. | Ø 100 × 4.2 mm |
 | **Coaster** | The crest engraved flush, so a glass stands level, with a recess underneath for a felt or cork pad. | Ø 100 × 5 mm |
@@ -93,7 +94,7 @@ line.
 
 ## What each model folder contains
 
-| File | |
+| File | Contents |
 |---|---|
 | `…-<product>.stl` | The solid, ready to slice (two-colour: `-plate.stl` and `-relief.stl`). |
 | `…-<product>.3mf` | The same, in 3MF. A two-colour model is one object made of two parts, each ready for its own filament. |
@@ -121,6 +122,37 @@ line.
 - **Magnets:** glue them in after printing (a drop of CA glue).
 - **Stand:** print it first and test the fit; adjust the clearance (0.3 mm by
   default) to your printer.
+
+### The layered medallion
+
+The crest is drawn from six parts — the **rim**, the **border ornament** (Greek
+key, rule and beads), the **laurels**, the **temple**, the **name plinth**, and
+the **clouds** with the logo slot. The layered medallion raises each to its
+own height, so the design reads in depth even in one filament.
+
+| Depth | |
+|---|---|
+| **Coin** | Rim and temple highest, the name a step below, the ornament, laurels and clouds lowest — like a struck coin. |
+| **Temple forward** | The temple stands out; the name follows; the frame, laurels and clouds stay low. |
+| **Frame forward** | The rim and its ornament rise like a frame around a lower scene. |
+| **Custom** | Each part's height set by hand, as a share of the deepest relief. |
+
+- **Deepest relief** sets the highest tier; the others are shares of it,
+  rounded to whole layers of your layer height — so every tier prints exact.
+  The sheet lists the tiers and what stands on each.
+- **Parts → a part per tier** writes the plate and each tier as separate
+  parts. On a multi-material printer, give each part its filament (load the
+  3MF). On one extruder, the sheet names the layer for each filament change
+  — dark plate with light tiers, or a different grey per tier.
+- Each tier stands entirely on the one below, so nothing overhangs.
+- The back takes magnets, a keyhole and the inscription, as the medallion does.
+- The OpenSCAD source places each tier from its own drawing
+  (`…-tier-1.svg`, `…-tier-2.svg`, …).
+
+```sh
+npm run model -- jellyfin --product layered                  # Coin
+npm run model -- jellyfin --product layered --style 1 --relief 3 --tiers 1
+```
 
 ### The rack panel
 

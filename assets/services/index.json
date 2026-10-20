@@ -6,6 +6,7 @@
     "patron": {
       "god": "kronos"
     },
+    "title": "Titan of time",
     "caption": "The Olympus · KRONOS",
     "url": "https://backup.theolympus.cloud",
     "path": "backup/"
@@ -17,6 +18,7 @@
     "patron": {
       "god": "dionysus"
     },
+    "title": "God of the feast and its company",
     "caption": "The Olympus · DIONYSUS",
     "url": "https://community.theolympus.cloud",
     "path": "community/"
@@ -28,6 +30,7 @@
     "patron": {
       "god": "poseidon"
     },
+    "title": "Lord of the sea and all it carries",
     "caption": "The Olympus · POSEIDON",
     "url": "https://containers.theolympus.cloud",
     "path": "containers/"
@@ -39,6 +42,7 @@
     "patron": {
       "god": "nike"
     },
+    "title": "Goddess of victory",
     "caption": "The Olympus · NIKE",
     "url": "https://game-server.theolympus.cloud",
     "path": "game-server/"
@@ -50,6 +54,7 @@
     "patron": {
       "god": "hestia"
     },
+    "title": "Goddess of the hearth and the home",
     "caption": "The Olympus · HESTIA",
     "url": "https://home-assistant.theolympus.cloud",
     "path": "home-assistant/"
@@ -61,6 +66,7 @@
     "patron": {
       "god": "apollo"
     },
+    "title": "God of music and the arts",
     "caption": "The Olympus · APOLLO",
     "url": "https://jellyfin.theolympus.cloud",
     "path": "jellyfin/"
@@ -72,6 +78,7 @@
     "patron": {
       "god": "hephaestus"
     },
+    "title": "The divine smith",
     "caption": "The Olympus · HEPHAESTUS",
     "url": "https://minecraft.theolympus.cloud",
     "path": "minecraft/"
@@ -83,6 +90,7 @@
     "patron": {
       "god": "argus"
     },
+    "title": "The hundred-eyed watchman",
     "caption": "The Olympus · ARGUS",
     "url": "https://monitoring.theolympus.cloud",
     "path": "monitoring/"
@@ -94,6 +102,7 @@
     "patron": {
       "god": "ares"
     },
+    "title": "God of contest and combat",
     "caption": "The Olympus · ARES",
     "url": "https://multiplayer.theolympus.cloud",
     "path": "multiplayer/"
@@ -105,6 +114,7 @@
     "patron": {
       "god": "iris"
     },
+    "title": "Messenger of the rainbow, the bridge between worlds",
     "caption": "The Olympus · IRIS",
     "url": "https://network.theolympus.cloud",
     "path": "network/"
@@ -116,6 +126,7 @@
     "patron": {
       "god": "nephele"
     },
+    "title": "Nymph of the clouds",
     "caption": "The Olympus · NEPHELE",
     "url": "https://nextcloud.theolympus.cloud",
     "path": "nextcloud/"
@@ -127,6 +138,7 @@
     "patron": {
       "god": "atlas"
     },
+    "title": "The Titan who holds up the heavens",
     "caption": "The Olympus · ATLAS",
     "url": "https://proxmox.theolympus.cloud",
     "path": "proxmox/"
@@ -138,6 +150,7 @@
     "patron": {
       "god": "hermes"
     },
+    "title": "God of roads, crossings and travellers",
     "caption": "The Olympus · HERMES",
     "url": "https://reverse-proxy.theolympus.cloud",
     "path": "reverse-proxy/"
@@ -149,6 +162,7 @@
     "patron": {
       "god": "hades"
     },
+    "title": "Lord of the vault below, where nothing is lost",
     "caption": "The Olympus · HADES",
     "url": "https://storage.theolympus.cloud",
     "path": "storage/"
@@ -160,6 +174,7 @@
     "patron": {
       "god": "athena"
     },
+    "title": "Goddess of wisdom and defence",
     "caption": "The Olympus · ATHENA",
     "url": "https://vpn.theolympus.cloud",
     "path": "vpn/"
@@ -171,6 +186,7 @@
     "patron": {
       "god": "arachne"
     },
+    "title": "The weaver whom Athena could not outdo",
     "caption": "The Olympus · ARACHNE",
     "url": "https://web.theolympus.cloud",
     "path": "web/"

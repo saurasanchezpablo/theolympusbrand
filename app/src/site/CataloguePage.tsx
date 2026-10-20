@@ -4,15 +4,23 @@ import { resolve } from '../../../src/catalog/service.ts';
 import { GODS } from '../../../src/geometry/pantheon.ts';
 import type { Design } from '../../../src/catalog/design.ts';
 import { CATEGORY_LIST, marksFor, readLogo, title } from '../model.ts';
-import { HOUSE } from '../library.ts';
+import { HOUSE, loadLibrary } from '../library.ts';
+import { requestOpen } from '../bus.ts';
 import { download } from '../exporters.ts';
 import { SvgImage, Segmented } from '../components/ui.tsx';
 import type { Entry } from '../components/Library.tsx';
-import { fileUrl, filesUnder, formatSize, useIndex, zipFolder } from './files.ts';
+import { fileUrl, filesUnder, formatSize, useIndex } from './files.ts';
+import { zipFolder } from './zip.ts';
 
-type Props = { mine: Record<string, Design>; onOpen: (e: Entry) => void };
+/** Open a design in the Atelier (which loads if it has not yet). */
+function onOpen(e: Entry) {
+  requestOpen(e.kind === 'house' ? { kind: 'house', id: e.id } : { kind: 'mine', key: e.key });
+  location.hash = '#/atelier';
+}
 
-export function CataloguePage({ mine, onOpen }: Props) {
+export function CataloguePage() {
+  // Read fresh on each visit: designs saved in the Atelier since show up here.
+  const mine = useMemo<Record<string, Design>>(() => loadLibrary().designs, []);
   const { index } = useIndex();
   const [category, setCategory] = useState('');
   const [scope, setScope] = useState<'all' | 'house' | 'mine'>('all');

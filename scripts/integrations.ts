@@ -5,9 +5,9 @@
 //   npm run integrations -- --out /path/to/folder
 //
 // Dashboards (Homepage, Dashy, Homer, bookmarks, a table for Heimdall and
-// Homarr) list every service in the catalogue; theme kits (Nextcloud,
-// Jellyfin, Proxmox VE, Grafana, Uptime Kuma) carry the matching service's
-// seal. --icons-url makes the dashboards load the icons from a URL instead of
+// Homarr) list every service in the catalogue; theme kits (one per
+// application, src/integrations/themes/) carry the seal of the service that
+// runs the application — see `npm run service -- apps`. --icons-url makes the dashboards load the icons from a URL instead of
 // their own icon folders (written to --out only, never to the repository).
 
 import { mkdirSync, rmSync, writeFileSync } from 'node:fs';
@@ -18,6 +18,7 @@ import { loadCatalog, logoOf } from '../src/node/catalog.ts';
 import { baseMarks } from '../src/catalog/fileset.ts';
 import { crest, emblem, seal } from '../src/geometry/crest.ts';
 import { integrationKit, type KitMarks } from '../src/integrations/kit.ts';
+import { unknownApps } from '../src/integrations/themes/index.ts';
 import type { DashboardOptions } from '../src/integrations/dashboards.ts';
 import { ROOT } from './lib/build-service.ts';
 
@@ -44,6 +45,7 @@ if (iconsUrl && out === defaultOut) fail('--icons-url writes a personal copy: gi
 const opts: DashboardOptions = iconsUrl ? { icons: { kind: 'url', base: iconsUrl } } : {};
 
 const services = loadCatalog();
+for (const s of unknownApps(services)) console.log(`⚠ ${s.id} runs "${s.app}", which has no theme kit: listed on the dashboards, not themed`);
 const cache = new Map<string, KitMarks>();
 const marks = (id: string): KitMarks => {
   if (!cache.has(id)) {
@@ -58,7 +60,7 @@ const marks = (id: string): KitMarks => {
 };
 
 const files = await integrationKit(
-  { entries: services.map((s) => ({ id: s.id, name: s.name, category: s.category, description: s.description, url: s.url })), marks },
+  { entries: services.map((s) => ({ id: s.id, name: s.name, category: s.category, description: s.description, url: s.url, app: s.app })), marks },
   { png: (svg, width) => new Resvg(svg, { fitTo: { mode: 'width', value: width } }).render().asPng() },
   opts,
 );

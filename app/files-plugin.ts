@@ -39,19 +39,26 @@ const TYPES: Record<string, string> = {
   '.sh': 'text/plain; charset=utf-8',
 };
 
-function walk(root: string, dir: string, out: { path: string; size: number }[]) {
+type Published = { path: string; size: number; title?: string };
+
+function walk(root: string, dir: string, out: Published[]) {
   for (const name of readdirSync(dir).sort()) {
     if (name.startsWith('.')) continue;
     const full = join(dir, name);
     const st = statSync(full);
     if (st.isDirectory()) walk(root, full, out);
-    else out.push({ path: relative(root, full).split(sep).join('/'), size: st.size });
+    else {
+      const path = relative(root, full).split(sep).join('/');
+      // The guide's chapters carry their titles, so the site need not fetch each one to list them.
+      const title = /^docs\/[^/]+\.md$/.test(path) ? readFileSync(full, 'utf8').match(/^#\s+(.+)$/m)?.[1] : undefined;
+      out.push({ path, size: st.size, ...(title ? { title } : {}) });
+    }
   }
 }
 
 /** Every published file, with its size. */
 export function publishedFiles(root: string) {
-  const files: { path: string; size: number }[] = [];
+  const files: Published[] = [];
   for (const p of PUBLISHED) if (existsSync(join(root, p.dir))) walk(root, join(root, p.dir), files);
   return { groups: PUBLISHED.map((p) => ({ dir: p.dir, group: p.group, label: p.label })), files };
 }

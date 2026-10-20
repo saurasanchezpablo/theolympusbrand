@@ -79,7 +79,8 @@ async function downloadOf(page: Page, click: () => Promise<void>): Promise<{ nam
 }
 
 await waitForServer();
-const browser = await chromium.launch({ executablePath: chrome, headless: true });
+// SwiftShader gives headless Chrome WebGL, for the home page's medallion.
+const browser = await chromium.launch({ executablePath: chrome, headless: true, args: ['--enable-unsafe-swiftshader', '--use-angle=swiftshader'] });
 try {
   const context = await browser.newContext({ viewport: { width: 1520, height: 940 }, acceptDownloads: true });
   const page = await context.newPage();
@@ -190,6 +191,9 @@ try {
   await page.getByText('Application logo').waitFor();
   step('SVG logo imported into the fine logo slot');
 
+  // The application it runs: its theme kit comes in the asset pack.
+  await page.getByLabel('Application').selectOption('vaultwarden');
+
   // The asset pack.
   const pack = await downloadOf(page, () => page.getByRole('button', { name: 'Asset pack (.zip)' }).click());
   assert.equal(pack.name, 'the-olympus-vaultwarden.zip');
@@ -202,7 +206,10 @@ try {
   assert.equal(names.filter((n) => n.includes('/png/')).length, cliCount('png'));
   for (const p of ['assets/services/vaultwarden/favicon.ico', 'assets/services/vaultwarden/manifest.json', 'catalog/services/vaultwarden.json', 'catalog/logos/vaultwarden.svg', 'vaultwarden.olympus.json']) assert.ok(inPack(p), p);
   const spec = JSON.parse(strFromU8(zip['the-olympus-vaultwarden/catalog/services/vaultwarden.json']));
-  assert.deepEqual(spec, { id: 'vaultwarden', name: 'Vaultwarden', category: 'security', god: 'hades', logo: 'logos/vaultwarden.svg', caption: 'The Olympus · Vault', description: 'Password manager' });
+  assert.deepEqual(spec, { id: 'vaultwarden', name: 'Vaultwarden', category: 'security', god: 'hades', logo: 'logos/vaultwarden.svg', caption: 'The Olympus · Vault', app: 'vaultwarden', description: 'Password manager' });
+  // The theme kit, made from this design: its stylesheet names the service, its script is the command line's.
+  assert.match(strFromU8(zip['the-olympus-vaultwarden/theme/vaultwarden/user.vaultwarden.scss.hbs']), /Vaultwarden web vault \(Vaultwarden\)/);
+  assert.equal(strFromU8(zip['the-olympus-vaultwarden/theme/vaultwarden/apply.sh']), readFileSync(join(ROOT, 'assets/integrations/themes/vaultwarden/apply.sh'), 'utf8'));
   const png = zip['the-olympus-vaultwarden/assets/services/vaultwarden/png/the-olympus-vaultwarden-seal-512.png'];
   assert.deepEqual([...png.slice(1, 4)], [80, 78, 71]); // "PNG"
   // Dashboard icons: the coin is the command line's, byte for byte.
@@ -211,7 +218,7 @@ try {
   for (const p of ['dashboard/olympus-vaultwarden.png', 'dashboard/olympus-vaultwarden-light.png']) assert.ok(inPack(p), p);
   assert.ok(strFromU8(zip['the-olympus-vaultwarden/terminal/issue.net']).includes('V A U L T W A R D E N'));
   for (const p of ['terminal/20-the-olympus', 'terminal/motd-braille.txt', 'terminal/install.sh']) assert.ok(inPack(p), p);
-  step(`asset pack: ${names.length} files — SVGs, PNGs, favicon, manifest, catalogue entry, logo, dashboard icons, terminal crest`);
+  step(`asset pack: ${names.length} files — SVGs, PNGs, favicon, manifest, catalogue entry, logo, dashboard icons, theme kit, terminal crest`);
 
   // A wallpaper drawn in the browser: the marble from the worker, the crest on it, at the size chosen.
   await page.getByLabel('Wallpaper style').selectOption('marble');
@@ -295,7 +302,16 @@ try {
   const rackNode = modelFiles({ id: 'jellyfin', title: 'The Olympus — Jellyfin', name: jellyfin.name, caption: jellyfin.caption, url: jellyfin.url }, 'rack', suggestedParams('rack', mark.minDiameterMM), mark).files.find((f) => f.path.endsWith('.stl'))!;
   assert.ok(rackStl.data.equals(Buffer.from(rackNode.data as Uint8Array)), 'browser rack STL differs from the Node build');
   await shot(page, '10c-rack');
-  step('back features, layer inspector, backlit lithophane, vertical nameplate, stamp, rack panel');
+  // The layered medallion: depth styles, custom heights shown only for Custom, a part per tier.
+  await page.getByRole('radio', { name: 'Layered medallion' }).click();
+  await page.getByText(/Valid · [\d,]+ triangles/).waitFor({ timeout: 60000 });
+  assert.equal(await page.getByLabel('Temple slider').count(), 0, 'custom heights hidden for a preset');
+  await page.getByRole('radiogroup', { name: 'Depth' }).getByRole('radio', { name: 'Custom' }).click();
+  await page.getByLabel('Temple slider').waitFor();
+  await page.getByRole('radiogroup', { name: 'Parts' }).getByRole('radio', { name: 'A part per tier' }).click();
+  await page.getByText(/Valid · [\d,]+ triangles · [3-9] parts/).waitFor({ timeout: 60000 });
+  await shot(page, '10d-layered');
+  step('back features, layer inspector, backlit lithophane, vertical nameplate, stamp, rack panel, layered medallion');
 
   // Stickers: the website's PDF is the Node build's PDF, byte for byte — marble ground included.
   await page.getByRole('button', { name: /^Jellyfin Apollo · media/ }).click();
@@ -352,15 +368,104 @@ try {
   await shot(page, '15-downloads');
   step('downloads: folders zip in the browser with the repository’s files');
 
-  await page.goto(`${URL_}#/atelier`);
-  await page.setViewportSize({ width: 820, height: 1100 });
-  await shot(page, '6-narrow');
-  step('narrow layout renders');
+  // The medallion: drawn live from its STL; it moves, unless the visitor asks for reduced motion.
+  const frames = async (p: Page) => {
+    // The clouds drift in front of the medallion's foot: compare the medallion alone.
+    await p.addStyleTag({ content: '.ascent__clouds{visibility:hidden!important}' });
+    const stage = p.locator('.hero__frame');
+    const a = await stage.screenshot();
+    await p.waitForTimeout(1200);
+    return [a, await stage.screenshot()];
+  };
+  await page.goto(`${URL_}#/`);
+  await page.locator('.hero__stage[data-state="live"][data-stone="ready"]').waitFor({ timeout: 60000 });
+  await page.getByText('Drag to turn it').waitFor();
+  const [m1, m2] = await frames(page);
+  assert.ok(!m1.equals(m2), 'the medallion moves');
+  const still = await browser.newContext({ viewport: { width: 1280, height: 860 }, reducedMotion: 'reduce' });
+  const sp = await still.newPage();
+  await sp.goto(`${URL_}#/`);
+  await sp.locator('.hero__stage[data-state="live"][data-stone="ready"]').waitFor({ timeout: 60000 });
+  await sp.waitForTimeout(300);
+  const [r1, r2] = await frames(sp);
+  assert.ok(r1.equals(r2), 'under reduced motion the medallion holds still');
+  await still.close();
+  step('home: the medallion is drawn from its STL, moves, and holds still under reduced motion');
+
+  // The home page's story: the ascent is held while it plays, the crest assembles step by step,
+  // the pantheon passes sideways (and follows the keyboard), and without motion all of it simply lies in the page.
+  const scrollTo = (p: Page, y: number) => p.evaluate((y) => document.getElementById('site-main')!.scrollTo(0, y), y);
+  const topOf = (p: Page, sel: string) => p.evaluate((sel) => document.querySelector(sel)!.getBoundingClientRect().top + document.getElementById('site-main')!.scrollTop - 60, sel);
+  await page.locator('.home.is-held').waitFor();
+  await scrollTo(page, 400);
+  await page.waitForTimeout(900);
+  assert.ok(await page.locator('.ascent').evaluate((el) => Math.abs(el.getBoundingClientRect().top - 60) < 2), 'the ascent holds in place');
+  assert.notEqual(await page.locator('.ascent__word--the').evaluate((el) => getComputedStyle(el).transform), 'none', 'the words part');
+  const steps = page.locator('.anatomy__step');
+  await scrollTo(page, (await topOf(page, '.anatomy__step:nth-child(4)')) - 860 / 2 + 100);
+  await page.locator('.anatomy__step:nth-child(4)[aria-current="step"]').waitFor();
+  assert.equal(await page.locator('.anatomy__part').nth(3).getAttribute('data-state'), 'now', 'the temple is drawn as it is told');
+  assert.equal(await page.locator('.anatomy__part').nth(0).getAttribute('data-state'), 'set');
+  assert.equal(await steps.count(), 6);
+  const panStart = await topOf(page, '.pantheon-run');
+  await scrollTo(page, panStart + 1500);
+  await page.waitForTimeout(1200);
+  const shifted = await page.locator('.pantheon__track').evaluate((el) => new DOMMatrix(getComputedStyle(el).transform).m41);
+  assert.ok(shifted < -1000, `the gods pass sideways (${shifted})`);
+  await scrollTo(page, panStart);
+  await page.waitForTimeout(600);
+  await page.locator('.deity a').nth(12).focus();
+  await page.waitForTimeout(1200);
+  const box = await page.locator('.deity a').nth(12).boundingBox();
+  assert.ok(box && box.x >= 0 && box.x + box.width <= 1520, `a god reached by keyboard is brought into view (${box?.x})`);
+  await page.locator('.deity a').nth(12).click();
+  await page.locator('.card').first().waitFor();
+  await page.goto(`${URL_}#/`);
+  const calm = await browser.newContext({ viewport: { width: 1440, height: 900 }, reducedMotion: 'reduce' });
+  const cp = await calm.newPage();
+  const scripts: string[] = [];
+  cp.on('request', (r) => scripts.push(r.url()));
+  await cp.goto(`${URL_}#/`);
+  await cp.locator('.deity').nth(15).waitFor();
+  await cp.waitForTimeout(1500);
+  assert.equal(await cp.locator('.home.is-held').count(), 0, 'nothing is held without motion');
+  assert.ok(!scripts.some((u) => /choreography/.test(u)), 'the choreography is not even loaded');
+  assert.ok(await cp.locator('.pantheon__viewport').evaluate((el) => el.scrollWidth > el.clientWidth && getComputedStyle(el).overflowX === 'auto'), 'the pantheon scrolls sideways by hand');
+  await calm.close();
+  step('home: the ascent holds while it plays, the crest assembles as it is told, the pantheon passes sideways and follows the keyboard; none of it without motion');
+
+  // A phone: the menu, the still medallion with its button, the Atelier one pane at a time.
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.reload(); // the hero decides on 3D when it loads
+  await page.getByRole('button', { name: 'Turn it in 3D' }).waitFor();
+  assert.equal(await page.locator('.hero__canvas').count(), 0, 'phones do not load the 3D scene until asked');
+  await page.getByRole('button', { name: 'Menu' }).click();
+  await page.getByRole('navigation', { name: 'Site' }).getByRole('link', { name: 'Atelier' }).click();
+  await page.locator('.stage__mark').waitFor();
+  assert.ok(!(await page.locator('#atelier-library').isVisible()), 'the preview pane hides the designs');
+  await page.getByRole('navigation', { name: 'Atelier' }).getByRole('button', { name: 'Designs' }).click();
+  await page.getByRole('button', { name: /^Jellyfin Apollo · media/ }).click();
+  await page.locator('.stage__mark').waitFor();
+  assert.equal(await page.getByRole('navigation', { name: 'Atelier' }).getByRole('button', { name: 'Preview' }).getAttribute('aria-pressed'), 'true', 'choosing a design shows it');
+  await page.getByRole('navigation', { name: 'Atelier' }).getByRole('button', { name: 'Settings' }).click();
+  assert.equal(await page.getByLabel('Name', { exact: true }).inputValue(), 'Jellyfin');
+  await shot(page, '6-phone-settings');
+  // A laptop: the designs open in a drawer and close with Escape.
+  await page.setViewportSize({ width: 1024, height: 768 });
+  await page.getByRole('button', { name: 'Designs', exact: true }).click();
+  await page.getByRole('button', { name: /^Backup Kronos · backup/ }).waitFor();
+  await page.keyboard.press('Escape');
+  await page.waitForTimeout(400);
+  assert.ok(!(await page.locator('#atelier-library').isVisible()), 'Escape closes the drawer');
+  await shot(page, '6-laptop');
+  step('phones and laptops: menu, Atelier panes, designs drawer');
 
   assert.deepEqual(errors, [], `console errors:\n${errors.join('\n')}`);
   step('no console errors');
 } finally {
-  await browser.close();
+  // A page that drew WebGL can keep the browser from closing promptly: do not wait on it.
+  await Promise.race([browser.close(), new Promise((r) => setTimeout(r, 5000))]);
   stop();
 }
 console.log(`\n${steps.length} checks passed.`);
+process.exit(0);

@@ -1,0 +1,55 @@
+# The Olympus — the site, rebuilt automatically.
+#
+#   cd deploy && docker compose -f docker-compose.auto.yml up -d --build
+#
+# Run it from the repository on the server (a git clone). The builder watches
+# catalog/ — add, change or remove a service there and the site follows within
+# seconds — and pulls from GitHub every OLYMPUS_GIT_INTERVAL minutes (0: never).
+# The first start installs and builds everything (a few minutes); after that,
+# only what changed. Then open http://<server>:8080.
+#
+# The builder runs as uid 1000 (the node image's user): the repository must be
+# writable by it (chown -R 1000:1000 the clone, or set user: to your own uid
+# and gid and make /site and node_modules theirs).
+services:
+  builder:
+    build:
+      context: .
+      dockerfile: Dockerfile.builder
+    image: theolympus-builder
+    container_name: olympus-builder
+    volumes:
+      - ..:/repo
+      - node_modules:/repo/node_modules
+      - site:/site
+    environment:
+      OLYMPUS_GIT_INTERVAL: "10"
+      OLYMPUS_GIT_REMOTE: origin
+      # The repository is owned by the host's user; let git work in it anyway.
+      GIT_CONFIG_COUNT: "1"
+      GIT_CONFIG_KEY_0: safe.directory
+      GIT_CONFIG_VALUE_0: /repo
+    restart: unless-stopped
+
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile.web
+    image: theolympus-web
+    container_name: olympus
+    ports:
+      - "8080:80"
+    volumes:
+      - site:/site:ro
+    depends_on:
+      - builder
+    restart: unless-stopped
+    read_only: true
+    tmpfs:
+      - /var/cache/nginx
+      - /var/run
+      - /tmp
+
+volumes:
+  node_modules:
+  site:

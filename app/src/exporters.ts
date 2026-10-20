@@ -9,7 +9,10 @@ import { designFile, catalogFile, libraryFile, type Design } from '../../src/cat
 import { ico } from '../../src/export/ico.ts';
 import { webIcons } from '../../src/catalog/webicons.ts';
 import { coinSvg } from '../../src/integrations/kit.ts';
-import { dashboardSnippets, iconName } from '../../src/integrations/dashboards.ts';
+import { addressOf, dashboardSnippets, iconName } from '../../src/integrations/dashboards.ts';
+import { themeKit } from '../../src/integrations/themes/index.ts';
+import { png } from '../../src/export/png.ts';
+import { marbleScreen } from '../../src/render/wallpaper.ts';
 import { issue, motd, motdScript, sshBanner, terminalInstall, wallpaperSvg, WALLPAPER_SIZES, WALLPAPER_STYLES, type ScreenSubject, type WallpaperSize, type WallpaperStyle } from '../../src/screens/screens.ts';
 import type { ScreenTone } from '../../src/render/wallpaper.ts';
 import { PRINTER_MM, type PrintReport } from '../../src/print/service.ts';
@@ -111,11 +114,25 @@ export async function assetPack(design: Design, service: Service, marks: Record<
   if (design.logoSvg) files[`catalog/logos/${id}.svg`] = strToU8(design.logoSvg);
   files[`${id}.olympus.json`] = strToU8(designFile(design));
   // Dashboard icons and entries, for a start page that already lists the house.
-  const entry = { id, name: service.name, category: service.category, description: service.description, url: service.url };
+  const entry = { id, name: service.name, category: service.category, description: service.description, url: service.url, app: service.app };
   files[`dashboard/${iconName(id, '', 'svg')}`] = strToU8(coinSvg(marks.seal, 'dark', `The Olympus — ${service.name}`));
   files[`dashboard/${iconName(id)}`] = await svgToPng(coinSvg(marks.seal, 'dark', `The Olympus — ${service.name}`), 256);
   files[`dashboard/${iconName(id, '-light')}`] = await svgToPng(coinSvg(marks.seal, 'light', `The Olympus — ${service.name}`), 256);
   files['dashboard/README.md'] = strToU8(dashboardSnippets(entry));
+  // The theme kit of the application the service runs, made from its seal.
+  const kit = service.app ? themeKit(service.app) : undefined;
+  if (kit) {
+    const ctx = {
+      entry,
+      id,
+      name: service.name,
+      url: addressOf(entry),
+      marks: { seal: marks.seal, emblem: marks['emblem-fine'], crest: marks['crest-fine'] },
+      png: svgToPng,
+      ground: (w: number, h: number, tone: ScreenTone) => png(marbleScreen(w, h, tone), w, h, 1),
+    };
+    for (const [path, data] of await kit.files(ctx)) files[`theme/${kit.id}/${path}`] = typeof data === 'string' ? strToU8(data) : data;
+  }
   // The crest in the terminal: message of the day, console login, SSH banner.
   const screen: ScreenSubject = { id, name: service.name, caption: service.caption, url: service.url, marks: { crest: marks['crest-fine'], seal: marks.seal } };
   files['terminal/motd-braille.txt'] = strToU8(motd(screen, 'braille'));

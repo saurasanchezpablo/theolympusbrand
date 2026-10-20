@@ -18,9 +18,17 @@ logic and no account: open it from any static host, or run
 
 | Area | What it does |
 |---|---|
-| **Library** (left) | The master, the house catalogue (`catalog/services/`, read-only) and your designs. Search by name, god, category or description; filter by origin and category. Hover a row to duplicate it, download its design file, or delete it (your designs only). |
+| **Designs** (left) | The master, the house catalogue (`catalog/services/`, read-only) and your designs, with **New design**, **Import** and **Export library** at the top. Search by name, god, category or description; filter by origin and category. Hover a row to duplicate it, download its design file, or delete it (your designs only). |
 | **Canvas** (centre) | Live preview. **View**: crest, emblem, seal, horizontal and vertical lockups, a sheet of small sizes (16–64 px seals, emblems, crest), **Sticker** ([die-cut stickers](06-stickers.md)) and **3D print** ([printable models](05-3d-printing.md)). **Edition**: fine or print. **Surface**: flat vector, white marble, black marble, engraved. **Background**: light, dark or transparent. |
 | **Configuration** (right) | Name and identifier, category, patron, logo slot, lockup caption. Below it, the exports. The bar at the bottom saves. |
+
+The three areas sit side by side from 1280 px wide. On a laptop or a tablet
+on its side, the canvas and the settings share the screen and the designs
+open in a drawer (**Designs**, top left of the canvas; Escape closes it). On a
+tablet held upright or a phone, one area shows at a time, chosen from the bar
+at the bottom — **Designs**, **Preview**, **Settings**; choosing a design shows
+its preview. The Atelier loads the first time it is opened and stays loaded
+while you read other pages, so nothing in progress is lost.
 
 ## Making a design
 
@@ -132,3 +140,23 @@ survive a reload, that an SVG logo imports, that the asset pack has the full
 file set, and that a design exports and imports back with its logo, with no
 console errors. It needs an installed Chrome or Chromium (`CHROME_PATH` to
 point at one).
+
+## The lab
+
+`app/lab.html` is a development page with one bench for each interface
+library the site can use: shadcn/ui and Aceternity UI components, Motion,
+GSAP, React Three Fiber with Drei, Swiper and Rive. Each is drawn in the
+house's grays. Start the development server with `npm run app` and open
+`/lab.html`. The lab is not part of the built site.
+
+Components are added with the shadcn command line, configured in
+`components.json`:
+
+```sh
+npx shadcn@4.21.2 add button
+npx shadcn@4.21.2 add @aceternity/text-generate-effect --path app/src/components/aceternity
+```
+
+Only the grays are allowed. The palette test rejects Tailwind's tinted colour
+classes, and `npm run app:viewports` rejects any colour with a hue in the
+built stylesheets.

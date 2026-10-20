@@ -14,9 +14,41 @@ The master's set is kept in the repository and is on the website under
 built on demand; in the Atelier, the export panel draws any wallpaper, and a
 service's asset pack carries its terminal crest.
 
+## One command
+
+Every part has its own installer, and `install.sh` at the top of the set runs
+them all: the boot screens, the terminal crest and the wallpapers — each on
+the machines that can take it, skipping the rest with the reason.
+
+```sh
+sudo sh install.sh                    # every part this machine can take
+sudo sh install.sh grub terminal      # only those
+sudo sh install.sh terminal --ascii   # options go to the parts that take them
+sudo sh install.sh --restore          # undo every part that is installed
+sh install.sh --list                  # the parts, and what this machine can take
+```
+
+Without copying the folder first, straight from the house's site (the
+Downloads page shows the command with the site's own address):
+
+```sh
+curl -fsSL http://<site>/files/assets/screens/install.sh | sudo OLYMPUS_FROM=http://<site>/files/assets/screens/ sh
+```
+
+It fetches only the files of the parts it installs, into a temporary folder,
+and checks each against the SHA-256 written in the script before running
+anything; one that does not match stops it. A service's set
+(`assets/screens/services/<id>/`) has its own `install.sh`.
+
+**Parts are modules.** Each is listed in `src/screens/parts.ts`: its folder,
+the shell test for whether a machine can take it and whether it is
+installed, and the options it accepts. The umbrella script is written from
+that list, so a new part — generated into its folder by `screensKit`, with an
+`install.sh` that also takes `--restore` — is one entry there.
+
 ## Wallpapers
 
-| Style | |
+| Style | Look |
 |---|---|
 | **Black marble** | The crest in marble white on black stone, lifted by a soft shadow. |
 | **White marble** | The crest in charcoal on white stone. |
@@ -31,6 +63,12 @@ The stone on screens is drawn for being seen whole: a few long veins that
 taper and fade, finer veins across them, a soft vignette. Like all the
 house's marble it is seeded, so it is the same on every build. It is a
 picture of stone, made from noise — not a photograph.
+
+`wallpapers/install.sh` adds them to the desktop's own choices, without
+changing anyone's current background: GNOME, Cinnamon and MATE list them in
+their background settings (the 4K file, zoomed to fit), and KDE Plasma gets
+one wallpaper package per style with every size, choosing the one that fits
+the screen. `--restore` removes them.
 
 ## Boot screens
 
@@ -85,7 +123,7 @@ The seal drawn in text, the name and caption beside it:
 ⠀⠀⠀⠀⠀⠀⠉⠛⠻⠿⢿⣿⣿⡿⠿⠟⠛⠉
 ```
 
-| File | |
+| File | Contents |
 |---|---|
 | `20-the-olympus` | The message of the day, for `/etc/update-motd.d/`: the seal in braille (or ASCII), then the host's name and how long it has been up. |
 | `issue` | The console login screen (`/etc/issue`), in ASCII; the login prompt fills in the host and terminal. |
@@ -119,6 +157,14 @@ removed. It runs the message-of-the-day script in `dash` and `bash`, checks
 that the SSH banner is ASCII and the console text has only the escapes
 `getty` expects, and that every function the Plymouth script registers is
 defined and it loads only the images it ships with.
+
+The one-command installer is run against stand-in parts: it installs only
+what the stand-in machine can take, passes `--ascii` to the terminal alone,
+restores only what is installed, rejects unknown parts and options, fetches
+the files from a stand-in site, and refuses a file whose checksum does not
+match. The wallpaper installer is run against a stand-in system: the GNOME
+list is valid XML naming files that exist, every KDE package has its
+metadata and an image per size, and `--restore` leaves nothing behind.
 
 The scripts are written for Debian, Ubuntu and Proxmox VE and keep a copy of
 everything they replace. They have not been run on a live machine here, and

@@ -14,7 +14,7 @@ const n = (v: number) => (Number.isInteger(v) ? String(v) : v.toFixed(3).replace
  * The SCAD source of a model. `files` names what it reads: the mark SVG, the
  * nameplate's design SVG, or the lithophane's heightmap PNG.
  */
-export function scadSource(model: Model, title: string, files: { mark?: string; art?: string; heightmap?: { file: string; pixels: number } }): string {
+export function scadSource(model: Model, title: string, files: { mark?: string; art?: string; heightmap?: { file: string; pixels: number }; tiers?: { file: string; cx: number; cy: number }[] }): string {
   const spec = PRODUCTS[model.product];
   const p = model.params;
   const vars = spec.params.map((s) => {
@@ -22,7 +22,7 @@ export function scadSource(model: Model, title: string, files: { mark?: string; 
     const line = `${snake(s.key)} = ${n(p[s.key])};`;
     return `${line}${' '.repeat(Math.max(1, 26 - line.length))}// ${range}${s.label}${s.unit && s.unit !== '%' ? ` (${s.unit})` : s.unit === '%' ? ' (%)' : ''}`;
   });
-  const reads = [files.mark, files.art, files.heightmap?.file].filter(Boolean);
+  const reads = [files.mark, files.art, files.heightmap?.file, ...(files.tiers ?? []).map((t) => t.file)].filter(Boolean);
   const head = `// ${title}
 // ${spec.name} — ${spec.summary}
 //
@@ -54,6 +54,24 @@ difference() {
 translate([0, 0, base]) linear_extrude(relief) mark(diameter - 2 * flange);
 `;
       break;
+    case 'layered': {
+      const t = model.tiers!;
+      body = `
+// The tiers, lowest first: [file, centre x, centre y, bottom, top] (mm above the bed).
+// Their heights come from the depth style and were rounded to whole layers when
+// this file was made: rebuild it to change them.
+tiers = [
+${t.map((tier, i) => `  ["${files.tiers![i].file}", ${n(files.tiers![i].cx)}, ${n(files.tiers![i].cy)}, ${n(tier.z0)}, ${n(tier.z1)}]`).join(',\n')}
+];
+
+difference() {
+  cylinder(d = diameter, h = base);
+  back();
+}
+for (t = tiers) translate([t[1], t[2], t[3]]) linear_extrude(t[4] - t[3]) import(t[0], center = true);
+`;
+      break;
+    }
     case 'two-colour':
       body = `
 // Which part to export: "plate" and "relief" for two STLs, "both" to preview.
@@ -204,7 +222,7 @@ difference() {
 
 /** The back features exactly where the model put them. */
 function backModule(model: Model): string {
-  if (!['medallion', 'two-colour', 'engraved', 'nameplate'].includes(model.product)) return '';
+  if (!['medallion', 'layered', 'two-colour', 'engraved', 'nameplate'].includes(model.product)) return '';
   const k = KEYHOLE_SPEC;
   const parts: string[] = [];
   for (const f of model.back) {

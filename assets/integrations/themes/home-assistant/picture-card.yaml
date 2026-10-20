@@ -1,0 +1,5 @@
+# The Olympus — the house's seal on a dashboard: Edit dashboard → Add card →
+# Manual, and paste this. The image is served from <config>/www/the-olympus/.
+type: picture
+image: /local/the-olympus/banner.svg
+alt_text: The Olympus · theolympus.cloud

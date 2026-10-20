@@ -4,6 +4,7 @@
 // are millimetres.
 
 import { RIM, C, type Ring } from '../geometry/math.ts';
+import { CREST_PARTS, type CrestPart } from '../geometry/crest.ts';
 import { flatten, strictlySimple, union, difference, intersection, noSpecks, offset } from '../geometry/poly.ts';
 import { lineText } from '../geometry/fonts.ts';
 import { lockupParts, type LockupLayout } from '../geometry/lockup.ts';
@@ -14,7 +15,7 @@ import { qr, qrPath } from '../geometry/qr.ts';
 import { area, cleanRings, lathe, stack, surfaceArea, validate, type Layer, type Mesh, type MeshReport } from './mesh.ts';
 import { lithophaneMesh, rasterise, type LithophaneSpec, type Raster } from './lithophane.ts';
 
-export type ProductId = 'medallion' | 'engraved' | 'two-colour' | 'coaster' | 'nameplate' | 'rack' | 'lithophane' | 'token' | 'stamp' | 'stand';
+export type ProductId = 'medallion' | 'layered' | 'engraved' | 'two-colour' | 'coaster' | 'nameplate' | 'rack' | 'lithophane' | 'token' | 'stamp' | 'stand';
 
 export type ParamKey =
   | 'diameter' | 'flange' | 'base' | 'relief' | 'thickness' | 'depth'
@@ -23,7 +24,8 @@ export type ParamKey =
   | 'height' | 'margin' | 'corner' | 'layout' | 'caption' | 'qr' | 'bed'
   | 'frame' | 'minThickness' | 'maxThickness' | 'resolution' | 'veins'
   | 'hole' | 'slot' | 'clearance'
-  | 'units' | 'spacing' | 'vents';
+  | 'units' | 'spacing' | 'vents'
+  | 'style' | 'tiers' | 'hRim' | 'hOrnament' | 'hLaurels' | 'hTemple' | 'hPlinth' | 'hClouds';
 export type Params = Partial<Record<ParamKey, number>>;
 export type ParamSpec = {
   key: ParamKey;
@@ -39,6 +41,10 @@ export type ParamSpec = {
   options?: string[];
   /** Back-of-plate features are grouped apart from the shape. */
   group: 'shape' | 'back';
+  /** Only used (and shown) when another parameter has this value. */
+  when?: { key: ParamKey; is: number };
+  /** For a choice: what each option does, shown under it. */
+  optionHints?: string[];
 };
 
 export type Product = {
@@ -52,7 +58,7 @@ export type Product = {
 
 const N = (key: ParamKey, label: string, unit: string, min: number, max: number, step: number, value: number, hint: string, group: 'shape' | 'back' = 'shape'): ParamSpec => ({ key, label, unit, min, max, step, value, hint, kind: 'number', group });
 const T = (key: ParamKey, label: string, value: 0 | 1, hint: string, group: 'shape' | 'back' = 'shape'): ParamSpec => ({ key, label, unit: '', min: 0, max: 1, step: 1, value, hint, kind: 'toggle', group });
-const CH = (key: ParamKey, label: string, options: string[], value: number, hint: string): ParamSpec => ({ key, label, unit: '', min: 0, max: options.length - 1, step: 1, value, hint, kind: 'choice', options, group: 'shape' });
+const CH = (key: ParamKey, label: string, options: string[], value: number, hint: string, optionHints?: string[]): ParamSpec => ({ key, label, unit: '', min: 0, max: options.length - 1, step: 1, value, hint, kind: 'choice', options, group: 'shape', ...(optionHints ? { optionHints } : {}) });
 
 /** Keyhole, sized for a 3.5–4 mm screw with a head up to 8 mm. */
 const KEYHOLE = { head: 8.6, shank: 4.6, travel: 8, lip: 1.2, chamber: 2.2 } as const;
@@ -68,6 +74,16 @@ const INSCRIPTION_DEPTH = 0.6;
  */
 const RACK = { width: 254, unit: 44.45, gap: 0.79, holes: [6.35, 38.1], margin: 4 } as const;
 export const RACK_SPEC = RACK;
+
+/** Each part of the crest's height in the depth styles, as a share of the deepest relief. */
+export const DEPTH_STYLES: Record<'coin' | 'temple' | 'frame', Record<CrestPart, number>> = {
+  coin: { rim: 1, ornament: 0.5, laurels: 0.5, temple: 1, plinth: 0.75, clouds: 0.5 },
+  temple: { rim: 0.5, ornament: 0.35, laurels: 0.5, temple: 1, plinth: 0.65, clouds: 0.35 },
+  frame: { rim: 1, ornament: 0.8, laurels: 0.4, temple: 0.6, plinth: 0.6, clouds: 0.4 },
+};
+const PART_KEY: Record<CrestPart, ParamKey> = { rim: 'hRim', ornament: 'hOrnament', laurels: 'hLaurels', temple: 'hTemple', plinth: 'hPlinth', clouds: 'hClouds' };
+const CUSTOM_DEFAULT: Record<string, number> = { hRim: 100, hOrnament: 50, hTemple: 100, hPlinth: 75, hLaurels: 50, hClouds: 50 };
+const PART_NAME: Record<CrestPart, string> = { rim: 'rim', ornament: 'border ornament', laurels: 'laurels', temple: 'temple', plinth: 'name plinth', clouds: 'clouds' };
 
 const BACK: ParamSpec[] = [
   N('magnets', 'Magnet pockets', '', 0, 4, 1, 0, 'Round pockets for disc magnets: hangs on a rack door, a fridge, a steel panel. Glue the magnets in after printing.', 'back'),
@@ -88,6 +104,39 @@ export const PRODUCTS: Record<ProductId, Product> = {
       N('flange', 'Flange', 'mm', 0.6, 6, 0.1, 1.2, 'Plate left around the crest’s rim.'),
       N('base', 'Plate thickness', 'mm', 1.6, 10, 0.1, 3, 'A multiple of your layer height keeps the relief crisp.'),
       N('relief', 'Relief height', 'mm', 0.4, 4, 0.1, 1.2, 'How far the design stands proud of the plate.'),
+      ...BACK,
+    ],
+  },
+  layered: {
+    id: 'layered',
+    name: 'Layered medallion',
+    summary: 'The crest in tiers of relief — rim, border, temple, name, laurels and clouds each at its own height, like a struck coin. One filament, or a colour per tier.',
+    mark: 'crest',
+    params: [
+      N('diameter', 'Diameter', 'mm', 40, 300, 1, 100, 'Outer diameter of the plate.'),
+      N('flange', 'Flange', 'mm', 0.6, 6, 0.1, 1.2, 'Plate left around the crest’s rim.'),
+      N('base', 'Plate thickness', 'mm', 1.6, 10, 0.1, 3, 'A multiple of your layer height keeps the tiers crisp.'),
+      CH('style', 'Depth', ['Coin', 'Temple forward', 'Frame forward', 'Custom'], 0, 'How the heights are shared out between the parts of the crest.', [
+        'Like a struck coin: rim and temple highest, the name a step below, the border ornament, laurels and clouds lowest.',
+        'The temple stands out; the name follows; the frame, laurels and clouds stay low.',
+        'The rim and its ornament rise like a frame around a lower scene.',
+        'Set each part’s height below, as a share of the deepest relief.',
+      ]),
+      N('relief', 'Deepest relief', 'mm', 0.8, 5, 0.2, 2.4, 'The highest tier. The others are shares of it, rounded to whole layers.'),
+      CH('tiers', 'Parts', ['One part', 'A part per tier'], 0, 'One solid, or the plate and each tier as parts of their own.', [
+        'One solid, one filament: the tiers show by their shadows.',
+        'The plate and each tier as separate parts: a filament each on a multi-material printer, or a filament change at each tier on one extruder.',
+      ]),
+      ...(
+        [
+          ['hRim', 'Rim'],
+          ['hOrnament', 'Border ornament'],
+          ['hTemple', 'Temple'],
+          ['hPlinth', 'Name plinth'],
+          ['hLaurels', 'Laurels'],
+          ['hClouds', 'Clouds and logo slot'],
+        ] as const
+      ).map(([key, label]): ParamSpec => ({ ...N(key, label, '%', 10, 100, 5, CUSTOM_DEFAULT[key], `Height of the ${label.toLowerCase()}, as a share of the deepest relief.`), when: { key: 'style', is: 3 } })),
       ...BACK,
     ],
   },
@@ -499,6 +548,8 @@ export type Model = {
   art?: Ring[];
   /** Stadium-shaped openings through the plate (rack panel: mounting slots and vents). */
   openings?: Opening[];
+  /** The layered medallion's tiers, lowest first: what rises to each height. */
+  tiers?: { rings: Ring[]; z0: number; z1: number; parts: CrestPart[] }[];
   /** A turned part (the stamp's handle): its profile, [z, r] from the bed up, and where it stands. */
   lathe?: { profile: [number, number][]; x: number; segments: number };
 };
@@ -548,7 +599,7 @@ export function stampHandle(dieR: number, length: number, socketDepth: number, p
 
 export type ModelInput = {
   /** The print-edition mark (crest or seal) and the smallest diameter it prints at. */
-  mark?: { d: string; minDiameterMM: number };
+  mark?: { d: string; minDiameterMM: number; parts?: Record<CrestPart, string> };
   /** The service's name and lockup caption (nameplate) and the back inscription. */
   name?: string;
   caption?: string;
@@ -606,6 +657,35 @@ export function buildModel(id: ProductId, input: Params, src: ModelInput = {}, s
       heights.push(['plate', p.base], ['relief', p.relief]);
       notes.push(`Thickest point ${top.toFixed(1)} mm — the desk stand’s slot should match.`);
       break;
+    }
+    case 'layered': {
+      checkSize(markD);
+      if (!mark!.parts) throw new Error('layered: needs the crest in parts');
+      const style = (['coin', 'temple', 'frame', 'custom'] as const)[p.style] ?? 'coin';
+      const share = (part: CrestPart) => (style === 'custom' ? p[PART_KEY[part]] / 100 : DEPTH_STYLES[style][part]);
+      // Heights in whole layers, at least one.
+      const heightOf = (part: CrestPart) => Math.max(1, Math.round((share(part) * p.relief) / layer)) * layer;
+      const k = markD / (2 * RIM);
+      const rings = Object.fromEntries(CREST_PARTS.map((part) => [part, pathRings(mark!.parts![part], k, C, C)])) as Record<CrestPart, Ring[]>;
+      const levels = [...new Set(CREST_PARTS.map(heightOf).map((h) => Math.round(h * 1000) / 1000))].sort((a, b) => a - b);
+      const tiers = levels.map((h, i) => {
+        const up = CREST_PARTS.filter((part) => heightOf(part) >= h - 1e-9);
+        return { rings: cleanRings(strictlySimple(union(...up.map((part) => rings[part]))), MESH_TOLERANCE / 4), z0: p.base + (i ? levels[i - 1] : 0), z1: p.base + h, parts: CREST_PARTS.filter((part) => Math.abs(heightOf(part) - h) < 1e-9) };
+      });
+      // The lowest tier is the whole crest (checked above); the ones above it hold only some parts.
+      for (const t of tiers.slice(1)) if (!isClean(problemsAt(union(t.rings), PRINTER_MM))) warnings.push(`At this size the tier with the ${t.parts.map((x) => PART_NAME[x]).join(' and ')} has details finer than a 0.4 mm nozzle draws; make the medallion larger.`);
+      const back = backFeatures(p, { kind: 'disc', r: R }, p.base, inscription, warnings, notes, placed);
+      const plateL = plateLayers([plate], p.base, back);
+      const tierL: Layer[] = tiers.map((t) => ({ rings: t.rings, z0: t.z0, z1: t.z1 }));
+      if (p.tiers === 1) {
+        parts = [part('plate', plateL, 'dark'), ...tierL.map((L, i) => part(`tier-${i + 1}`, [L], i % 2 ? 'dark' : 'light'))];
+        notes.push(`A part per tier: on a multi-material printer, give each part its filament. On one extruder, change filament at ${tiers.map((t) => `layer ${Math.round(t.z0 / layer) + 1} (z = ${t.z0.toFixed(2)} mm)`).join(', ')}.`);
+      } else parts = [part('medallion', [...plateL, ...tierL], 'light')];
+      const top = p.base + levels[levels.length - 1];
+      size = [p.diameter, p.diameter, top];
+      heights.push(['plate', p.base]);
+      notes.push(`Tiers: ${tiers.map((t) => `${(t.z1 - p.base).toFixed(2)} mm — ${t.parts.map((x) => PART_NAME[x]).join(', ')}`).join('; ')}.`, `Thickest point ${top.toFixed(1)} mm — the desk stand’s slot should match.`);
+      return finish({ tiers });
     }
     case 'engraved':
     case 'coaster': {
@@ -809,7 +889,7 @@ export function buildModel(id: ProductId, input: Params, src: ModelInput = {}, s
   }
   return finish({});
 
-  function finish(extra: Pick<Model, 'openings' | 'lathe'>): Model {
+  function finish(extra: Pick<Model, 'openings' | 'lathe' | 'tiers'>): Model {
     if (id !== 'lithophane') notes.unshift(id === 'stamp' ? 'No supports needed.' : 'Print flat on the bed, design facing up. No supports needed.', `Layers of ${layer} mm: ${heights.length ? 'the heights below are whole numbers of layers unless noted.' : 'any height works.'}`);
     for (const [label, h] of heights) {
       const n = h / layer;

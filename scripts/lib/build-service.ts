@@ -94,7 +94,7 @@ export function buildIndex(services: Service[]): void {
   mkdirSync(SERVICES_OUT, { recursive: true });
   writeFileSync(
     join(SERVICES_OUT, 'index.json'),
-    JSON.stringify(services.map((s) => ({ id: s.id, name: s.name, category: s.category, patron: s.patron, caption: s.caption, url: s.url ?? null, path: `${s.id}/` })), null, 2) + '\n',
+    JSON.stringify(services.map((s) => ({ id: s.id, name: s.name, category: s.category, patron: s.patron, title: 'god' in s.patron ? GODS[s.patron.god].title : null, caption: s.caption, url: s.url ?? null, path: `${s.id}/` })), null, 2) + '\n',
   );
   // Overview board: every service's crest with its name and patron.
   const cols = 4;
@@ -146,7 +146,7 @@ function writeCatalogDoc(services: Service[]): void {
     const patron = 'god' in s.patron ? `${sentence(GODS[s.patron.god].name)} — ${GODS[s.patron.god].attribute.toLowerCase()}` : `Monogram ${s.letter}`;
     return `| <img src="../assets/services/${s.id}/png/the-olympus-${s.id}-seal-64.png" width="32"> | **${s.name}** | ${s.category} | ${patron} | [files](../assets/services/${s.id}/) |`;
   });
-  doc = between(doc, 'catalog', ['| | Service | Category | Patron | |', '|---|---|---|---|---|', ...rows].join('\n'));
+  doc = between(doc, 'catalog', ['| Seal | Service | Category | Patron | Files |', '|---|---|---|---|---|', ...rows].join('\n'));
   writeFileSync(file, doc);
 }
 

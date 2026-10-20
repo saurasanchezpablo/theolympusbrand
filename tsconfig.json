@@ -11,7 +11,9 @@
     "strict": true,
     "noUncheckedIndexedAccess": false,
     "skipLibCheck": true,
-    "types": ["node"]
+    "types": ["node"],
+    "baseUrl": ".",
+    "paths": { "@/*": ["./app/src/*"] }
   },
   "include": ["src", "scripts", "tests"]
 }

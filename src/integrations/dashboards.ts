@@ -9,7 +9,7 @@ import { PALETTE } from '../brand/palette.ts';
 import { DOMAIN } from '../brand/identity.ts';
 import { base64 } from '../export/png.ts';
 
-export type Entry = { id: string; name: string; category: Category; description?: string; url?: string };
+export type Entry = { id: string; name: string; category: Category; description?: string; url?: string; app?: string };
 
 /** Where the dashboards find the icons. `local`: each dashboard's own icon folder; otherwise a URL prefix. */
 export type IconSource = { kind: 'local' } | { kind: 'url'; base: string };

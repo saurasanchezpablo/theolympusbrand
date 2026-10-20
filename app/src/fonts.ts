@@ -15,7 +15,18 @@ const FILES: Record<FontRole, string> = {
   body: jostRegular,
 };
 
-export async function loadBrandFonts(): Promise<void> {
+let loading: Promise<void> | null = null;
+
+/** Fetch and register the brand fonts, once; the parts of the site that draw lettering wait for it. */
+export function loadBrandFonts(): Promise<void> {
+  loading ??= loadAll().catch((e) => {
+    loading = null;
+    throw e;
+  });
+  return loading;
+}
+
+async function loadAll(): Promise<void> {
   await Promise.all(
     (Object.entries(FILES) as [FontRole, string][]).map(async ([role, url]) => {
       const res = await fetch(url);

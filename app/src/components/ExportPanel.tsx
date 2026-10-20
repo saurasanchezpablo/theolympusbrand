@@ -174,7 +174,7 @@ function Wallpaper({ screen }: { screen: ScreenSubject }) {
   };
   return (
     <Section title="Wallpaper">
-      <div className="input-row">
+      <div className="input-stack">
         <select className="select select--sm" value={style} onChange={(e) => setStyle(e.target.value as WallpaperStyle)} aria-label="Wallpaper style">
           {(Object.keys(WALLPAPER_STYLES) as WallpaperStyle[]).map((k) => (
             <option key={k} value={k}>

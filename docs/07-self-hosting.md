@@ -33,7 +33,8 @@ read-only, restarts with the server, and serves:
 
 - the correct types for the brand's files (STL, 3MF, PDF, web manifests),
 - compressed text, SVG and meshes,
-- long-lived caching for the built scripts, an hour for the brand's files,
+- long-lived caching for the built scripts; the brand's files are checked
+  with the server on each visit, so a rebuilt site shows at once,
 - a strict Content-Security-Policy: the page may only load from its own
   server.
 
@@ -45,7 +46,59 @@ docker run -d -p 8080:80 --restart unless-stopped --name olympus theolympus-site
 ```
 
 Rebuild the image after changing the repository (a new service, new models):
-the site is a snapshot of it.
+the site is a snapshot of it — or let the server do it, as below.
+
+## Rebuilt automatically
+
+`deploy/docker-compose.auto.yml` runs the site from the repository on the
+server (a git clone) and keeps it up to date by itself:
+
+```sh
+cd deploy && docker compose -f docker-compose.auto.yml up -d --build
+```
+
+Two containers share the built site: a **builder** and the web server. The
+builder watches `catalog/` — add a service there (by hand, with
+`npm run service -- add`, or by dropping in the files of an Atelier asset
+pack's `catalog/` folder), change one or remove it, and the site follows
+within seconds. It also pulls from GitHub every `OLYMPUS_GIT_INTERVAL`
+minutes (10 by default; 0 turns it off), so work pushed from another machine
+arrives on its own.
+
+It rebuilds only what changed:
+
+| What changed | What is rebuilt |
+|---|---|
+| A service added or changed | That service's files, the catalogue's index, boards and tables, the dashboards and theme kits, the site |
+| A service removed | Its files go; the index, dashboards, theme kits and site are rebuilt without it |
+| Documents or committed files (a pull) | The site |
+| The code or the dependencies | Everything (`npm ci` first if the dependencies changed) |
+
+Each build becomes a new release, and the web server switches to it in one
+step, so visitors never see half a build; the previous release is kept. If a
+build fails — a service file with a mistake, say — the site stays as it was.
+The Downloads page says when the site was last rebuilt, or that the last
+attempt failed and why; the builder's log has the detail
+(`docker logs olympus-builder`).
+
+Pulling never discards anything: if a file changed on the server would be
+overwritten by the pull, git refuses, the page says so, and nothing changes
+until you resolve it (commit or move your change). New files — a service
+added on the server — do not get in the way.
+
+The first start installs the dependencies and builds everything, which takes
+a few minutes. The builder runs as uid 1000; the clone must be writable by
+it (`sudo chown -R 1000:1000 theolympusbrand`), or set `user:` in the compose
+file to your own and make the volumes yours.
+
+Without Docker, the same builder runs on its own:
+
+```sh
+OLYMPUS_OUT=/srv/olympus OLYMPUS_GIT_INTERVAL=10 npm run autobuild
+```
+
+and any web server can serve `/srv/olympus/current` (it follows the switch to
+each new release). `npm run autobuild -- --once` does a single pass.
 
 ## Without Docker
 
@@ -81,3 +134,24 @@ npm run app:check -- --url http://server:8080
 It walks through the Atelier, stickers, printable models, the catalogue, the
 guide and the downloads, and compares files made by the site with files made
 by the command line.
+
+The same check of every page at phone, tablet, laptop and desktop sizes —
+nothing scrolling sideways, nothing cut off, no errors, and an
+accessibility audit with axe-core — runs the same way:
+
+```sh
+npm run app:viewports -- --url http://server:8080
+```
+
+## What a visitor's browser loads
+
+The home page loads only the page itself (about 75 kB of script, compressed)
+and a still of the master medallion. On a screen 720 px wide or more, and
+unless the browser asks to save data, it then brings the medallion to life in
+WebGL from its STL (about 340 kB compressed, plus the 3D library, about
+130 kB); on a phone, the still stays until the visitor taps **Turn it in 3D**.
+Visitors who ask their system for reduced motion get the medallion lit but
+still. Where WebGL is missing, the still stays.
+
+The Atelier and the catalogue load when first opened, with the brand fonts
+they draw lettering with; the guide and the downloads load on their own.

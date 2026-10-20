@@ -32,9 +32,11 @@ type Props = {
   isMaster: boolean;
   name: string;
   print: PrintReport | null;
+  /** Shown first in the bar (the library's toggle, where the library is a drawer). */
+  lead?: ReactNode;
 };
 
-export function Canvas({ model, sticker, state, onChange, marks, isMaster, name, print }: Props) {
+export function Canvas({ model, sticker, state, onChange, marks, isMaster, name, print, lead }: Props) {
   const { view, edition, surface, ground } = state;
   const set = (p: Partial<CanvasState>) => onChange({ ...state, ...p });
   const key = markKeyOf(view, edition);
@@ -55,8 +57,10 @@ export function Canvas({ model, sticker, state, onChange, marks, isMaster, name,
   const stageGround = flatOnly ? 'model' : treated ? `t-${surface}` : ground;
 
   return (
-    <main className="canvas" aria-label="Design canvas">
+    <main className="canvas" aria-label="Design canvas" id="atelier-main" tabIndex={-1}>
+      <h1 className="visually-hidden">The Atelier</h1>
       <div className="canvas__bar">
+        {lead}
         <Segmented
           label="View"
           value={view}

@@ -1,5 +1,6 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
+import tailwindcss from '@tailwindcss/vite';
 import { join } from 'node:path';
 import { filesPlugin } from './files-plugin.ts';
 
@@ -9,7 +10,9 @@ import { filesPlugin } from './files-plugin.ts';
 export default defineConfig({
   root: import.meta.dirname,
   base: './',
-  plugins: [react(), filesPlugin(join(import.meta.dirname, '..'))],
+  plugins: [react(), tailwindcss(), filesPlugin(join(import.meta.dirname, '..'))],
+  // `@/…` is app/src — the alias shadcn/ui and Aceternity components are written against.
+  resolve: { alias: { '@': join(import.meta.dirname, 'src') } },
   build: { outDir: 'dist', emptyOutDir: true, chunkSizeWarningLimit: 1500 },
   server: { fs: { allow: ['..'] } },
 });

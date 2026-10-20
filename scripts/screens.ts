@@ -9,6 +9,7 @@
 // Plymouth theme, each with an install script. Terminal: the message of the
 // day, the console login and the SSH banner, with an install script.
 
+import { createHash } from 'node:crypto';
 import { mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { Resvg } from '@resvg/resvg-js';
@@ -60,11 +61,12 @@ const files = await screensKit(
       return png(gray, r.width, r.height, 1);
     },
     ground: (w, h, tone) => png(marbleScreen(w, h, tone), w, h, 1),
+    sha256: (data) => createHash('sha256').update(data).digest('hex'),
   },
   { wallpapers: !args.includes('--no-wallpapers') },
 );
 // Replace only what was rebuilt: the master's folder also holds the services', and --no-wallpapers keeps the wallpapers.
-for (const d of ['boot', 'terminal', 'README.md', ...(args.includes('--no-wallpapers') ? [] : ['wallpapers'])]) rmSync(join(out, d), { recursive: true, force: true });
+for (const d of ['boot', 'terminal', 'README.md', 'install.sh', ...(args.includes('--no-wallpapers') ? [] : ['wallpapers'])]) rmSync(join(out, d), { recursive: true, force: true });
 let bytes = 0;
 for (const f of files) {
   const path = join(out, f.path);

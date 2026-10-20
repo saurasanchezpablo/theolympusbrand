@@ -37,7 +37,7 @@ bead-and-reel astragal. Both follow the house's own rhythm, set in
 All dimensions are in units of the 512 × 512 artboard, centred at (256, 256).
 These are the dimensions of the Fine edition.
 
-| | Element | Dimensions |
+| Key | Element | Dimensions |
 |---|---|---|
 | A | Rim | r 247–252 · the outer silhouette, never broken or cropped |
 | B | Greek key | r 221–243 · 5 cells deep · 56 units, each 6 cells long |
@@ -139,7 +139,7 @@ production.
 Most of the crest never changes, which is what keeps a large family
 consistent.
 
-| | What | Rule |
+| Part | What | Rule |
 |---|---|---|
 | Variable | **Central bay** | The god of the service, standing in the cella. The master has server racks there. |
 | Variable | **Logo slot** | Fine edition: the service's seal by default, or an application logo (§8). Print edition: always the bold temple glyph — no seal, logo or letter keeps its shape at that size. |

@@ -1,0 +1,816 @@
+/* The home page: an ascent through the clouds to the temple, then the house
+   told in light and dark rooms. The stone rooms (ascent, pantheon, closing)
+   keep fixed values in every colour scheme; the light rooms follow the theme.
+   Everything here is readable at rest; motion only adds to it. */
+
+.home {
+  --stone: #0e0e0e;
+  --stone-raised: #171717;
+  --stone-line: #2a2a2a;
+  --mist: #bdbdbd;
+  --stone-ink: #ededed;
+  --stone-quiet: #9a9a9a;
+}
+
+.home .btn {
+  height: var(--tap);
+  padding: 0 22px;
+  font-size: 14.5px;
+}
+
+.section-title {
+  margin: 0;
+  font: 600 clamp(2.1rem, 1.3rem + 3vw, 4.4rem) / 1 var(--display);
+  letter-spacing: 0.03em;
+}
+
+.section-lede {
+  max-width: 44ch;
+  margin: 18px 0 0;
+  font-size: clamp(1rem, 0.94rem + 0.3vw, 1.2rem);
+  line-height: 1.6;
+  color: var(--slate);
+}
+
+/* ---------------------------------------------------------------- */
+/* The ascent                                                         */
+/* ---------------------------------------------------------------- */
+
+/* Held: the scene stays in place for a screen of scrolling while it plays. */
+.home.is-held .ascent-run {
+  height: calc(210dvh - 120px);
+}
+
+.home.is-held .ascent {
+  position: sticky;
+  top: 0;
+}
+
+.home.is-held .pantheon-run {
+  height: calc(100dvh - 60px + var(--travel, 0px));
+}
+
+.home.is-held .pantheon {
+  position: sticky;
+  top: 0;
+  height: calc(100dvh - 60px);
+}
+
+.ascent {
+  position: relative;
+  isolation: isolate;
+  height: calc(100dvh - 60px);
+  min-height: 600px;
+  overflow: hidden;
+  background: radial-gradient(70% 62% at 50% 40%, #2a2a2a 0%, #161616 56%, #0e0e0e 100%);
+  color: var(--stone-ink);
+}
+
+.ascent__title {
+  position: absolute;
+  top: clamp(16px, 4vh, 44px);
+  left: var(--gutter);
+  right: var(--gutter);
+  z-index: 1;
+  display: flex;
+  justify-content: space-between;
+  margin: 0;
+  font: 600 clamp(3.2rem, 10.6vw, 15rem) / 0.86 var(--display);
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: #f2f2f2;
+  pointer-events: none;
+}
+
+.ascent__word {
+  display: inline-block;
+  animation: ascent-rise 1.5s var(--ease) 0.15s backwards;
+}
+
+.ascent__word--olympus {
+  animation-delay: 0.32s;
+}
+
+.ascent__stage {
+  position: absolute;
+  top: clamp(90px, 15vh, 180px);
+  left: 50%;
+  z-index: 2;
+  width: min(60vh, 42vw);
+  margin-left: calc(min(60vh, 42vw) / -2);
+}
+
+.ascent .hero__frame {
+  width: 100%;
+  animation: ascent-surface 1.8s var(--ease) 0.2s backwards;
+}
+
+.ascent .hero__caption {
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  width: max-content;
+  max-width: 80vw;
+  transform: translateX(-50%);
+  color: #c9c9c9;
+  text-shadow: 0 1px 8px rgb(0 0 0 / 0.6);
+}
+
+.ascent__intro {
+  position: absolute;
+  left: var(--gutter);
+  top: 33%;
+  z-index: 4;
+  max-width: min(34ch, 29vw);
+  animation: ascent-fade 1.2s var(--ease) 0.9s backwards;
+}
+
+.ascent__lede {
+  margin: 0 0 26px;
+  font-size: clamp(1rem, 0.9rem + 0.4vw, 1.22rem);
+  line-height: 1.6;
+  color: #c9c9c9;
+}
+
+.ascent__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.ascent .btn:focus-visible,
+.closing .btn:focus-visible,
+.ascent .hero__turn:focus-visible,
+.pantheon a:focus-visible {
+  outline-color: #ededed;
+}
+
+/* Two banks of cloud drifting at different speeds; the nearer one hides the medallion's foot. */
+.ascent__clouds {
+  position: absolute;
+  inset: auto 0 0;
+  z-index: 3;
+  height: 46%;
+  pointer-events: none;
+  animation: ascent-clouds 2.2s var(--ease) 0.1s backwards;
+}
+
+.cloudbank {
+  position: absolute;
+  inset: auto 0 0;
+}
+
+.cloudbank::before {
+  content: '';
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 300%;
+  background-repeat: repeat-x;
+  background-position: 0 100%;
+  background-size: 33.3334% 100%;
+  animation: drift 160s linear infinite;
+}
+
+.cloudbank--back {
+  bottom: 22%;
+  height: 78%;
+  opacity: 0.55;
+  -webkit-mask-image: linear-gradient(to bottom, #000 62%, transparent 96%);
+  mask-image: linear-gradient(to bottom, #000 62%, transparent 96%);
+}
+
+.cloudbank--back::before {
+  background-image: url(/clouds/back.webp);
+  animation-duration: 240s;
+}
+
+.cloudbank--front {
+  height: 100%;
+}
+
+/* Beneath the nearer bank the cloud goes on: as it rises, it fills the view. */
+.cloudbank--front::after {
+  content: '';
+  position: absolute;
+  top: 70%;
+  left: 0;
+  right: 0;
+  height: 400%;
+  background: linear-gradient(to bottom, rgb(189 189 189 / 0), var(--mist) 8%);
+}
+
+.cloudbank--front::before {
+  background-image: url(/clouds/front.webp);
+}
+
+/* At the end of the ascent the view passes into the cloud. */
+.ascent__veil {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  background: var(--mist);
+  opacity: 0;
+  pointer-events: none;
+}
+
+@keyframes ascent-rise {
+  from {
+    opacity: 0;
+    transform: translateY(32%);
+    filter: blur(10px);
+  }
+}
+
+@keyframes ascent-surface {
+  from {
+    opacity: 0;
+    transform: translateY(6%) scale(0.94);
+  }
+}
+
+@keyframes ascent-fade {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+}
+
+@keyframes ascent-clouds {
+  from {
+    transform: translateY(35%);
+  }
+}
+
+@keyframes drift {
+  to {
+    transform: translateX(-33.3334%);
+  }
+}
+
+/* ---------------------------------------------------------------- */
+/* The passage: out of the cloud                                      */
+/* ---------------------------------------------------------------- */
+
+.passage {
+  padding: clamp(72px, 14vh, 160px) var(--gutter) clamp(64px, 10vh, 120px);
+  background: linear-gradient(to bottom, var(--mist) 0%, var(--paper) 42%);
+}
+
+.passage__domain {
+  max-width: var(--measure);
+  margin: 0 auto 30px;
+  font: 400 clamp(1.5rem, 0.9rem + 3vw, 3.6rem) / 1 var(--mono);
+  letter-spacing: -0.01em;
+  color: var(--charcoal);
+}
+
+.passage__text {
+  max-width: var(--measure);
+  margin: 0 auto;
+  font: 400 clamp(1.45rem, 0.95rem + 2.1vw, 3.05rem) / 1.24 var(--sans);
+  letter-spacing: -0.012em;
+  color: var(--charcoal);
+}
+
+/* ---------------------------------------------------------------- */
+/* The band of names                                                  */
+/* ---------------------------------------------------------------- */
+
+.band {
+  overflow: hidden;
+  padding: clamp(12px, 3vw, 40px) 0 clamp(40px, 7vw, 96px);
+  background: var(--paper);
+  font: 600 clamp(2.6rem, 1.2rem + 6vw, 8rem) / 1.08 var(--display);
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--charcoal);
+  user-select: none;
+}
+
+.band__row {
+  display: flex;
+  width: max-content;
+}
+
+.band__row--outline {
+  color: transparent;
+  -webkit-text-stroke: 1px var(--charcoal);
+}
+
+.band__run {
+  display: flex;
+  flex: none;
+  animation: band-run 90s linear infinite;
+}
+
+.band__row--outline .band__run {
+  animation-direction: reverse;
+}
+
+.band__item {
+  display: inline-flex;
+  align-items: center;
+  white-space: nowrap;
+}
+
+.band__seal {
+  width: 0.36em;
+  height: 0.36em;
+  margin: 0 0.42em;
+  opacity: 0.8;
+}
+
+@keyframes band-run {
+  to {
+    transform: translateX(-100%);
+  }
+}
+
+/* ---------------------------------------------------------------- */
+/* The anatomy: the crest assembled as the story is told              */
+/* ---------------------------------------------------------------- */
+
+.anatomy {
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
+  gap: clamp(32px, 5vw, 96px);
+  max-width: var(--measure);
+  margin: 0 auto;
+  padding: clamp(48px, 8vh, 112px) var(--gutter) clamp(64px, 12vh, 160px);
+}
+
+.anatomy__figure {
+  position: sticky;
+  top: 0;
+  display: grid;
+  place-items: center;
+  height: calc(100dvh - 60px);
+  max-height: 900px;
+}
+
+.anatomy__crest {
+  position: relative;
+  width: min(100%, 72vh);
+  aspect-ratio: 1;
+}
+
+.anatomy__part {
+  position: absolute;
+  inset: 0;
+  background: var(--line);
+  -webkit-mask-position: center;
+  mask-position: center;
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  transition: background-color 0.7s var(--ease), transform 0.9s var(--ease);
+}
+
+.anatomy__part[data-state='set'] {
+  background: var(--silver);
+}
+
+.anatomy__part[data-state='now'] {
+  background: var(--charcoal);
+  transform: scale(1.012);
+}
+
+.anatomy__text {
+  padding-top: clamp(24px, 10vh, 120px);
+}
+
+.anatomy__steps {
+  margin: clamp(40px, 8vh, 96px) 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* The step being told is in full ink under a dark rule; the others recede, still readable. */
+.anatomy__step {
+  display: grid;
+  align-content: center;
+  min-height: 62vh;
+  padding: 24px 0;
+  border-top: 1px solid var(--line);
+  color: var(--slate);
+  transition: color 0.5s var(--ease), border-color 0.5s var(--ease);
+}
+
+.anatomy__step[aria-current='step'] {
+  border-top-color: var(--charcoal);
+  color: var(--charcoal);
+}
+
+.anatomy__step h3 {
+  margin: 0 0 14px;
+  font: 600 clamp(1.5rem, 1.2rem + 1vw, 2.2rem) / 1.1 var(--display);
+  letter-spacing: 0.04em;
+}
+
+.anatomy__step p {
+  max-width: 40ch;
+  margin: 0;
+  font-size: clamp(1.02rem, 0.96rem + 0.25vw, 1.18rem);
+  line-height: 1.65;
+}
+
+/* ---------------------------------------------------------------- */
+/* The pantheon: the gods pass sideways                               */
+/* ---------------------------------------------------------------- */
+
+.pantheon {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: clamp(24px, 4vh, 48px);
+  min-height: calc(100dvh - 60px);
+  padding: clamp(40px, 8vh, 96px) 0 clamp(32px, 6vh, 72px);
+  background: var(--stone);
+  color: var(--stone-ink);
+}
+
+.pantheon .section-lede {
+  color: var(--stone-quiet);
+}
+
+.pantheon__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  justify-content: space-between;
+  gap: 12px 48px;
+  padding: 0 var(--gutter);
+}
+
+.pantheon__viewport {
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scroll-padding: 0 var(--gutter);
+  scrollbar-width: thin;
+  scrollbar-color: #3a3a3a transparent;
+}
+
+.pantheon.is-pinned .pantheon__viewport {
+  overflow: hidden;
+}
+
+.pantheon__track {
+  display: flex;
+  gap: clamp(12px, 1.5vw, 24px);
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0 var(--gutter) 12px;
+  list-style: none;
+}
+
+.deity {
+  flex: none;
+  width: clamp(260px, 25vw, 380px);
+  scroll-snap-align: start;
+}
+
+.deity a {
+  display: grid;
+  grid-template-rows: auto 1fr auto auto auto auto;
+  justify-items: start;
+  height: 100%;
+  min-height: 440px;
+  padding: 20px 22px 24px;
+  border: 1px solid var(--stone-line);
+  border-radius: var(--radius);
+  background: var(--stone-raised);
+  color: inherit;
+  text-decoration: none;
+  transition: background-color 0.3s, border-color 0.3s;
+}
+
+.deity a:hover {
+  border-color: #5e5e5e;
+  background: #1c1c1c;
+}
+
+.deity__index {
+  font: 400 12px/1 var(--mono);
+  color: var(--stone-quiet);
+}
+
+.deity__seal {
+  justify-self: center;
+  align-self: center;
+  width: min(72%, 220px);
+  height: auto;
+  margin: 18px 0;
+  filter: invert(1);
+  transform: perspective(700px) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg));
+  transition: transform 0.35s var(--ease);
+}
+
+.deity__god {
+  font: 600 clamp(1.7rem, 1.3rem + 1.1vw, 2.5rem) / 1 var(--display);
+  letter-spacing: 0.04em;
+}
+
+.deity__title {
+  margin-top: 8px;
+  font-size: 14px;
+  line-height: 1.45;
+  color: #c9c9c9;
+}
+
+.deity__service {
+  margin-top: 18px;
+  padding-top: 14px;
+  border-top: 1px solid var(--stone-line);
+  justify-self: stretch;
+  font: 500 16px/1.2 var(--sans);
+}
+
+.deity__host {
+  margin-top: 4px;
+  font: 400 12.5px/1.3 var(--mono);
+  color: var(--stone-quiet);
+  overflow-wrap: anywhere;
+}
+
+/* ---------------------------------------------------------------- */
+/* The workshop: the four rooms                                       */
+/* ---------------------------------------------------------------- */
+
+.workshop {
+  position: relative;
+  max-width: var(--measure);
+  margin: 0 auto;
+  padding: clamp(64px, 12vh, 150px) var(--gutter) clamp(64px, 12vh, 150px);
+}
+
+.rooms {
+  margin: clamp(32px, 6vh, 64px) 0 0;
+  padding: 0;
+  border-bottom: 1px solid var(--charcoal);
+  list-style: none;
+}
+
+.room {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 30ch);
+  align-items: center;
+  gap: 12px 48px;
+  padding: clamp(18px, 3vh, 32px) 0;
+  border-top: 1px solid var(--charcoal);
+  color: inherit;
+  text-decoration: none;
+}
+
+.room__name {
+  font: 600 clamp(2.4rem, 1rem + 6vw, 7rem) / 1 var(--display);
+  letter-spacing: 0.02em;
+  transition: transform 0.45s var(--ease);
+}
+
+.room:hover .room__name,
+.room:focus-visible .room__name {
+  transform: translateX(clamp(8px, 2vw, 28px));
+}
+
+.room__text {
+  font-size: 15px;
+  line-height: 1.6;
+  color: var(--slate);
+}
+
+.room__thumb {
+  display: none;
+}
+
+.rooms__preview {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 2;
+  width: 340px;
+  aspect-ratio: 3 / 2;
+  overflow: hidden;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-deep);
+  background: var(--marble);
+  opacity: 0;
+  pointer-events: none;
+  transform: translate(calc(var(--x, 0px) + 28px), calc(var(--y, 0px) - 50%));
+  transition: opacity 0.25s var(--ease);
+}
+
+.rooms__preview[data-shown] {
+  opacity: 1;
+}
+
+.rooms__preview img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0;
+  transition: opacity 0.3s var(--ease);
+}
+
+.rooms__preview img[data-on] {
+  opacity: 1;
+}
+
+/* Without a mouse the preview cannot follow: each room shows its own. */
+@media (hover: none), (pointer: coarse), (max-width: 899px) {
+  .rooms__preview {
+    display: none;
+  }
+
+  .room {
+    grid-template-columns: minmax(0, 1fr) 112px;
+  }
+
+  .room__text {
+    grid-column: 1;
+  }
+
+  .room__thumb {
+    display: block;
+    grid-column: 2;
+    grid-row: 1 / span 2;
+    width: 112px;
+    height: auto;
+    aspect-ratio: 3 / 2;
+    object-fit: cover;
+    border-radius: var(--radius);
+  }
+}
+
+/* ---------------------------------------------------------------- */
+/* The closing                                                        */
+/* ---------------------------------------------------------------- */
+
+.closing {
+  padding: clamp(80px, 16vh, 180px) var(--gutter) 32px;
+  background: var(--stone);
+  color: var(--stone-ink);
+}
+
+.closing__title {
+  max-width: 14ch;
+  margin: 0;
+  font: 600 clamp(2.5rem, 1.2rem + 5.4vw, 7rem) / 0.98 var(--display);
+  letter-spacing: 0.02em;
+}
+
+.closing__text {
+  max-width: 40ch;
+  margin: 28px 0 36px;
+  font-size: clamp(1.05rem, 0.95rem + 0.4vw, 1.3rem);
+  line-height: 1.6;
+  color: #c9c9c9;
+}
+
+.closing__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.closing__foot {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 8px 24px;
+  margin: clamp(80px, 14vh, 160px) 0 0;
+  padding-top: 20px;
+  border-top: 1px solid var(--stone-line);
+  font-size: 13px;
+  color: var(--stone-quiet);
+}
+
+/* ---------------------------------------------------------------- */
+/* Smaller screens: the same story, in a single column                */
+/* ---------------------------------------------------------------- */
+
+@media (max-width: 899px) {
+  .ascent {
+    display: grid;
+    height: auto;
+    min-height: 0;
+    padding: 28px var(--gutter) 0;
+  }
+
+  .ascent__title {
+    position: static;
+    flex-direction: column;
+    font-size: clamp(3rem, 16vw, 7.5rem);
+  }
+
+  .ascent__word--the {
+    font-size: 0.5em;
+    letter-spacing: 0.12em;
+  }
+
+  .ascent__stage {
+    position: relative;
+    top: auto;
+    left: auto;
+    width: min(100%, 440px);
+    margin: 8px auto 0;
+    justify-self: center;
+  }
+
+  .ascent .hero__caption {
+    position: static;
+    width: auto;
+    transform: none;
+  }
+
+  .ascent__intro {
+    position: relative;
+    top: auto;
+    left: auto;
+    max-width: 40ch;
+    margin: 24px 0 0;
+    padding-bottom: 44vw;
+  }
+
+  .ascent__clouds {
+    height: 50vw;
+    min-height: 170px;
+  }
+
+  .anatomy {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0;
+  }
+
+  .anatomy__figure {
+    z-index: 1;
+    order: 2;
+    height: auto;
+    padding: 12px 0;
+    background: var(--paper);
+  }
+
+  .anatomy__crest {
+    width: min(64vw, 38vh);
+  }
+
+  .anatomy__text {
+    display: contents;
+  }
+
+  .anatomy__text > .section-title,
+  .anatomy__text > .section-lede {
+    order: 1;
+  }
+
+  .anatomy__steps {
+    order: 3;
+    margin-top: 8px;
+  }
+
+  .anatomy__step {
+    min-height: 46vh;
+  }
+
+  .pantheon {
+    min-height: 0;
+  }
+}
+
+/* The header wears stone while the ascent is behind it. */
+.app[data-over='stone'] .topbar {
+  border-bottom-color: #222222;
+  background: #0e0e0e;
+  color: #ededed;
+}
+
+.app[data-over='stone'] .sitenav a {
+  color: #9a9a9a;
+}
+
+.app[data-over='stone'] .sitenav a:hover {
+  color: #ededed;
+  background: #1c1c1c;
+}
+
+.app[data-over='stone'] .menu-toggle {
+  color: #ededed;
+}
+
+.topbar {
+  transition: background-color 0.4s var(--ease), border-color 0.4s var(--ease), color 0.4s var(--ease);
+}
+
+@media (prefers-color-scheme: light) {
+  .app[data-over='stone'] .brand__seal {
+    filter: invert(1);
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  .band__seal {
+    filter: invert(1);
+  }
+}

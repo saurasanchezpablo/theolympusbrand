@@ -7,7 +7,7 @@ layer.
 
 ## Colourways
 
-| | Substrate | What is printed |
+| Colourway | Substrate | What is printed |
 |---|---|---|
 | **White vinyl** | white vinyl | the design in charcoal; nothing else |
 | **Dark** | white vinyl | a black ground to the edge, the design in white — premium on silver and light cases |
@@ -59,7 +59,7 @@ catalogue sheets are kept in the repository; the rest are built on demand.
 
 ## The files
 
-| File | |
+| File | Contents |
 |---|---|
 | `…-sticker-<design>-<colourway>.pdf` | The production file. Layers: **Bleed** (the ground), **Artwork**, **White** (underbase, clear vinyl only), **CutContour**. |
 | `….svg` | The same, as layered SVG (Inkscape and Illustrator read the layers). |

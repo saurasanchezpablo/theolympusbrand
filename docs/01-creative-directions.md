@@ -47,7 +47,7 @@ the clouds only exist at crest size, where they can be seen.
 
 Four compositions of the same crest, each in two detail editions:
 
-| | Composition | Character |
+| Composition | Arrangement | Character |
 |---|---|---|
 | **I · Classic** | Tetrastyle temple, laurel sprigs | The A2 crest as designed |
 | **II · Hexastyle** | Six columns, four rack bays | Closer to the Parthenon front; more "server" |
@@ -261,7 +261,7 @@ the M structural, which fixed both problems.
 
 ![A and B side by side](creative-directions/phase-1-crest/ab-compare.png)
 
-| | A · The Name Plinth | B · The Inscribed Temple |
+| Aspect | A · The Name Plinth | B · The Inscribed Temple |
 |---|---|---|
 | **The name** | Reversed out of the mountain plinth; very clean and legible | Built into the architecture (the M is the pillars); more distinctive, more "logo" |
 | **The god** | Inside the temple, as its cult statue | On a seal medallion: the same icon as the favicon |

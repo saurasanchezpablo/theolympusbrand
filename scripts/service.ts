@@ -6,8 +6,10 @@
 //   npm run service -- add --name "Vaultwarden" --category security [--god athena|monogram]
 //                          [--id vaultwarden] [--monogram V] [--logo path/to/logo.svg]
 //                          [--caption "The Olympus · Vault"] [--url https://vault.theolympus.cloud]
-//                          [--description "Password manager"] [--no-build]
-//   npm run service -- build [id …]        (all services when no id is given)
+//                          [--app vaultwarden] [--description "Password manager"] [--no-build]
+//   npm run service -- apps                 (the applications with a theme kit, and which service themes each)
+//   npm run service -- build [id …] [--warn-only]  (all services when no id is given)
+//   npm run service -- index                (only the catalogue-wide files: index, boards, tables)
 //   npm run service -- check [id …]        (validate and print-check, write nothing)
 //   npm run service -- remove <id>
 
@@ -18,6 +20,7 @@ import { loadCatalog, writeSpec, CATALOG_DIR, SERVICES_DIR } from '../src/node/c
 import { validateSpec, resolve, slugify, type ServiceSpec } from '../src/catalog/service.ts';
 import { GODS, CATEGORIES } from '../src/geometry/pantheon.ts';
 import { importLogo } from '../src/geometry/logo.ts';
+import { THEME_KITS, themeAssignments, themeKit } from '../src/integrations/themes/index.ts';
 import { buildService, buildIndex, SERVICES_OUT } from './lib/build-service.ts';
 import { checkPrint } from '../src/print/service.ts';
 
@@ -59,7 +62,8 @@ function build(ids: string[]) {
   }
   buildIndex(all);
   console.log(`→ assets/services/ · docs/03-catalog.md · docs/catalog/*.png (${all.length} services)`);
-  if (failed) process.exit(1);
+  // --warn-only: a patron that loses detail in print is reported, not an error (the automatic rebuild uses it).
+  if (failed && !flags['warn-only']) process.exit(1);
 }
 
 switch (command) {
@@ -84,6 +88,16 @@ switch (command) {
     }
     break;
   }
+  case 'apps': {
+    const entries = loadCatalog();
+    for (const { kit, entry, dir } of themeAssignments(entries)) {
+      const how = entry ? (entry.app === kit.id ? `${entry.id} (names it)` : `${entry.id} (fits it)`) : 'the master (no service runs it)';
+      console.log(`${pad(dir, 22)} ${pad(kit.label, 16)} from ${how}`);
+    }
+    for (const s of entries.filter((e) => e.app && !themeKit(e.app))) console.log(`⚠ ${s.id} runs "${s.app}", which has no theme kit`);
+    console.log(`Name an application with --app <id> (${THEME_KITS.map((k) => k.id).join(', ')}).`);
+    break;
+  }
   case 'add': {
     const name = flag('name') ?? fail('--name is required');
     const id = flag('id') ?? slugify(name);
@@ -93,6 +107,10 @@ switch (command) {
     if (flag('monogram')) spec.monogram = flag('monogram');
     if (flag('caption')) spec.caption = flag('caption');
     if (flag('url')) spec.url = flag('url');
+    if (flag('app')) {
+      spec.app = flag('app');
+      if (!themeKit(spec.app!)) console.log(`⚠ no theme kit for "${spec.app}" yet: the service is listed on dashboards, not themed (npm run service -- apps)`);
+    }
     if (flag('description')) spec.description = flag('description');
     const logoSrc = flag('logo');
     if (logoSrc) {
@@ -116,6 +134,10 @@ switch (command) {
   }
   case 'build':
     build(positional);
+    break;
+  case 'index':
+    buildIndex(loadCatalog());
+    console.log('✔ index, boards and tables');
     break;
   case 'check': {
     const all = loadCatalog();

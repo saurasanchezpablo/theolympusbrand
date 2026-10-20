@@ -10,7 +10,7 @@ type Props = {
   onRestore: (v: DesignVersion) => void;
 };
 
-const LABELS: Record<string, string> = { id: 'identifier', name: 'name', category: 'category', god: 'patron', monogram: 'monogram', caption: 'caption', url: 'address', description: 'description', logo: 'logo' };
+const LABELS: Record<string, string> = { id: 'identifier', name: 'name', category: 'category', god: 'patron', monogram: 'monogram', caption: 'caption', url: 'address', app: 'application', description: 'description', logo: 'logo' };
 
 /** What changed from one version to the next, in words. */
 function changes(from: DesignVersion, to: DesignVersion): string {

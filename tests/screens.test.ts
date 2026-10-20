@@ -179,7 +179,7 @@ test('wallpapers: well-formed SVG at every size and style', () => {
 });
 
 test('the committed screens: every wallpaper at its size, in gray; GRUB’s background in RGBA', () => {
-  const files = readdirSync(join(KIT, 'wallpapers'));
+  const files = readdirSync(join(KIT, 'wallpapers')).filter((f) => f.endsWith('.png'));
   assert.equal(files.length, Object.keys(WALLPAPER_STYLES).length * Object.keys(WALLPAPER_SIZES).length);
   for (const style of Object.keys(WALLPAPER_STYLES) as WallpaperStyle[])
     for (const size of Object.keys(WALLPAPER_SIZES) as WallpaperSize[]) {
@@ -193,4 +193,107 @@ test('the committed screens: every wallpaper at its size, in gray; GRUB’s back
     assert.ok(statSync(join(KIT, f)).mode & 0o100, `${f} is executable`);
   }
   assert.equal(readFileSync(join(KIT, 'terminal/motd-braille.txt'), 'utf8'), motd(master, 'braille'), 'assets/screens is stale: npm run screens');
+});
+
+/** The committed umbrella installer, pointed at a stand-in system and allowed to run unprivileged. */
+function standInUmbrella(sys: string): string {
+  return readFileSync(join(KIT, 'install.sh'), 'utf8')
+    .replaceAll('/etc/', `${sys}/etc/`)
+    .replaceAll('/usr/share/', `${sys}/usr/share/`)
+    .replaceAll('command -v plymouth-set-default-theme >/dev/null 2>&1', `[ -e ${sys}/has-plymouth ]`)
+    .replace('[ "$(id -u)" = 0 ]', 'true');
+}
+
+test('one command installs every screen part the machine can take, passes options on, restores, and fetches from the site with checksums', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'olympus-screens-'));
+  try {
+    const sys = join(dir, 'sys');
+    const kit = join(dir, 'kit');
+    const log = join(dir, 'log');
+    mkdirSync(`${sys}/etc/default`, { recursive: true });
+    writeFileSync(`${sys}/etc/default/grub`, 'GRUB_TIMEOUT=5\n');
+    writeFileSync(`${sys}/etc/issue`, 'Debian\n');
+    // The kit as committed, but each part's own installer replaced by one that records how it was called.
+    const umbrella = readFileSync(join(KIT, 'install.sh'), 'utf8');
+    const manifest = [...umbrella.matchAll(/^(?:MANIFEST=')?(\w+) (\S+) ([0-9a-f]{64})'?$/gm)].map(([, part, path]) => ({ part, path }));
+    assert.deepEqual([...new Set(manifest.map((m) => m.part))], ['grub', 'plymouth', 'terminal', 'wallpapers']);
+    for (const { path } of manifest) {
+      mkdirSync(join(kit, path, '..'), { recursive: true });
+      writeFileSync(join(kit, path), path.endsWith('install.sh') ? `#!/bin/sh\necho "${path.split('/').slice(-2, -1)[0]} $*" >> ${log}\n` : readFileSync(join(KIT, path)));
+    }
+    writeFileSync(join(kit, 'install.sh'), standInUmbrella(sys));
+    const run = (...a: string[]) => execFileSync('sh', [join(kit, 'install.sh'), ...a], { encoding: 'utf8' });
+    const calls = () => (existsSync(log) ? readFileSync(log, 'utf8').trim().split('\n') : []);
+
+    // What this machine can take: GRUB and the terminal; no Plymouth, no desktop.
+    const list = run('--list');
+    assert.match(list, /grub .*can be installed/);
+    assert.match(list, /plymouth .*skipped: Plymouth is not installed/);
+    assert.match(list, /wallpapers .*skipped: no desktop installed/);
+    const out = run('--ascii');
+    assert.deepEqual(calls(), ['grub ', 'terminal --ascii'], 'only the parts that fit; --ascii only to the terminal');
+    assert.match(out, /Installed: grub terminal/);
+    assert.match(out, /Skipped: plymouth wallpapers/);
+
+    // Restore undoes only what is installed.
+    rmSync(log);
+    writeFileSync(`${sys}/etc/default/grub.the-olympus.orig`, 'GRUB_TIMEOUT=5\n');
+    run('--restore');
+    assert.deepEqual(calls(), ['grub --restore']);
+    assert.throws(() => run('nonsense'), /unknown part/);
+    assert.throws(() => run('--dark'), /unknown option/);
+
+    // From the site: an empty folder, the script piped in, the files fetched and checked.
+    rmSync(log);
+    const piped = join(dir, 'piped');
+    mkdirSync(piped);
+    writeFileSync(join(piped, 'install.sh'), standInUmbrella(sys));
+    const from = `file://${kit}/`;
+    const real = (...a: string[]) => execFileSync('sh', [join(piped, 'install.sh'), ...a], { encoding: 'utf8', env: { ...process.env, OLYMPUS_FROM: from } });
+    // The stand-in installers differ from the committed ones, so their checksums fail: nothing runs.
+    assert.throws(() => real('grub'), /does not match its checksum/);
+    assert.deepEqual(calls(), []);
+    // With the real files, fetching works (GRUB's installer then refuses the stand-in system, as it should).
+    const genuine = join(dir, 'genuine');
+    for (const { path } of manifest.filter((m) => m.part === 'terminal')) {
+      mkdirSync(join(genuine, path, '..'), { recursive: true });
+      writeFileSync(join(genuine, path), readFileSync(join(KIT, path)));
+    }
+    const fetched = execFileSync('sh', ['-c', `sed 's|SRC=$(mktemp -d)|SRC=${dir}/fetched; mkdir -p "$SRC"|; s|trap .*EXIT INT TERM||; s|if sh "$SRC/$(dir_of "$p")/install.sh" $args|if true|' ${join(piped, 'install.sh')} | OLYMPUS_FROM=file://${genuine}/ sh -s -- terminal`], { encoding: 'utf8' });
+    assert.match(fetched, /Installed: terminal/);
+    for (const { path } of manifest.filter((m) => m.part === 'terminal')) assert.deepEqual(readFileSync(join(dir, 'fetched', path)), readFileSync(join(KIT, path)), path);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('the wallpapers are offered to GNOME and KDE Plasma, and removed again', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'olympus-wallpapers-'));
+  try {
+    const sys = join(dir, 'sys');
+    const kit = join(dir, 'wallpapers');
+    mkdirSync(kit, { recursive: true });
+    for (const f of readdirSync(join(KIT, 'wallpapers'))) if (f.endsWith('.png')) writeFileSync(join(kit, f), `png ${f}`);
+    writeFileSync(join(kit, 'install.sh'), readFileSync(join(KIT, 'wallpapers/install.sh'), 'utf8').replaceAll('/usr/share/', `${sys}/usr/share/`).replace('[ "$(id -u)" = 0 ]', 'true'));
+    execFileSync('sh', [join(kit, 'install.sh')]);
+    const xml = readFileSync(`${sys}/usr/share/gnome-background-properties/the-olympus.xml`, 'utf8');
+    assert.ok(XMLValidator.validate(xml) === true);
+    const named = [...xml.matchAll(/<filename>([^<]+)<\/filename>/g)].map((m) => m[1]);
+    assert.equal(named.length, Object.keys(WALLPAPER_STYLES).length);
+    for (const f of named) assert.ok(existsSync(f), f);
+    const plasma = readdirSync(`${sys}/usr/share/wallpapers`);
+    assert.equal(plasma.length, Object.keys(WALLPAPER_STYLES).length);
+    for (const p of plasma) {
+      const meta = JSON.parse(readFileSync(`${sys}/usr/share/wallpapers/${p}/metadata.json`, 'utf8'));
+      assert.equal(meta.KPlugin.Id, p);
+      const images = readdirSync(`${sys}/usr/share/wallpapers/${p}/contents/images`);
+      assert.equal(images.length, Object.keys(WALLPAPER_SIZES).length);
+      for (const i of images) assert.match(readFileSync(`${sys}/usr/share/wallpapers/${p}/contents/images/${i}`, 'utf8'), /^png /, `${p}/${i} resolves`);
+    }
+    execFileSync('sh', [join(kit, 'install.sh'), '--restore']);
+    assert.ok(!existsSync(`${sys}/usr/share/backgrounds/the-olympus`) && !existsSync(`${sys}/usr/share/gnome-background-properties/the-olympus.xml`));
+    assert.deepEqual(readdirSync(`${sys}/usr/share/wallpapers`), []);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
 });

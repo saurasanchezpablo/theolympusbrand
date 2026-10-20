@@ -2,6 +2,7 @@ import { useRef } from 'react';
 import { productionSvg } from '../../../src/render/svg.ts';
 import { slugify, type Service, type ServiceSpec } from '../../../src/catalog/service.ts';
 import { CATEGORIES, GODS, initialOf, type Category, type GodId } from '../../../src/geometry/pantheon.ts';
+import { THEME_KITS } from '../../../src/integrations/themes/index.ts';
 import { CATEGORY_LIST, GOD_LIST, defaultGodOf, sealFor, title, type Draft, type Logo } from '../model.ts';
 import { Field, Notes, Section, SvgImage } from './ui.tsx';
 import { Icon } from './Library.tsx';
@@ -40,7 +41,7 @@ export function Config({ draft, service, logo, issues, warnings, onChange }: Pro
   }
 
   return (
-    <aside className="config" aria-label="Configuration">
+    <section className="config" aria-label="Configuration">
       <Notes items={issues} tone="error" />
 
       <Section title="Service">
@@ -69,6 +70,18 @@ export function Config({ draft, service, logo, issues, warnings, onChange }: Pro
         </Field>
         <Field label="Address" hint="Optional — where the service lives, e.g. https://jellyfin.theolympus.cloud. QR labels and nameplates point here.">
           {(id) => <input id={id} className="input input--mono" type="url" value={spec.url ?? ''} placeholder="https://…" maxLength={120} onChange={(e) => setSpec({ url: e.target.value.trim() })} />}
+        </Field>
+        <Field label="Application" hint="Optional — the app this service runs. Its theme kit (in the asset pack’s dashboards and in Downloads) is then made from this seal.">
+          {(id) => (
+            <select id={id} className="select" value={spec.app ?? ''} onChange={(e) => setSpec({ app: e.target.value || undefined })}>
+              <option value="">None</option>
+              {THEME_KITS.map((k) => (
+                <option key={k.id} value={k.id}>
+                  {k.label}
+                </option>
+              ))}
+            </select>
+          )}
         </Field>
         <Field label="Description" hint="Optional — for the library and the preview board.">
           {(id) => <input id={id} className="input" value={spec.description ?? ''} maxLength={80} onChange={(e) => setSpec({ description: e.target.value })} />}
@@ -165,7 +178,7 @@ export function Config({ draft, service, logo, issues, warnings, onChange }: Pro
       </Section>
 
       <Notes items={warnings} tone="warn" />
-    </aside>
+    </section>
   );
 }
 
@@ -186,7 +199,7 @@ function logoBox(d: string): string {
 
 export function MasterCard({ onNew }: { onNew: () => void }) {
   return (
-    <aside className="config" aria-label="Configuration">
+    <section className="config" aria-label="Configuration">
       <Section title="The master">
         <p className="prose">
           The master crest is fixed: rim, border, temple, thunderbolt, name plinth and clouds never change, and Zeus keeps the bay. Every service variant is built on it and changes only what the system allows — the patron in the bay, the logo slot and the lockup.
@@ -195,6 +208,6 @@ export function MasterCard({ onNew }: { onNew: () => void }) {
           <Icon name="plus" /> New service from the master
         </button>
       </Section>
-    </aside>
+    </section>
   );
 }

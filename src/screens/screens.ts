@@ -4,6 +4,7 @@
 // the command line and the Atelier: SVG and text here, rasterised by the host.
 
 import type { Mark } from '../geometry/crest.ts';
+import { SCREEN_PARTS, screensInstaller } from './parts.ts';
 import { ARTBOARD } from '../geometry/math.ts';
 import { lineText } from '../geometry/fonts.ts';
 import { PALETTE } from '../brand/palette.ts';
@@ -449,6 +450,81 @@ echo "Done. Log in again to see it."
 }
 
 /* ---------------------------------------------------------------- */
+/* Wallpapers, installed                                              */
+/* ---------------------------------------------------------------- */
+
+const xmlText = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;');
+const kdeId = (style: string) => `TheOlympus-${style.split('-').map((w) => w[0].toUpperCase() + w.slice(1)).join('')}`;
+
+/**
+ * The wallpapers, offered in the desktop's own picker: GNOME, Cinnamon and
+ * MATE read background properties; KDE Plasma reads wallpaper packages, one
+ * per style, choosing the image that best fits the screen.
+ */
+export function wallpaperInstall(subject: ScreenSubject): string {
+  const styles = Object.keys(WALLPAPER_STYLES) as WallpaperStyle[];
+  const sizes = Object.keys(WALLPAPER_SIZES) as WallpaperSize[];
+  const title = (style: WallpaperStyle) => `${subject.name} — ${WALLPAPER_STYLES[style].label}`;
+  const gnome = `<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE wallpapers SYSTEM "gnome-wp-list.dtd">
+<wallpapers>
+${styles
+  .map(
+    (style) => `  <wallpaper deleted="false">
+    <name>${xmlText(title(style))}</name>
+    <filename>/usr/share/backgrounds/the-olympus/${wallpaperName(subject.id, style, '4k')}</filename>
+    <options>zoom</options>
+    <shade_type>solid</shade_type>
+    <pcolor>${P.obsidian}</pcolor>
+    <scolor>${P.obsidian}</scolor>
+  </wallpaper>`,
+  )
+  .join('\n')}
+</wallpapers>`;
+  const kde = styles
+    .map((style) => {
+      const d = `"$KDE/${kdeId(style)}"`;
+      const meta = JSON.stringify({ KPlugin: { Id: kdeId(style), Name: title(style), Authors: [{ Name: 'The Olympus' }], License: 'All rights reserved' } });
+      return [
+        `mkdir -p ${d}/contents/images`,
+        ...sizes.map((size) => `ln -sf "$DEST/${wallpaperName(subject.id, style, size)}" ${d}/contents/images/${WALLPAPER_SIZES[size].w}x${WALLPAPER_SIZES[size].h}.png`),
+        `printf '%s\\n' '${meta.replace(/'/g, `'\\''`)}' > ${d}/metadata.json`,
+      ].join('\n');
+    })
+    .join('\n');
+  return `#!/bin/sh
+# ${subject.name} — wallpapers, offered in the desktop's own picker. Run as root.
+#
+#   sh install.sh            GNOME, Cinnamon and MATE (Settings → Background) and KDE Plasma
+#   sh install.sh --restore  remove them
+#
+# They are added to the choices; nobody's current wallpaper is changed.
+set -eu
+DIR=$(cd "$(dirname "$0")" && pwd)
+DEST=/usr/share/backgrounds/the-olympus
+GNOME=/usr/share/gnome-background-properties/the-olympus.xml
+KDE=/usr/share/wallpapers
+[ "$(id -u)" = 0 ] || { echo "run as root" >&2; exit 1; }
+
+if [ "\${1:-}" = "--restore" ]; then
+  rm -rf "$DEST" "$GNOME"${styles.map((s) => ` "$KDE/${kdeId(s)}"`).join('')}
+  echo "The wallpapers are removed. Anyone using one keeps a blank background until they choose another."
+  exit 0
+fi
+[ $# -eq 0 ] || { echo "unknown option: $1" >&2; exit 2; }
+
+mkdir -p "$DEST"
+for f in "$DIR"/*.png; do install -m 644 "$f" "$DEST/"; done
+mkdir -p "$(dirname "$GNOME")"
+cat > "$GNOME" <<'XML'
+${gnome}
+XML
+${kde}
+echo "The wallpapers are in the desktop's background settings."
+`;
+}
+
+/* ---------------------------------------------------------------- */
 /* The whole set                                                      */
 /* ---------------------------------------------------------------- */
 
@@ -458,6 +534,8 @@ export type ScreenHost = {
   png: (svg: string, width: number, opts?: { gray?: boolean }) => Uint8Array | Promise<Uint8Array>;
   /** A marble ground as an encoded gray PNG. */
   ground: (w: number, h: number, tone: 'marble-dark' | 'marble-light') => Uint8Array | Promise<Uint8Array>;
+  /** The SHA-256 of a file, in hex: the one-command installer checks what it fetches. */
+  sha256: (data: string | Uint8Array) => string | Promise<string>;
 };
 
 export async function screensKit(subject: ScreenSubject, host: ScreenHost, { wallpapers = true } = {}): Promise<ScreenFile[]> {
@@ -471,6 +549,7 @@ export async function screensKit(subject: ScreenSubject, host: ScreenHost, { wal
         const ground = tone ? await host.ground(w, h, tone) : undefined;
         add(`wallpapers/${wallpaperName(subject.id, style, size)}`, await host.png(wallpaperSvg(subject, style, size, ground), w, { gray: true }));
       }
+  if (wallpapers) add('wallpapers/install.sh', wallpaperInstall(subject));
   const boot = await host.ground(BOOT.w, BOOT.h, 'marble-dark');
   // GRUB reads 8-bit RGB(A) PNGs, not gray ones.
   add('boot/grub/background.png', await host.png(grubSvg(subject, boot), BOOT.w));
@@ -488,6 +567,16 @@ export async function screensKit(subject: ScreenSubject, host: ScreenHost, { wal
   add('terminal/issue', issue(subject));
   add('terminal/issue.net', sshBanner(subject));
   add('terminal/install.sh', terminalInstall());
+  // One command for all of it: the parts present, every file they need with its checksum.
+  const parts = SCREEN_PARTS.filter((p) => files.some((f) => f.path.startsWith(`${p.dir}/`)));
+  const manifest = await Promise.all(
+    files
+      .map((f) => ({ f, part: parts.find((p) => f.path.startsWith(`${p.dir}/`)) }))
+      .filter((x) => x.part)
+      .sort((a, b) => a.f.path.localeCompare(b.f.path))
+      .map(async ({ f, part }) => ({ part: part!.id, path: f.path, sha256: await host.sha256(f.data) })),
+  );
+  add('install.sh', screensInstaller(parts, manifest, { path: subject.id === 'master' ? 'files/assets/screens/' : `files/assets/screens/services/${subject.id}/` }));
   add('README.md', screensReadme(subject, wallpapers));
   return files.sort((a, b) => a.path.localeCompare(b.path));
 }

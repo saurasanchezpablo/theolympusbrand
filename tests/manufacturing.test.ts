@@ -10,7 +10,8 @@ import { unzipSync, strFromU8 } from 'fflate';
 import { XMLParser } from 'fast-xml-parser';
 import './helpers.ts';
 import { GODS, type GodId } from '../src/geometry/pantheon.ts';
-import { buildModel, estimate, PRODUCTS, defaults, suggestedParams, textRings, stampHandle, markRings, RACK_SPEC, DEFAULT_SETTINGS, type ProductId, type Params } from '../src/manufacturing/products.ts';
+import { buildModel, estimate, PRODUCTS, defaults, suggestedParams, textRings, stampHandle, markRings, RACK_SPEC, DEPTH_STYLES, DEFAULT_SETTINGS, type ProductId, type Params } from '../src/manufacturing/products.ts';
+import { crest, crestParts, CREST_PARTS } from '../src/geometry/crest.ts';
 import { markFor, modelFiles, type MarkSource } from '../src/manufacturing/files.ts';
 import { stack, validate, area, type Layer } from '../src/manufacturing/mesh.ts';
 import { readStl } from '../src/export/stl.ts';
@@ -195,6 +196,57 @@ test('the OpenSCAD source declares every parameter, reads its files and cuts the
     for (const [, file] of scad.matchAll(/(?:import|surface)\((?:file = )?"([^"]+)"/g)) assert.ok(files.some((f) => f.path === file) || file.endsWith('-heightmap.png'), `${id}: ${file}`);
     const magnets = model.back.find((f) => f.kind === 'magnets');
     if (magnets && magnets.kind === 'magnets') for (const [x] of magnets.centres) assert.ok(scad.includes(String(Math.round(x * 1000) / 1000).replace(/\.?0+$/, '')), `${id}: magnet at ${x}`);
+  }
+});
+
+test('the crest comes apart into six parts that rebuild it exactly', () => {
+  for (const detail of ['fine', 'print'] as const)
+    for (const patron of [undefined, { god: 'apollo' as const }, { monogram: 'Q' }]) {
+      const parts = crestParts({ detail, patron });
+      assert.equal(CREST_PARTS.map((k) => parts[k]).join(''), crest({ detail, patron }).d, `${detail} ${JSON.stringify(patron)}`);
+    }
+});
+
+test('the layered medallion: nested tiers in whole layers, a part per tier, the same crest at full height', () => {
+  const mark = markOf('layered', 'apollo')!;
+  const at = (params: Params, settings = DEFAULT_SETTINGS) => buildModel('layered', { ...suggestedParams('layered', mark.minDiameterMM), inscription: 0, ...params }, { mark, name: 'Jellyfin' }, settings);
+  const coin = at({});
+  assert.ok(coin.parts[0].report.ok, JSON.stringify(coin.parts[0].report));
+  const tiers = coin.tiers!;
+  assert.equal(tiers.length, new Set(Object.values(DEPTH_STYLES.coin)).size);
+  // Each tier stands on the one below it: smaller or equal, never overhanging.
+  for (let i = 1; i < tiers.length; i++) {
+    assert.ok(area(tiers[i].rings) < area(tiers[i - 1].rings), `tier ${i + 1} is smaller`);
+    assert.equal(tiers[i].z0, tiers[i - 1].z1);
+  }
+  assert.equal(coin.size[2], Math.round((coin.params.base + coin.params.relief) * 10) / 10);
+  assert.deepEqual(tiers.at(-1)!.parts.sort(), ['rim', 'temple']);
+  // Heights are whole layers, whatever the layer height.
+  const fine = at({ relief: 2.3, base: 3.2 }, { ...DEFAULT_SETTINGS, layer: 0.16 });
+  for (const t of fine.tiers!) {
+    const n = (t.z1 - t.z0) / 0.16;
+    assert.ok(Math.abs(n - Math.round(n)) < 1e-6, `${t.z1 - t.z0} mm`);
+  }
+  assert.ok(!fine.warnings.some((w) => w.includes('whole number of')), fine.warnings.join('\n'));
+  // Every part at full height: one tier, the plain medallion's crest.
+  const all = at({ style: 3, hRim: 100, hOrnament: 100, hTemple: 100, hPlinth: 100, hLaurels: 100, hClouds: 100, relief: 1.2 });
+  assert.equal(all.tiers!.length, 1);
+  const plain = buildModel('medallion', { ...suggestedParams('medallion', mark.minDiameterMM), inscription: 0, relief: 1.2 }, { mark, name: 'Jellyfin' });
+  const rel = Math.abs(all.parts[0].report.volume - plain.parts[0].report.volume) / plain.parts[0].report.volume;
+  assert.ok(rel < 0.002, `volume differs by ${(rel * 100).toFixed(2)} %`);
+  // A part per tier: the plate and each tier, each a valid solid, with the filament changes named.
+  const split = at({ tiers: 1 });
+  assert.deepEqual(split.parts.map((p) => p.name), ['plate', ...tiers.map((_, i) => `tier-${i + 1}`)]);
+  for (const p of split.parts) assert.ok(p.report.ok, `${p.name}: ${JSON.stringify(p.report)}`);
+  const sum = split.parts.reduce((t, p) => t + p.report.volume, 0);
+  assert.ok(Math.abs(sum - coin.parts[0].report.volume) < 1e-3 * sum);
+  assert.ok(split.notes.some((n) => n.includes('change filament at layer')));
+  // The OpenSCAD source places every tier from its own drawing.
+  const { files } = modelFiles({ id: 'apollo', title: 'The Olympus — Jellyfin', name: 'Jellyfin' }, 'layered', coin.params, mark);
+  const scad = files.find((f) => f.path.endsWith('.scad'))!.data as string;
+  for (let i = 1; i <= tiers.length; i++) {
+    assert.ok(files.some((f) => f.path.endsWith(`-tier-${i}.svg`)), `tier ${i} drawing`);
+    assert.ok(scad.includes(`-tier-${i}.svg`), `tier ${i} in the SCAD`);
   }
 });
 

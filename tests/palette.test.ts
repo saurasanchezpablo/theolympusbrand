@@ -26,5 +26,8 @@ test('no hue anywhere in the brand source or the web app', () => {
     for (const [hex] of src.matchAll(/#[0-9a-fA-F]{6}\b|#[0-9a-fA-F]{3}\b/g)) assert.ok(neutral(hex), `${file}: ${hex} has a hue`);
     for (const [, r, g, b] of src.matchAll(/rgba?\((\d+)[,\s]+(\d+)[,\s]+(\d+)/g)) assert.ok(r === g && g === b, `${file}: rgb(${r} ${g} ${b}) has a hue`);
     assert.ok(!/\b(hsla?|hwb|lab|lch|oklab|oklch)\(/.test(src), `${file}: use neutral hex or rgb colours only`);
+    // Tailwind's palette: only `neutral` is grey all through (slate, gray, zinc and stone are tinted).
+    const tinted = src.match(/\b[a-z-]+-(?:red|orange|amber|yellow|lime|green|emerald|teal|cyan|sky|blue|indigo|violet|purple|fuchsia|pink|rose|slate|gray|zinc|stone)-\d{2,3}\b/);
+    assert.ok(!tinted, `${file}: ${tinted?.[0]} — use the house tokens or neutral-*`);
   }
 });

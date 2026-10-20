@@ -14,8 +14,11 @@ import './helpers.ts';
 import { loadCatalog } from '../src/node/catalog.ts';
 import { seal } from '../src/geometry/crest.ts';
 import { addressOf, bookmarks, dashboardSnippets, dashy, groups, homepage, homer, iconName, servicesCsv, type Entry } from '../src/integrations/dashboards.ts';
-import { bannerMark, coinSvg, themedEntry } from '../src/integrations/kit.ts';
-import { jellyfinCss, nextcloudScript, proxmoxScript } from '../src/integrations/themes.ts';
+import { bannerMark, coinSvg } from '../src/integrations/kit.ts';
+import { THEME_KITS, themeAssignments, unknownApps } from '../src/integrations/themes/index.ts';
+import { jellyfinCss } from '../src/integrations/themes/jellyfin.ts';
+import { nextcloudScript } from '../src/integrations/themes/nextcloud.ts';
+import { proxmoxScript } from '../src/integrations/themes/proxmox.ts';
 import { DOMAIN } from '../src/brand/identity.ts';
 
 const ROOT = new URL('..', import.meta.url).pathname;
@@ -178,10 +181,27 @@ test('drawings: the coin, the banner, the CSS-embedded banner', () => {
   assert.equal(new XMLParser({ ignoreAttributes: false }).parse(svg).svg.path['@_d'], b.d);
 });
 
-test('each application is themed by its service, by id and then by category', () => {
-  assert.equal(themedEntry(catalogue, 'jellyfin')?.id, 'jellyfin');
-  assert.equal(themedEntry(catalogue, 'grafana')?.category, 'monitoring');
-  assert.equal(themedEntry([], 'proxmox'), null);
+test('each application is themed by the service that names it, then by id, then by category, then by the master', () => {
+  const dirOf = (entries: Entry[], app: string) => themeAssignments(entries).filter((a) => a.kit.id === app);
+  assert.equal(dirOf(catalogue, 'jellyfin')[0].entry?.id, 'jellyfin');
+  assert.equal(dirOf(catalogue, 'grafana')[0].entry?.category, 'monitoring');
+  assert.equal(dirOf([], 'proxmox')[0].entry, null);
+  // Naming the application wins, and a second service running it gets a kit of its own.
+  const named: Entry[] = [...catalogue, { id: 'films', name: 'Films', category: 'media', app: 'jellyfin' }, { id: 'kids', name: 'Kids', category: 'media', app: 'jellyfin' }];
+  assert.deepEqual(dirOf(named, 'jellyfin').map((a) => [a.dir, a.entry?.id]), [['jellyfin', 'films'], ['jellyfin-kids', 'kids']]);
+  // A service that names one application is not borrowed by another.
+  assert.equal(dirOf([{ id: 'grafana', name: 'Grafana', category: 'monitoring', app: 'uptime-kuma' }], 'grafana')[0].entry, null);
+  // An application the house has no kit for is reported, not themed.
+  assert.deepEqual(unknownApps([{ id: 'x', name: 'X', category: 'other', app: 'no-such-app' }]).map((e) => e.id), ['x']);
+});
+
+test('the theme kit registry: unique ids, folders that cannot collide, every kit described', () => {
+  const ids = THEME_KITS.map((k) => k.id);
+  assert.equal(new Set(ids).size, ids.length);
+  for (const k of THEME_KITS) {
+    assert.match(k.id, /^[a-z0-9]+(?:-[a-z0-9]+)*$/);
+    assert.ok(k.label && k.how, k.id);
+  }
 });
 
 test('the committed kit lists the catalogue and has every icon it names', () => {
@@ -193,4 +213,58 @@ test('the committed kit lists the catalogue and has every icon it names', () => 
   for (const f of ['dashboards/dashy/conf.yml', 'dashboards/homer/config.yml', 'dashboards/homepage/settings.yaml']) parse(readFileSync(join(KIT, f), 'utf8'));
   for (const f of ['themes/nextcloud/apply.sh', 'themes/proxmox/apply.sh']) execFileSync('dash', ['-n', join(KIT, f)]);
   for (const f of ['themes/nextcloud/logo.svg', 'themes/nextcloud/logoheader.svg', 'themes/grafana/grafana_icon.svg']) assert.ok(XMLValidator.validate(readFileSync(join(KIT, f), 'utf8')) === true, f);
+});
+
+test('the Home Assistant kit: the theme parses with both modes in greys; the script installs, asks for the include once, and undoes', () => {
+  const theme = parse(readFileSync(join(KIT, 'themes/home-assistant/the-olympus.yaml'), 'utf8'))['The Olympus'];
+  assert.deepEqual(Object.keys(theme.modes), ['light', 'dark']);
+  for (const mode of ['light', 'dark']) assert.ok(theme.modes[mode]['primary-color'] && theme.modes[mode]['primary-background-color'], mode);
+  assert.ok(theme['ha-color-primary-40'], 'the primary scale is set, or blue shows through');
+  const dir = mkdtempSync(join(tmpdir(), 'olympus-ha-'));
+  try {
+    const config = join(dir, 'config');
+    execFileSync('mkdir', ['-p', config]);
+    writeFileSync(join(config, 'configuration.yaml'), 'default_config:\n');
+    const run = (...a: string[]) => execFileSync('sh', [join(KIT, 'themes/home-assistant/apply.sh'), ...a]).toString();
+    assert.match(run(config), /include_dir_merge_named themes/, 'tells the user the one line to add');
+    assert.equal(readFileSync(join(config, 'themes/the-olympus.yaml'), 'utf8'), readFileSync(join(KIT, 'themes/home-assistant/the-olympus.yaml'), 'utf8'));
+    assert.ok(existsSync(join(config, 'www/the-olympus/banner.svg')) && existsSync(join(config, 'www/the-olympus/seal.svg')));
+    writeFileSync(join(config, 'configuration.yaml'), 'frontend:\n  themes: !include_dir_merge_named themes\n');
+    assert.doesNotMatch(run(config), /One more step/, 'not asked again once it is there');
+    run(config, '--restore');
+    assert.ok(!existsSync(join(config, 'themes/the-olympus.yaml')) && !existsSync(join(config, 'www/the-olympus')));
+    assert.throws(() => execFileSync('sh', [join(KIT, 'themes/home-assistant/apply.sh'), dir], { stdio: 'ignore' }), 'refuses a folder that is not Home Assistant’s');
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('the Vaultwarden kit: a stylesheet Handlebars leaves alone, grey in both themes, installed and removed by its script', () => {
+  const scss = readFileSync(join(KIT, 'themes/vaultwarden/user.vaultwarden.scss.hbs'), 'utf8');
+  assert.ok(!/\{\{|\}\}/.test(scss), 'no Handlebars expressions');
+  assert.ok(scss.includes(':root {') && scss.includes('.theme_dark {'));
+  for (const [, r, g, b] of scss.matchAll(/--color-[\w-]+: (\d+),? (\d+),? (\d+);/g)) assert.ok(r === g && g === b, `${r} ${g} ${b}`);
+  const dir = mkdtempSync(join(tmpdir(), 'olympus-vw-'));
+  try {
+    const data = join(dir, 'data');
+    execFileSync('mkdir', ['-p', data]);
+    const script = join(KIT, 'themes/vaultwarden/apply.sh');
+    execFileSync('sh', [script, data]);
+    const installed = join(data, 'templates/scss/user.vaultwarden.scss.hbs');
+    assert.equal(readFileSync(installed, 'utf8'), scss);
+    assert.ok(!existsSync(join(data, 'templates/scss/vaultwarden.scss.hbs')), 'Vaultwarden’s own rules are not replaced');
+    execFileSync('sh', [script, data, '--restore']);
+    assert.ok(!existsSync(installed));
+    // The Docker form, against a stand-in docker that records what it is asked to do.
+    const bin = join(dir, 'bin');
+    execFileSync('mkdir', ['-p', bin]);
+    writeFileSync(join(bin, 'docker'), `#!/bin/sh\necho "$@" >> "${dir}/docker.log"\n`);
+    chmodSync(join(bin, 'docker'), 0o755);
+    execFileSync('sh', [script], { env: { ...process.env, PATH: `${bin}:${process.env.PATH}`, VAULTWARDEN_CONTAINER: 'vw' } });
+    const log = readFileSync(join(dir, 'docker.log'), 'utf8');
+    assert.match(log, /cp .*user\.vaultwarden\.scss\.hbs vw:\/data\/templates\/scss\/user\.vaultwarden\.scss\.hbs/);
+    assert.match(log, /restart vw/);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
 });

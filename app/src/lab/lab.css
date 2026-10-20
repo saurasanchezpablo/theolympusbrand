@@ -1,0 +1,3 @@
+/* The site's Tailwind setup, plus the lab's own classes — which stay out of the site's stylesheet. */
+@import '../tailwind.css';
+@source '.';

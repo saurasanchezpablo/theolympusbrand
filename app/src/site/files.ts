@@ -2,9 +2,8 @@
 // whole folders made in the browser.
 
 import { useEffect, useState } from 'react';
-import { zipSync } from 'fflate';
 
-export type FileIndex = { groups: { dir: string; group: string; label: string }[]; files: { path: string; size: number }[] };
+export type FileIndex = { groups: { dir: string; group: string; label: string }[]; files: { path: string; size: number; title?: string }[] };
 
 /** URL of a published file, relative to the page (works from any sub-path). */
 export const fileUrl = (path: string) => `files/${path.split('/').map(encodeURIComponent).join('/')}`;
@@ -33,27 +32,6 @@ export function formatSize(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`;
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} KB`;
   return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
-}
-
-/** Fetch every file under a folder and zip them, paths relative to the folder's parent. */
-export async function zipFolder(index: FileIndex, prefix: string, onProgress?: (done: number, total: number) => void): Promise<Uint8Array> {
-  const files = filesUnder(index, prefix);
-  const parent = prefix.replace(/\/?[^/]+\/?$/, '');
-  const out: Record<string, Uint8Array> = {};
-  let done = 0;
-  // A few at a time: kind to a small home server.
-  const queue = [...files];
-  await Promise.all(
-    Array.from({ length: 4 }, async () => {
-      for (let f = queue.shift(); f; f = queue.shift()) {
-        const res = await fetch(fileUrl(f.path));
-        if (!res.ok) throw new Error(`${f.path}: ${res.status}`);
-        out[parent ? f.path.slice(parent.length + 1) : f.path] = new Uint8Array(await res.arrayBuffer());
-        onProgress?.(++done, files.length);
-      }
-    }),
-  );
-  return zipSync(out, { level: 6 });
 }
 
 /* ---------------------------------------------------------------- */

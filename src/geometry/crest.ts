@@ -323,16 +323,18 @@ const placeTemple = (P: Profile, d: string) => {
   return transformPath(d, k, C * (1 - k), COMPOSITION.plateauY - P.templeGap - 334 * k);
 };
 
-/** Tier 1 — the full crest. */
-export function crest({ detail = 'fine', patron = ZEUS, medal = 'seal', logo, border: rhythms = BORDER }: CrestConfig = {}): Mark {
+/** The crest's parts, in their drawing order: the border, then the centre (laid out for the nominal field). */
+export const CREST_PARTS = ['rim', 'ornament', 'laurels', 'temple', 'plinth', 'clouds'] as const;
+export type CrestPart = (typeof CREST_PARTS)[number];
+
+function crestPieces({ detail = 'fine', patron = ZEUS, medal = 'seal', logo, border: rhythms = BORDER }: CrestConfig): { border: Record<'rim' | 'ornament', string>; centre: Record<'laurels' | 'temple' | 'plinth' | 'clouds', string>; k: number } {
   const P = PROFILES[detail];
   const L = borderLayout(P);
   const b = P.border;
-  const border =
-    annulus(L.rimIn, RIM) +
-    keyBand(L.keyOut, L.keyIn, rhythms.hooks).d +
-    annulus(L.ruleIn, L.ruleOut) +
-    beadAndReel(L.beadR, rhythms.beads, { thickness: b.beadT, repeat: b.beadRepeat }).d;
+  const border = {
+    rim: annulus(L.rimIn, RIM),
+    ornament: keyBand(L.keyOut, L.keyIn, rhythms.hooks).d + annulus(L.ruleIn, L.ruleOut) + beadAndReel(L.beadR, rhythms.beads, { thickness: b.beadT, repeat: b.beadRepeat }).d,
+  };
 
   // The centre is laid out for the nominal field, then scaled to the real one.
   const k = L.fieldR / COMPOSITION.nominalField;
@@ -350,16 +352,39 @@ export function crest({ detail = 'fine', patron = ZEUS, medal = 'seal', logo, bo
   const medalHalo = flatten(circle(C, P.medal.cy, P.medal.r + P.medal.halo));
   const lr = COMPOSITION.laurel;
 
-  const centre =
-    laurelBranch(lr.R, lr.left[0], lr.left[1], lr.leaves, P.laurel) +
-    laurelBranch(lr.R, lr.right[0], lr.right[1], lr.leaves, P.laurel) +
-    placeTemple(P, temple(P, patron)) +
+  const centre = {
+    laurels: laurelBranch(lr.R, lr.left[0], lr.left[1], lr.leaves, P.laurel) + laurelBranch(lr.R, lr.right[0], lr.right[1], lr.leaves, P.laurel),
+    temple: placeTemple(P, temple(P, patron)),
     // The plinth ends at the field, so it never covers the bead-and-reel.
-    ringsPath(noSpecks(difference(plinth(P, COMPOSITION.nominalField, COMPOSITION.nominalField), cl.halo))) +
-    ringsPath(noSpecks(difference(cl.outline, medalHalo))) +
-    medallion(P, patron, medal, logo);
+    plinth: ringsPath(noSpecks(difference(plinth(P, COMPOSITION.nominalField, COMPOSITION.nominalField), cl.halo))),
+    clouds: ringsPath(noSpecks(difference(cl.outline, medalHalo))) + medallion(P, patron, medal, logo),
+  };
+  return { border, centre, k };
+}
 
-  return { id: `crest-${detail}-${patronId(patron)}${medal === 'slot' ? '-slot' : ''}`, d: border + scaleAbout(centre, k) };
+/** Tier 1 — the full crest. */
+export function crest(config: CrestConfig = {}): Mark {
+  const { detail = 'fine', patron = ZEUS, medal = 'seal' } = config;
+  const { border, centre, k } = crestPieces(config);
+  const d = border.rim + border.ornament + scaleAbout(centre.laurels + centre.temple + centre.plinth + centre.clouds, k);
+  return { id: `crest-${detail}-${patronId(patron)}${medal === 'slot' ? '-slot' : ''}`, d };
+}
+
+/**
+ * The crest taken apart, each part where it sits in the finished crest: the
+ * rim, the border ornament (key, rule, beads), the laurels, the temple, the
+ * name plinth, and the clouds with the logo slot. Together they are the crest.
+ */
+export function crestParts(config: CrestConfig = {}): Record<CrestPart, string> {
+  const { border, centre, k } = crestPieces(config);
+  return {
+    rim: border.rim,
+    ornament: border.ornament,
+    laurels: scaleAbout(centre.laurels, k),
+    temple: scaleAbout(centre.temple, k),
+    plinth: scaleAbout(centre.plinth, k),
+    clouds: scaleAbout(centre.clouds, k),
+  };
 }
 
 /**

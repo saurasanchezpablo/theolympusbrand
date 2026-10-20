@@ -33,6 +33,8 @@ Each service's seal struck as a coin: `olympus-<id>.png` (dark, 256 px),
 | Proxmox VE | `apply.sh` installs the header logo and favicon (`--restore` undoes) | Proxmox’s seal |
 | Grafana | `docker-compose.override.yml` mounts the logo, favicon and icon | Monitoring’s seal |
 | Uptime Kuma | `status-page.css` and `logo.png` — status page settings | Monitoring’s seal |
+| Home Assistant | `apply.sh` installs the theme (light and dark) and the images; `picture-card.yaml` puts the seal on a dashboard | Home Assistant’s seal |
+| Vaultwarden | `apply.sh` installs `user.vaultwarden.scss.hbs` in the data folder: greys for the web vault, the house’s logo | the master’s seal |
 
 Each is written for a current release of the application (named in the
 file) and only uses what it offers for customisation. They have not been run

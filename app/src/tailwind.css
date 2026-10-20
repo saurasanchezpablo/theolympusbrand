@@ -1,0 +1,83 @@
+/* Tailwind for the components that use it (shadcn/ui, Aceternity) — and only
+   for them. No preflight: the site's own base styles stay as they are. Only
+   the folders below are scanned, so no utility reaches the existing pages by
+   accident. Every colour token is one of the house's grays (R = G = B); the
+   dark set follows the system, as the rest of the site does. */
+
+@layer theme, base, components, utilities;
+@import 'tailwindcss/theme.css' layer(theme);
+@import 'tailwindcss/utilities.css' layer(utilities) source(none);
+@import 'tw-animate-css';
+
+@source './components/ui';
+@source './components/aceternity';
+
+@theme inline {
+  --font-sans: 'Jost', system-ui, sans-serif;
+  --font-serif: 'Cinzel', 'Times New Roman', serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+  --radius-sm: 2px;
+  --radius-md: 2px;
+  --radius-lg: 3px;
+  --radius-xl: 4px;
+  --color-background: var(--ui-background);
+  --color-foreground: var(--ui-foreground);
+  --color-card: var(--ui-card);
+  --color-card-foreground: var(--ui-foreground);
+  --color-popover: var(--ui-card);
+  --color-popover-foreground: var(--ui-foreground);
+  --color-primary: var(--ui-primary);
+  --color-primary-foreground: var(--ui-primary-foreground);
+  --color-secondary: var(--ui-muted);
+  --color-secondary-foreground: var(--ui-foreground);
+  --color-muted: var(--ui-muted);
+  --color-muted-foreground: var(--ui-muted-foreground);
+  --color-accent: var(--ui-muted);
+  --color-accent-foreground: var(--ui-foreground);
+  --color-destructive: var(--ui-foreground);
+  --color-border: var(--ui-border);
+  --color-input: var(--ui-border);
+  --color-ring: var(--ui-foreground);
+}
+
+:root {
+  --ui-background: #fafafa;
+  --ui-foreground: #1c1c1c;
+  --ui-card: #ffffff;
+  --ui-primary: #1c1c1c;
+  --ui-primary-foreground: #fafafa;
+  --ui-muted: #ededed;
+  --ui-muted-foreground: #5e5e5e;
+  --ui-border: #c9c9c9;
+}
+
+/* Preflight for the components alone (shadcn/ui marks its parts with
+   data-slot): without it the browser's button border and fill show through. */
+@layer base {
+  :where([data-slot], [data-slot] *) {
+    border: 0 solid;
+    margin: 0;
+    padding: 0;
+  }
+  :where(button[data-slot], [data-slot] button) {
+    background-color: transparent;
+  }
+}
+
+/* Swiper's one colour is a blue on :root; this outranks it wherever its CSS loads. */
+:root:root {
+  --swiper-theme-color: var(--ui-foreground);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --ui-background: #0e0e0e;
+    --ui-foreground: #ededed;
+    --ui-card: #1c1c1c;
+    --ui-primary: #ededed;
+    --ui-primary-foreground: #0e0e0e;
+    --ui-muted: #262626;
+    --ui-muted-foreground: #9a9a9a;
+    --ui-border: #3a3a3a;
+  }
+}

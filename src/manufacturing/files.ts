@@ -2,7 +2,7 @@
 // Images are returned as pixels; each host encodes them (Node: PNG writer,
 // browser: canvas).
 
-import { crest, seal } from '../geometry/crest.ts';
+import { crest, crestParts, seal, CREST_PARTS, type CrestPart } from '../geometry/crest.ts';
 import type { Patron } from '../geometry/pantheon.ts';
 import type { Ring } from '../geometry/math.ts';
 import { productionSvg } from '../render/svg.ts';
@@ -16,7 +16,8 @@ import { buildModel, estimate, modelVolume, DEFAULT_SETTINGS, PRODUCTS, type Mod
 import { backlit, heightmap } from './lithophane.ts';
 import { scadSource } from './scad.ts';
 
-export type MarkSource = { d: string; minDiameterMM: number; svg: string; file: string };
+/** A print-edition mark; a crest also comes in its parts, for the layered medallion. */
+export type MarkSource = { d: string; minDiameterMM: number; svg: string; file: string; parts?: Record<CrestPart, string> };
 
 /**
  * The print-edition mark a product carries, with the size it prints from.
@@ -27,7 +28,9 @@ export function markFor(kind: 'crest' | 'seal', patron: Patron | undefined, id: 
   if (kind === 'crest') {
     const d = ringsPath(geometryOf(crest({ detail: 'print', patron }).d));
     const min = master ? Math.ceil(minDiameterMM(SHARED_PRINT_MIN_UNITS, PRINTER_MM)) : checkPrint(patron!).minDiameterMM;
-    return { d, minDiameterMM: min, svg: productionSvg({ id: 'crest-print', d }, { title: `The Olympus — ${id} — crest, print edition` }), file: `the-olympus-${id}-crest-print.svg` };
+    const raw = crestParts({ detail: 'print', patron });
+    const parts = Object.fromEntries(CREST_PARTS.map((k) => [k, ringsPath(geometryOf(raw[k]))])) as Record<CrestPart, string>;
+    return { d, minDiameterMM: min, svg: productionSvg({ id: 'crest-print', d }, { title: `The Olympus — ${id} — crest, print edition` }), file: `the-olympus-${id}-crest-print.svg`, parts };
   }
   const d = ringsPath(geometryOf(seal({ patron }).d));
   const { w } = minFeature(geometryOf(d));
@@ -75,8 +78,18 @@ export function modelFiles(
   else for (const pt of model.parts) files.push({ path: `${base}-${pt.name}.stl`, data: stl(pt.mesh, `${label} ${pt.name}`) });
   files.push({ path: `${base}.3mf`, data: threeMf(label, model.parts) });
 
-  const sources: { mark?: string; art?: string; heightmap?: { file: string; pixels: number } } = {};
-  if (model.art) {
+  const sources: { mark?: string; art?: string; heightmap?: { file: string; pixels: number }; tiers?: { file: string; cx: number; cy: number }[] } = {};
+  if (model.tiers) {
+    // One drawing per tier; OpenSCAD centres each on import, so its centre goes with it.
+    sources.tiers = model.tiers.map((t, i) => {
+      const pts = t.rings.flat();
+      const xs = pts.map((q) => q[0]);
+      const ys = pts.map((q) => q[1]);
+      const file = `${base}-tier-${i + 1}.svg`;
+      files.push({ path: file, data: ringsSvg(t.rings, `${label} — tier ${i + 1}`) });
+      return { file, cx: (Math.min(...xs) + Math.max(...xs)) / 2, cy: (Math.min(...ys) + Math.max(...ys)) / 2 };
+    });
+  } else if (model.art) {
     sources.art = `${base}-design.svg`;
     files.push({ path: sources.art, data: ringsSvg(model.art, label) });
   } else if (model.lithophane) sources.heightmap = { file: `${base}-heightmap.png`, pixels: heightmapPixels(model) };
@@ -114,7 +127,7 @@ export function modelReadme(title: string, model: Model, base: string, mark: Mar
   const cm3 = modelVolume(model);
   const est = estimate(model, model.settings);
   const value = (key: (typeof spec.params)[number]) => (key.kind === 'toggle' ? (model.params[key.key] ? 'on' : 'off') : key.kind === 'choice' ? key.options![model.params[key.key]] : fmt(model.params[key.key], key.unit));
-  const rows = spec.params.map((p) => `| ${p.label} | ${value(p)} | ${p.hint} |`);
+  const rows = spec.params.filter((p) => !p.when || model.params[p.when.key] === p.when.is).map((p) => `| ${p.label} | ${value(p)} | ${p.hint} |`);
   const files = model.parts.length === 1 ? [`\`${base}.stl\` — the solid, ready to slice`] : model.parts.map((pt) => `\`${base}-${pt.name}.stl\` — the ${pt.name}`);
   const infill = model.product === 'lithophane' ? 100 : model.settings.infill;
   return `# ${title} — ${spec.name}

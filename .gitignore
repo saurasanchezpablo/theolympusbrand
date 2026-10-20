@@ -18,3 +18,4 @@ manufacturing/stickers/*
 !manufacturing/stickers/sheets/
 # A service's screens are generated on demand (npm run screens -- <id>); the master's are kept.
 assets/screens/services/
+site-releases/

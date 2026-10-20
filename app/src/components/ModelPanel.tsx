@@ -52,9 +52,10 @@ function Param({ p, value, onChange }: { p: ParamSpec; value: number; onChange: 
     );
   if (p.kind === 'choice')
     return (
-      <div className="param param--choice" title={p.hint}>
+      <div className={`param param--choice${p.options!.length > 2 || p.optionHints ? ' param--choice-wide' : ''}`} title={p.hint}>
         <span className="param__label">{p.label}</span>
         <Segmented label={p.label} size="sm" value={String(value)} onChange={(v) => onChange(Number(v))} options={p.options!.map((o, i) => ({ value: String(i), label: o }))} />
+        {p.optionHints && <span className="field__hint param__choice-hint">{p.optionHints[value]}</span>}
       </div>
     );
   return (
@@ -73,7 +74,9 @@ export function ModelPanel({ product, values, build, error, markMin, settings, o
   const spec = PRODUCTS[product];
   const [busy, setBusy] = useState(false);
   const ok = build?.model.parts.every((p) => p.report.ok);
-  const shape = spec.params.filter((p) => p.group === 'shape');
+  // Parameters that only matter for one value of another (the custom heights) show only then.
+  const applies = (p: (typeof spec.params)[number]) => !p.when || values[p.when.key] === p.when.is;
+  const shape = spec.params.filter((p) => p.group === 'shape' && applies(p));
   const back = spec.params.filter((p) => p.group === 'back');
   const magnetsOn = values.magnets > 0;
   const est = build ? estimate(build.model, settings) : null;
