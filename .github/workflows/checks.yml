@@ -1,0 +1,72 @@
+# Every push: the tests, the site in a real browser, the generated files
+# rebuilt and compared with the committed ones, and the server image.
+name: Checks
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: checks-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  tests:
+    name: Tests and browser checks
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run site
+      - name: The site, driven in Chrome
+        run: npm run app:check
+        env:
+          CHROME_PATH: /usr/bin/google-chrome
+
+  reproducible:
+    name: Generated files are reproducible
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+      - run: npm run build
+      - run: npm run model -- master
+      - run: npm run sticker -- master && npm run sticker -- sheet && npm run sticker -- sheet --art crest --size 60 --style marble-dark
+      - name: Nothing changed
+        run: |
+          git status --short
+          git diff --stat --exit-code
+
+  image:
+    name: Server image builds
+    needs: tests
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker build -f deploy/Dockerfile -t theolympus-site .
+      - name: The image serves the site
+        run: |
+          docker run -d -p 8080:80 --name olympus theolympus-site
+          for i in $(seq 1 20); do curl -fsS http://127.0.0.1:8080/ >/dev/null && break; sleep 1; done
+          curl -fsS http://127.0.0.1:8080/ | grep -q '<title>The Olympus</title>'
+          curl -fsS http://127.0.0.1:8080/files/index.json | grep -q 'assets/master'
+          curl -fsSI http://127.0.0.1:8080/files/assets/master/web/site.webmanifest | grep -qi 'application/manifest+json'
+          curl -fsSI http://127.0.0.1:8080/ | grep -qi 'content-security-policy'
