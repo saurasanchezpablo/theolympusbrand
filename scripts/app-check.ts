@@ -455,7 +455,8 @@ try {
   await page.getByRole('button', { name: 'Designs', exact: true }).click();
   await page.getByRole('button', { name: /^Backup Kronos · backup/ }).waitFor();
   await page.keyboard.press('Escape');
-  await page.waitForTimeout(400);
+  // The drawer slides away (0.28 s); a slow machine takes longer to finish it.
+  await page.locator('#atelier-library').waitFor({ state: 'hidden', timeout: 5000 }).catch(() => {});
   assert.ok(!(await page.locator('#atelier-library').isVisible()), 'Escape closes the drawer');
   await shot(page, '6-laptop');
   step('phones and laptops: menu, Atelier panes, designs drawer');
