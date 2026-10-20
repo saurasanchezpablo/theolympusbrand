@@ -1,4 +1,4 @@
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
 import { productionSvg } from '../../../src/render/svg.ts';
 import { slugify, type Service, type ServiceSpec } from '../../../src/catalog/service.ts';
 import { CATEGORIES, GODS, initialOf, type Category, type GodId } from '../../../src/geometry/pantheon.ts';
@@ -34,15 +34,22 @@ export function Config({ draft, service, logo, issues, warnings, onChange }: Pro
   };
   const defaultCaption = 'god' in service.patron ? `The Olympus · ${GODS[service.patron.god].name}` : 'The Olympus';
 
+  const [logoError, setLogoError] = useState<string | null>(null);
   async function onLogoFile(file: File | undefined) {
     if (!file) return;
-    onChange({ ...draft, logoSvg: await file.text() });
     if (fileRef.current) fileRef.current.value = '';
+    // A logo is a few shapes; a much larger file would only stall the page.
+    if (file.size > 512 * 1024) {
+      setLogoError(`${file.name} is ${Math.round(file.size / 1024)} KB: a logo SVG must be under 512 KB.`);
+      return;
+    }
+    setLogoError(null);
+    onChange({ ...draft, logoSvg: await file.text() });
   }
 
   return (
     <section className="config" aria-label="Configuration">
-      <Notes items={issues} tone="error" />
+      <Notes items={logoError ? [...issues, logoError] : issues} tone="error" />
 
       <Section title="Service">
         <Field label="Name" hint="Shown in the lockups, set in Cinzel.">

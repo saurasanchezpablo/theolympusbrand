@@ -1,7 +1,7 @@
 // Node host for the catalogue: read, validate and write service files.
 
 import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
-import { basename, join } from 'node:path';
+import { basename, join, resolve as resolvePath, sep } from 'node:path';
 import { validateSpec, resolve, SPEC_KEYS, type Service, type ServiceSpec } from '../catalog/service.ts';
 import { importLogo } from '../geometry/logo.ts';
 
@@ -32,5 +32,14 @@ export function writeSpec(spec: ServiceSpec, dir = SERVICES_DIR): string {
 
 /** The service's imported logo (path data), if it has one. */
 export function logoOf(service: Service): { d: string; warnings: string[] } | null {
-  return service.logo ? importLogo(readFileSync(join(CATALOG_DIR, service.logo), 'utf8')) : null;
+  if (!service.logo) return null;
+  // Only files inside catalog/logos/, and of a size a logo has.
+  const file = resolvePath(CATALOG_DIR, service.logo);
+  if (!file.startsWith(resolvePath(CATALOG_DIR, 'logos') + sep)) throw new Error(`${service.id}: logo ${service.logo} is outside catalog/logos/`);
+  const svg = readFileSync(file, 'utf8');
+  if (svg.length > LOGO_MAX_BYTES) throw new Error(`${service.id}: logo ${service.logo} is larger than ${LOGO_MAX_BYTES / 1024} KB`);
+  return importLogo(svg);
 }
+
+/** A logo is a few shapes; anything much larger is not one. */
+export const LOGO_MAX_BYTES = 512 * 1024;

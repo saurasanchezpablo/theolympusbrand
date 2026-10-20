@@ -6,3 +6,68 @@ export const cssSvg = (svg: string) =>
 
 /** A single-quoted shell word. */
 export const sq = (s: string) => `'${s.replace(/'/g, `'\\''`)}'`;
+
+/** A kit's guide, always in the same order, so every application reads alike. Markdown. */
+export type Guide = {
+  title: string;
+  /** One paragraph: what the kit does for the application. */
+  intro: string;
+  /** What it changes. */
+  changes: string[];
+  /** What it cannot change, and why — said plainly. */
+  limits?: string[];
+  /** What is needed first. */
+  requires: string[];
+  /** The steps, in order; each may carry a shell block. */
+  steps: { text: string; code?: string }[];
+  check: string[];
+  undo: { text: string; code?: string }[];
+  /** What an update of the application does to it. */
+  updates?: string;
+  files: [name: string, what: string][];
+  /** Written for which release; tested how. */
+  tested: string;
+};
+
+const block = (code?: string) => (code ? `\n\n   \`\`\`sh\n${code.split('\n').map((l) => `   ${l}`).join('\n')}\n   \`\`\`` : '');
+
+export function guideMarkdown(g: Guide, madeFrom: string, dir: string): string {
+  const list = (xs: string[]) => xs.map((x) => `- ${x}`).join('\n');
+  return `# ${g.title}
+
+${g.intro}
+
+Made from ${madeFrom}. The files are in \`themes/${dir}/\` of the integration kit
+(Downloads → Dashboards and themes), with this guide as their README.
+
+## What it changes
+
+${list(g.changes)}
+${g.limits?.length ? `\n## What it cannot change\n\n${list(g.limits)}\n` : ''}
+## Before you start
+
+${list(g.requires)}
+
+## Install
+
+${g.steps.map((s, i) => `${i + 1}. ${s.text}${block(s.code)}`).join('\n\n')}
+
+## Check that it worked
+
+${list(g.check)}
+
+## Undo
+
+${g.undo.map((s, i) => `${i + 1}. ${s.text}${block(s.code)}`).join('\n\n')}
+${g.updates ? `\n## After an update\n\n${g.updates}\n` : ''}
+## Files
+
+| File | What it is |
+|---|---|
+${g.files.map(([f, w]) => `| \`${f}\` | ${w} |`).join('\n')}
+
+---
+
+${g.tested}
+`;
+}

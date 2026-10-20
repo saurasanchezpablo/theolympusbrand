@@ -5,6 +5,11 @@
 
 import type { Mark } from '../geometry/crest.ts';
 import { SCREEN_PARTS, screensInstaller } from './parts.ts';
+import { commentText, mdText, oneLine, shQuote, xmlText as xmlEscape } from '../catalog/text.ts';
+import { SHELL_PARTS, shellFiles } from './shell.ts';
+import { limineInstall } from './limine.ts';
+import { archCommand, archFiles, archInstallHooks, archTerminalCommand, pkgbuild } from './arch.ts';
+import { shellGuide } from './shell-guide.ts';
 import { ARTBOARD } from '../geometry/math.ts';
 import { lineText } from '../geometry/fonts.ts';
 import { PALETTE } from '../brand/palette.ts';
@@ -297,7 +302,8 @@ Plymouth.SetMessageFunction(message_callback);
 export function plymouthInstall(): string {
   return `#!/bin/sh
 # The Olympus — Plymouth boot theme. Run as root on a machine with Plymouth
-# (apt install plymouth); the kernel command line needs "quiet splash".
+# (apt install plymouth, or pacman -S plymouth); the kernel command line needs
+# "quiet splash".
 #
 #   sh install.sh            install the theme, make it the default, rebuild the initramfs
 #   sh install.sh --restore  go back to the distribution's theme
@@ -305,7 +311,7 @@ set -eu
 DIR=$(cd "$(dirname "$0")" && pwd)
 DEST=/usr/share/plymouth/themes/the-olympus
 [ "$(id -u)" = 0 ] || { echo "run as root" >&2; exit 1; }
-command -v plymouth-set-default-theme >/dev/null 2>&1 || { echo "Plymouth is not installed (apt install plymouth)" >&2; exit 1; }
+command -v plymouth-set-default-theme >/dev/null 2>&1 || { echo "Plymouth is not installed (apt install plymouth, or pacman -S plymouth)" >&2; exit 1; }
 
 if [ "\${1:-}" = "--restore" ]; then
   if [ -f "$DEST/previous" ]; then plymouth-set-default-theme -R "$(cat "$DEST/previous")"; else plymouth-set-default-theme -r; plymouth-set-default-theme -R "$(plymouth-set-default-theme)"; fi
@@ -320,6 +326,10 @@ mkdir -p "$DEST"
 [ "$current" = "the-olympus" ] || echo "$current" > "$DEST/previous"
 for f in the-olympus.plymouth the-olympus.script background.png crest.png track.png fill.png; do install -m 644 "$DIR/the-olympus/$f" "$DEST/$f"; done
 plymouth-set-default-theme -R the-olympus
+# Arch and CachyOS: Plymouth runs only if the initramfs has its hook.
+if [ -f /etc/mkinitcpio.conf ] && ! grep -Eqs '^[[:space:]]*HOOKS=.*[( ]plymouth[ )]' /etc/mkinitcpio.conf /etc/mkinitcpio.conf.d/*.conf; then
+  echo "note: add plymouth to HOOKS in /etc/mkinitcpio.conf (after base and udev or systemd), then run mkinitcpio -P" >&2
+fi
 echo "The Olympus boot theme is installed; it shows at the next boot."
 `;
 }
@@ -345,7 +355,10 @@ const plain = (s: string) => s.replace(/·/g, '-').normalize('NFKD').replace(/[^
 
 /** The name, its caption, and its address unless the caption already is it (the master's). */
 const textLines = (subject: ScreenSubject, ascii = false) =>
-  [spaced(subject.name), '', subject.caption, ...(subject.url && !subject.url.endsWith(`//${subject.caption}`) ? [subject.url] : [])].map((l) => (ascii ? plain(l) : l));
+  [spaced(oneLine(subject.name)), '', oneLine(subject.caption), ...(subject.url && !subject.url.endsWith(`//${subject.caption}`) ? [oneLine(subject.url)] : [])].map((l) => (ascii ? plain(l) : l));
+
+/** Lines for a shell script to print: each one a single-quoted word, so no text can end anything early. */
+const printLines = (text: string) => `printf '%s\\n' \\\n${text.split('\n').map((l) => `  ${shQuote(l)}`).join(' \\\n')}`;
 
 /** The message of the day, drawn in braille (fine; needs a font with braille) or ASCII (any terminal). */
 export function motd(subject: ScreenSubject, kind: 'braille' | 'ascii'): string {
@@ -363,13 +376,9 @@ export function motdScript(subject: ScreenSubject): string {
 [ -r /etc/default/the-olympus ] && . /etc/default/the-olympus
 echo
 if [ "\${OLYMPUS_ART:-braille}" = ascii ]; then
-cat <<'ART'
-${motd(subject, 'ascii').trimEnd()}
-ART
+${printLines(motd(subject, 'ascii').trimEnd())}
 else
-cat <<'ART'
-${motd(subject, 'braille').trimEnd()}
-ART
+${printLines(motd(subject, 'braille').trimEnd())}
 fi
 echo
 printf '  %s · up %s\\n\\n' "$(hostname -f 2>/dev/null || hostname)" "$(uptime -p 2>/dev/null | sed 's/^up //')"
@@ -379,13 +388,15 @@ printf '  %s · up %s\\n\\n' "$(hostname -f 2>/dev/null || hostname)" "$(uptime 
 /** /etc/issue: the console login. Getty fills in \\n (the host) and \\l (the terminal). */
 export function issue(subject: ScreenSubject): string {
   const art = ascii(subject.marks.seal.d, S, S, 30);
-  return beside(art, [plain(spaced(subject.name)), '', plain(subject.caption), '', '\\n - \\l']).join('\n') + '\n\n';
+  // Getty reads backslashes as its escapes: the name's and caption's are doubled.
+  const lit = (s: string) => plain(s).replace(/\\/g, '\\\\');
+  return beside(art, [lit(spaced(oneLine(subject.name))), '', lit(oneLine(subject.caption)), '', '\\n - \\l']).join('\n') + '\n\n';
 }
 
 /** The SSH banner, shown before login: plain ASCII, and nothing about the system beyond its name. */
 export function sshBanner(subject: ScreenSubject): string {
   const art = ascii(subject.marks.seal.d, S, S, 24);
-  return '\n' + beside(art, [plain(spaced(subject.name)), '', plain(subject.caption), '', 'Private system. Authorised access only.']).join('\n') + '\n\n';
+  return '\n' + beside(art, [plain(spaced(oneLine(subject.name))), '', plain(oneLine(subject.caption)), '', 'Private system. Authorised access only.']).join('\n') + '\n\n';
 }
 
 export function terminalInstall(): string {
@@ -412,7 +423,7 @@ reload_ssh() {
 }
 
 if [ "\${1:-}" = "--restore" ]; then
-  rm -f "$MOTD" "$BANNER" "$DROPIN" /etc/default/the-olympus
+  rm -f "$MOTD" "$BANNER" "$DROPIN" /etc/default/the-olympus /etc/motd.d/the-olympus
   [ -f /etc/issue.the-olympus.orig ] && mv /etc/issue.the-olympus.orig /etc/issue
   reload_ssh || true
   echo "Removed."
@@ -425,12 +436,15 @@ case "\${1:-}" in
   *) echo "unknown option: $1" >&2; exit 2 ;;
 esac
 
-# Message of the day (Debian, Ubuntu, Proxmox VE: run by pam_motd at login).
+# Message of the day. Debian, Ubuntu, Proxmox VE: a script pam_motd runs at login, with the host and uptime.
+# Arch, CachyOS and other systems whose pam_motd reads /etc/motd.d/: the crest as text.
 if [ -d /etc/update-motd.d ]; then
   install -m 755 "$DIR/20-the-olympus" "$MOTD"
   echo "OLYMPUS_ART=$art" > /etc/default/the-olympus
+elif grep -qs pam_motd /etc/pam.d/system-login /etc/pam.d/login /etc/pam.d/sshd; then
+  install -D -m 644 "$DIR/motd-$art.txt" /etc/motd.d/the-olympus
 else
-  echo "no /etc/update-motd.d: copy motd-$art.txt to /etc/motd instead" >&2
+  echo "no /etc/update-motd.d and no pam_motd: copy motd-$art.txt to /etc/motd instead" >&2
 fi
 
 # Console login.
@@ -453,7 +467,6 @@ echo "Done. Log in again to see it."
 /* Wallpapers, installed                                              */
 /* ---------------------------------------------------------------- */
 
-const xmlText = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;');
 const kdeId = (style: string) => `TheOlympus-${style.split('-').map((w) => w[0].toUpperCase() + w.slice(1)).join('')}`;
 
 /**
@@ -461,17 +474,16 @@ const kdeId = (style: string) => `TheOlympus-${style.split('-').map((w) => w[0].
  * MATE read background properties; KDE Plasma reads wallpaper packages, one
  * per style, choosing the image that best fits the screen.
  */
-export function wallpaperInstall(subject: ScreenSubject): string {
+/** GNOME's list of the wallpapers (background properties), installed beside them. */
+export function wallpaperList(subject: ScreenSubject): string {
   const styles = Object.keys(WALLPAPER_STYLES) as WallpaperStyle[];
-  const sizes = Object.keys(WALLPAPER_SIZES) as WallpaperSize[];
-  const title = (style: WallpaperStyle) => `${subject.name} — ${WALLPAPER_STYLES[style].label}`;
-  const gnome = `<?xml version="1.0" encoding="UTF-8"?>
+  return `<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE wallpapers SYSTEM "gnome-wp-list.dtd">
 <wallpapers>
 ${styles
   .map(
     (style) => `  <wallpaper deleted="false">
-    <name>${xmlText(title(style))}</name>
+    <name>${xmlEscape(`${subject.name} — ${WALLPAPER_STYLES[style].label}`)}</name>
     <filename>/usr/share/backgrounds/the-olympus/${wallpaperName(subject.id, style, '4k')}</filename>
     <options>zoom</options>
     <shade_type>solid</shade_type>
@@ -480,7 +492,14 @@ ${styles
   </wallpaper>`,
   )
   .join('\n')}
-</wallpapers>`;
+</wallpapers>
+`;
+}
+
+export function wallpaperInstall(subject: ScreenSubject): string {
+  const styles = Object.keys(WALLPAPER_STYLES) as WallpaperStyle[];
+  const sizes = Object.keys(WALLPAPER_SIZES) as WallpaperSize[];
+  const title = (style: WallpaperStyle) => `${oneLine(subject.name)} — ${WALLPAPER_STYLES[style].label}`;
   const kde = styles
     .map((style) => {
       const d = `"$KDE/${kdeId(style)}"`;
@@ -493,7 +512,7 @@ ${styles
     })
     .join('\n');
   return `#!/bin/sh
-# ${subject.name} — wallpapers, offered in the desktop's own picker. Run as root.
+# ${commentText(subject.name)} — wallpapers, offered in the desktop's own picker. Run as root.
 #
 #   sh install.sh            GNOME, Cinnamon and MATE (Settings → Background) and KDE Plasma
 #   sh install.sh --restore  remove them
@@ -516,9 +535,7 @@ fi
 mkdir -p "$DEST"
 for f in "$DIR"/*.png; do install -m 644 "$f" "$DEST/"; done
 mkdir -p "$(dirname "$GNOME")"
-cat > "$GNOME" <<'XML'
-${gnome}
-XML
+install -m 644 "$DIR/the-olympus-wallpapers.xml" "$GNOME"
 ${kde}
 echo "The wallpapers are in the desktop's background settings."
 `;
@@ -549,11 +566,17 @@ export async function screensKit(subject: ScreenSubject, host: ScreenHost, { wal
         const ground = tone ? await host.ground(w, h, tone) : undefined;
         add(`wallpapers/${wallpaperName(subject.id, style, size)}`, await host.png(wallpaperSvg(subject, style, size, ground), w, { gray: true }));
       }
-  if (wallpapers) add('wallpapers/install.sh', wallpaperInstall(subject));
+  if (wallpapers) {
+    add('wallpapers/install.sh', wallpaperInstall(subject));
+    add('wallpapers/the-olympus-wallpapers.xml', wallpaperList(subject));
+  }
   const boot = await host.ground(BOOT.w, BOOT.h, 'marble-dark');
   // GRUB reads 8-bit RGB(A) PNGs, not gray ones.
   add('boot/grub/background.png', await host.png(grubSvg(subject, boot), BOOT.w));
   add('boot/grub/install.sh', grubScript());
+  // Limine shows the same picture as GRUB: the crest faint on black marble.
+  add('boot/limine/install.sh', limineInstall(subject));
+  add('boot/limine/wallpaper.png', files.find((f) => f.path === 'boot/grub/background.png')!.data);
   add('boot/plymouth/install.sh', plymouthInstall());
   add('boot/plymouth/the-olympus/the-olympus.plymouth', plymouthTheme());
   add('boot/plymouth/the-olympus/the-olympus.script', plymouthScript());
@@ -567,6 +590,15 @@ export async function screensKit(subject: ScreenSubject, host: ScreenHost, { wal
   add('terminal/issue', issue(subject));
   add('terminal/issue.net', sshBanner(subject));
   add('terminal/install.sh', terminalInstall());
+  // Your own terminal: per user, with its own one-command installer.
+  // Omarchy takes the wallpapers as its theme's backgrounds.
+  const backgrounds = (['marble', 'graphite', 'blueprint'] as const)
+    .map((style): [string, Uint8Array] | null => {
+      const f = files.find((x) => x.path === `wallpapers/${wallpaperName(subject.id, style, '1440p')}`);
+      return f && typeof f.data !== 'string' ? [`${style}.png`, f.data] : null;
+    })
+    .filter((x): x is [string, Uint8Array] => x !== null);
+  for (const [path, data] of shellFiles(subject, backgrounds)) add(path, data);
   // One command for all of it: the parts present, every file they need with its checksum.
   const parts = SCREEN_PARTS.filter((p) => files.some((f) => f.path.startsWith(`${p.dir}/`)));
   const manifest = await Promise.all(
@@ -576,7 +608,27 @@ export async function screensKit(subject: ScreenSubject, host: ScreenHost, { wal
       .sort((a, b) => a.f.path.localeCompare(b.f.path))
       .map(async ({ f, part }) => ({ part: part!.id, path: f.path, sha256: await host.sha256(f.data) })),
   );
-  add('install.sh', screensInstaller(parts, manifest, { path: subject.id === 'master' ? 'files/assets/screens/' : `files/assets/screens/services/${subject.id}/` }));
+  const base = subject.id === 'master' ? 'files/assets/screens/' : `files/assets/screens/services/${subject.id}/`;
+  add('install.sh', screensInstaller(parts, manifest, { path: base }));
+  const shellParts = SHELL_PARTS.map((p) => ({ ...p, dir: p.dir.slice('shell/'.length) }));
+  const shellManifest = await Promise.all(
+    files
+      .filter((f) => f.path.startsWith('shell/') && !f.path.startsWith('shell/schemes/'))
+      .sort((a, b) => a.path.localeCompare(b.path))
+      .map(async (f) => ({ part: SHELL_PARTS.find((p) => f.path.startsWith(`${p.dir}/`))!.id, path: f.path.slice('shell/'.length), sha256: await host.sha256(f.data) })),
+  );
+  const umbrella = files.find((f) => f.path === 'install.sh')!.data as string;
+  const shellUmbrella = screensInstaller(shellParts, shellManifest, { path: `${base}shell/`, user: true });
+  add('shell/install.sh', shellUmbrella);
+  add('shell/README.md', shellGuide(subject));
+  // Arch, CachyOS, Omarchy: the same files as a pacman package, each pinned by its checksum.
+  const local: [string, string][] = [['the-olympus', archCommand], ['the-olympus-terminal', archTerminalCommand], ['the-olympus.install', archInstallHooks]];
+  const pinned = archFiles(manifest, shellManifest, [
+    { path: 'install.sh', sha256: await host.sha256(umbrella) },
+    { path: 'shell/install.sh', sha256: await host.sha256(shellUmbrella) },
+  ]);
+  for (const [name, text] of local) add(`arch/${name}`, text);
+  add('arch/PKGBUILD', pkgbuild({ id: subject.id, files: pinned, base, local: await Promise.all(local.map(async ([name, text]) => ({ name, sha256: await host.sha256(text) }))) }));
   add('README.md', screensReadme(subject, wallpapers));
   return files.sort((a, b) => a.path.localeCompare(b.path));
 }
@@ -584,7 +636,7 @@ export async function screensKit(subject: ScreenSubject, host: ScreenHost, { wal
 function screensReadme(subject: ScreenSubject, wallpapers: boolean): string {
   const sizes = Object.values(WALLPAPER_SIZES).map((s) => s.label).join('; ');
   const styles = Object.values(WALLPAPER_STYLES).map((s) => s.label.toLowerCase()).join(', ');
-  return `# ${subject.name} — screens
+  return `# ${mdText(subject.name)} — screens
 
 Generated by \`npm run screens${subject.id === 'master' ? '' : ` -- ${subject.id}`}\`. The guide's chapter *Screens* explains each part.
 ${wallpapers ? `

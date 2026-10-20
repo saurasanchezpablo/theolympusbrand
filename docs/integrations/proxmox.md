@@ -1,0 +1,71 @@
+# Proxmox VE
+
+The whole Proxmox VE web interface in the house's greys, with Proxmox's seal and name in the header and as the favicon. The theme is made on the node itself from the dark theme Proxmox ships: every blue and blue-grey becomes the grey of the same lightness, while the colours that report something — a running guest, a warning, an error — keep their meaning. Because it is made from the installed release, it matches whatever version the node runs, and it is made again after every update.
+
+Made from Proxmox’s seal. The files are in `themes/proxmox/` of the integration kit
+(Downloads → Dashboards and themes), with this guide as their README.
+
+## What it changes
+
+- Every panel, tree, grid, toolbar, menu and window: Proxmox’s dark theme, in greys.
+- The sign-in window, in the same greys.
+- The header logo: Proxmox's seal and name, 30 px tall.
+- The favicon: the seal on its own disc.
+
+## What it cannot change
+
+- The console (noVNC, xterm.js) has no theme setting; its colours stay. The crest *at login* in a shell is the screens kit’s *terminal* part.
+- Status colours — green for running, orange for a warning, red for an error — are kept on purpose.
+- Proxmox Backup Server is not covered by this kit.
+- It changes Proxmox’s own page template (one line) and adds files to its folders: `debsums` or `dpkg --verify` list the template as modified until the next update puts Proxmox’s back — and the hook makes it again.
+
+## Before you start
+
+- Proxmox VE 8 or 9 (7.4 and later have the dark theme it is made from).
+- A root shell on each node: the web interface’s *Shell*, or SSH.
+
+## Install
+
+1. Copy this folder to the node, for instance with `scp -r proxmox root@<node>:/root/the-olympus-proxmox`.
+
+2. Run the script as root.
+
+   ```sh
+   cd /root/the-olympus-proxmox
+   sh apply.sh
+   ```
+
+3. Reload the web interface with Ctrl+Shift+R (the browser keeps the old stylesheet otherwise).
+
+4. Repeat on every node of a cluster: each serves its own interface.
+
+## Check that it worked
+
+- The interface is grey from the sign-in window on; the header shows the seal and the name.
+- A running guest’s icon is still green; a stopped one grey.
+- `ls /etc/apt/apt.conf.d/99-the-olympus-logo` shows the hook is in place.
+
+## Undo
+
+1. Put Proxmox’s look back and remove the hook.
+
+   ```sh
+   sh /usr/local/share/the-olympus/proxmox/apply.sh --restore
+   ```
+
+## After an update
+
+An update of `pve-manager` puts Proxmox’s page template and logo back; the APT hook runs right after and makes the theme again from the new release’s dark theme. Install with `--no-persist` if you would rather re-run the script yourself. Only the logo and favicon, on Proxmox’s light theme: `sh apply.sh --logo-only`.
+
+## Files
+
+| File | What it is |
+|---|---|
+| `apply.sh` | Makes and installs the theme, the logo and the favicon; `--restore` undoes |
+| `logo-dark-theme.png` | The header logo for the grey (dark) interface |
+| `logo-light-theme.png` | The header logo for Proxmox’s light theme (`--logo-only`) |
+| `favicon.ico` | The favicon: 16, 32 and 48 px |
+
+---
+
+Written for Proxmox VE 8 and 9. The test suite runs the script against a stand-in node — the theme made from a sample of the dark theme (blues to grey, status colours kept), the template linked once however often it runs, the hook re-applying, and `--restore` putting everything back; it has not been run on a live node here.

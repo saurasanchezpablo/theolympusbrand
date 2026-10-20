@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE wallpapers SYSTEM "gnome-wp-list.dtd">
+<wallpapers>
+  <wallpaper deleted="false">
+    <name>The Olympus — Black marble</name>
+    <filename>/usr/share/backgrounds/the-olympus/the-olympus-master-wallpaper-marble-4k.png</filename>
+    <options>zoom</options>
+    <shade_type>solid</shade_type>
+    <pcolor>#0E0E0E</pcolor>
+    <scolor>#0E0E0E</scolor>
+  </wallpaper>
+  <wallpaper deleted="false">
+    <name>The Olympus — White marble</name>
+    <filename>/usr/share/backgrounds/the-olympus/the-olympus-master-wallpaper-marble-light-4k.png</filename>
+    <options>zoom</options>
+    <shade_type>solid</shade_type>
+    <pcolor>#0E0E0E</pcolor>
+    <scolor>#0E0E0E</scolor>
+  </wallpaper>
+  <wallpaper deleted="false">
+    <name>The Olympus — Graphite</name>
+    <filename>/usr/share/backgrounds/the-olympus/the-olympus-master-wallpaper-graphite-4k.png</filename>
+    <options>zoom</options>
+    <shade_type>solid</shade_type>
+    <pcolor>#0E0E0E</pcolor>
+    <scolor>#0E0E0E</scolor>
+  </wallpaper>
+  <wallpaper deleted="false">
+    <name>The Olympus — Blueprint</name>
+    <filename>/usr/share/backgrounds/the-olympus/the-olympus-master-wallpaper-blueprint-4k.png</filename>
+    <options>zoom</options>
+    <shade_type>solid</shade_type>
+    <pcolor>#0E0E0E</pcolor>
+    <scolor>#0E0E0E</scolor>
+  </wallpaper>
+</wallpapers>

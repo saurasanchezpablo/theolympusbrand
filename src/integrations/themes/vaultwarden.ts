@@ -14,6 +14,7 @@ import { PALETTE } from '../../brand/palette.ts';
 import { bannerMark, coinSvg, markSvg } from '../marks.ts';
 import { cssSvg } from './shared.ts';
 import type { ThemeKit } from './types.ts';
+import { commentText } from '../../catalog/text.ts';
 
 const P = PALETTE;
 // The interface's lightest greys, beside the brand's eight.
@@ -53,7 +54,7 @@ const legacy = (t: { primary: [string, string, string, string]; bg: string; alt:
   ].join('\n');
 
 export function vaultwardenScss({ name, seal, bannerDark, bannerLight }: { name: string; seal: string; bannerDark: string; bannerLight: string }): string {
-  return `/* The Olympus — Vaultwarden web vault (${name}).
+  return `/* The Olympus — Vaultwarden web vault (${commentText(name)}).
    Vaultwarden 1.37, web vault 2026.7. Lives in the data folder as
    templates/scss/user.vaultwarden.scss.hbs and is compiled into Vaultwarden's
    own stylesheet; restart Vaultwarden after changing it. Delete it to undo. */
@@ -160,6 +161,34 @@ export const vaultwarden: ThemeKit = {
   label: 'Vaultwarden',
   match: { ids: ['vaultwarden', 'bitwarden', 'passwords'] },
   how: '`apply.sh` installs `user.vaultwarden.scss.hbs` in the data folder: greys for the web vault, the house’s logo',
+  guide: (t) => ({
+    title: 'Vaultwarden',
+    intro: `Vaultwarden reads a stylesheet of your own from its data folder and adds it to the web vault's. The kit's turns every blue of the vault grey, in the light and the dark theme, and puts ${t.name}'s banner and seal where the vault's logo was.`,
+    changes: [
+      'Every blue and blue-grey of the web vault: greys, in its light and dark themes.',
+      `The logo on the sign-in page and in the side navigation: ${t.name}'s banner (the seal alone when the navigation is folded).`,
+      'The loading screen: the seal.',
+    ],
+    limits: [
+      'The favicon: it belongs to the web vault’s own files.',
+      'The browser extensions and the phone apps: they are Bitwarden’s, and draw themselves.',
+      'Danger, success and warning colours keep their meaning.',
+    ],
+    requires: ['Vaultwarden 1.33 or later (written for 1.37 with web vault 2026.7).', 'Access to its data folder: the container’s `/data`, or the folder mounted there.'],
+    steps: [
+      { text: 'Run the script — with Docker, naming the container (it copies the file and restarts Vaultwarden); otherwise, giving the data folder.', code: 'VAULTWARDEN_CONTAINER=vaultwarden sh apply.sh\n# or\nsh apply.sh /path/to/vaultwarden/data' },
+      { text: 'Without Docker, restart Vaultwarden: it reads the stylesheet when it starts.' },
+      { text: 'Reload the web vault (Ctrl+Shift+R).' },
+    ],
+    check: ['The sign-in page shows the banner instead of the vault’s logo.', 'Buttons and links are grey, not blue — in *Settings → Preferences*, try both themes.'],
+    undo: [{ text: 'Remove the stylesheet, then restart Vaultwarden.', code: 'sh apply.sh /path/to/vaultwarden/data --restore' }],
+    updates: 'Updates keep the stylesheet. A new web vault may rename a colour or the logo’s place: the rest still applies; rebuild the kit when a newer one is out. If the stylesheet has a mistake, Vaultwarden says so in its log and uses its own.',
+    files: [
+      ['apply.sh', 'Installs the stylesheet (`--restore` removes it)'],
+      ['user.vaultwarden.scss.hbs', 'The stylesheet, with the banner and seal embedded'],
+    ],
+    tested: 'Written for Vaultwarden 1.37 and web vault 2026.7. The test suite checks that every colour is grey and runs the script against a stand-in data folder and a stand-in `docker`; it has not been applied to a live instance here.',
+  }),
   files: async (t) => {
     const banner = bannerMark(t.marks.seal, t.name);
     return [

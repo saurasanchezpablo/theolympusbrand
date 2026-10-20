@@ -115,6 +115,11 @@ The house's domain is **theolympus.cloud**. On a home network, a name such as
 port 8080, adding HTTPS if it already manages certificates for the domain.
 Nothing in the site depends on its address.
 
+**Use HTTPS.** The install commands on the Downloads page fetch scripts that
+run as root; over plain HTTP, anyone who can tamper with the network on the
+way could change them. Behind a reverse proxy with a certificate (Caddy,
+Traefik, Nginx Proxy Manager…) they cannot — see [Security](11-security.md).
+
 ## What stays in the browser
 
 Designs you save in the Atelier live in that browser's storage, on that

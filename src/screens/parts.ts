@@ -34,12 +34,21 @@ export const SCREEN_PARTS: readonly ScreenPart[] = [
     options: [],
   },
   {
+    id: 'limine',
+    label: 'Limine boot menu',
+    dir: 'boot/limine',
+    fits: '( for c in ${LIMINE_CONF:-} /boot/limine.conf /boot/limine/limine.conf /boot/EFI/limine/limine.conf /efi/limine.conf /efi/EFI/limine/limine.conf /boot/efi/limine.conf /boot/efi/EFI/limine/limine.conf /boot/EFI/BOOT/limine.conf; do [ -f "$c" ] && exit 0; done; exit 1 )',
+    installed: '( for c in ${LIMINE_CONF:-} /boot/limine.conf /boot/limine/limine.conf /boot/EFI/limine/limine.conf /efi/limine.conf /efi/EFI/limine/limine.conf /boot/efi/limine.conf /boot/efi/EFI/limine/limine.conf /boot/EFI/BOOT/limine.conf; do grep -qsF "# The Olympus — begin" "$c" && exit 0; done; exit 1 )',
+    unfit: 'this machine does not boot with Limine',
+    options: [],
+  },
+  {
     id: 'plymouth',
     label: 'Plymouth boot splash',
     dir: 'boot/plymouth',
     fits: 'command -v plymouth-set-default-theme >/dev/null 2>&1',
     installed: '[ -d /usr/share/plymouth/themes/the-olympus ]',
-    unfit: 'Plymouth is not installed (apt install plymouth)',
+    unfit: 'Plymouth is not installed (apt install plymouth, or pacman -S plymouth)',
     options: [],
   },
   {
@@ -47,8 +56,8 @@ export const SCREEN_PARTS: readonly ScreenPart[] = [
     label: 'Terminal: message of the day, console login, SSH banner',
     dir: 'terminal',
     fits: '[ -f /etc/issue ]',
-    installed: '[ -f /etc/update-motd.d/20-the-olympus ] || [ -f /etc/issue.the-olympus.orig ]',
-    unfit: 'no /etc/issue: not a Debian-style system',
+    installed: '[ -f /etc/update-motd.d/20-the-olympus ] || [ -f /etc/motd.d/the-olympus ] || [ -f /etc/issue.the-olympus.orig ]',
+    unfit: 'no /etc/issue: not a Linux system with a console login',
     options: ['--ascii'],
   },
   {
@@ -68,11 +77,26 @@ export type ManifestLine = { part: string; path: string; sha256: string };
 const shWord = (s: string) => (/^[\w./-]+$/.test(s) ? s : `'${s.replace(/'/g, `'\\''`)}'`);
 
 /** The umbrella installer for a kit with these parts (in the order given) and files. */
-export function screensInstaller(parts: readonly ScreenPart[], manifest: readonly ManifestLine[], { site = '<your site>', path = 'files/assets/screens/' } = {}): string {
+export function screensInstaller(parts: readonly ScreenPart[], manifest: readonly ManifestLine[], { site = '<your site>', path = 'files/assets/screens/', user = false } = {}): string {
   const ids = parts.map((p) => p.id);
   const options = [...new Set(parts.flatMap((p) => p.options))];
   const caseOf = (key: keyof ScreenPart, indent = '    ') => parts.map((p) => `${indent}${p.id}) ${p[key]} ;;`).join('\n');
-  return `#!/bin/sh
+  const head = user
+    ? `#!/bin/sh
+# The Olympus — your terminal, every part in one command. Run as yourself
+# (not with sudo): everything goes into your home folder.
+#
+#   sh install.sh                          every part this machine has a program for
+#   sh install.sh ${ids.slice(0, 2).join(' ')}             only the parts named
+#   sh install.sh --restore                undo every part that is installed
+#   sh install.sh --list                   the parts, and which this machine can take
+#
+# Straight from the house's site, without downloading the folder first:
+#
+#   curl -fsSL ${site}/${path}install.sh | OLYMPUS_FROM=${site}/${path} sh
+#   curl -fsSL ${site}/${path}install.sh | OLYMPUS_FROM=${site}/${path} sh -s -- bash
+#`
+    : `#!/bin/sh
 # The Olympus — screens, every part in one command. Run as root.
 #
 #   sudo sh install.sh                     every part this machine can take
@@ -85,7 +109,8 @@ export function screensInstaller(parts: readonly ScreenPart[], manifest: readonl
 #
 #   curl -fsSL ${site}/${path}install.sh | sudo OLYMPUS_FROM=${site}/${path} sh
 #   curl -fsSL ${site}/${path}install.sh | sudo OLYMPUS_FROM=${site}/${path} sh -s -- terminal
-#
+#`;
+  return `${head}
 # Every file fetched is checked against the SHA-256 written below before
 # anything runs. Parts: ${ids.join(', ')}.
 set -eu
@@ -152,7 +177,7 @@ if [ "$list" = 1 ]; then
   done
   exit 0
 fi
-[ "$(id -u)" = 0 ] || { echo "run as root (sudo)" >&2; exit 1; }
+${user ? `[ "$(id -u)" != 0 ] || echo "note: running as root, so this themes root's own terminal" >&2` : `[ "$(id -u)" = 0 ] || { echo "run as root (sudo)" >&2; exit 1; }`}
 
 # Where the parts come from: this folder, or the site.
 if [ -n "$FROM" ]; then

@@ -8,6 +8,7 @@ import { CATEGORIES, type Category } from '../geometry/pantheon.ts';
 import { PALETTE } from '../brand/palette.ts';
 import { DOMAIN } from '../brand/identity.ts';
 import { base64 } from '../export/png.ts';
+import { mdText, oneLine } from '../catalog/text.ts';
 
 export type Entry = { id: string; name: string; category: Category; description?: string; url?: string; app?: string };
 
@@ -187,7 +188,12 @@ export function bookmarks(entries: Entry[], favicon: (id: string) => Uint8Array 
   return out;
 }
 
-const csvCell = (s: string) => (/[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s);
+/** A CSV cell: quoted when it must be, and never read as a formula by a spreadsheet. */
+const csvCell = (cell: string) => {
+  const raw = oneLine(cell);
+  const s = /^[=+\-@]/.test(raw) ? `'${raw}` : raw;
+  return /[",\r\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+};
 
 /** One row per service, for dashboards set up in their own interface. */
 export function servicesCsv(entries: Entry[]): string {
@@ -204,7 +210,7 @@ export function servicesCsv(entries: Entry[]): string {
 export function dashboardSnippets(e: Entry, opts: DashboardOptions = {}): string {
   const after = (text: string, marker: string) => text.slice(text.indexOf(marker) + marker.length).trimEnd();
   const fence = (s: string) => '```yaml\n' + s + '\n```';
-  return `# ${e.name} — dashboard entries
+  return `# ${mdText(e.name)} — dashboard entries
 
 The icons beside this file are the service's seal struck as a coin:
 \`${iconName(e.id)}\` (dark), \`${iconName(e.id, '-light')}\` (light) and \`${iconName(e.id, '', 'svg')}\`.

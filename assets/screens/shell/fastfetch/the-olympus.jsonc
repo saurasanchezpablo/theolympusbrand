@@ -1,0 +1,31 @@
+// The Olympus — fastfetch, with the seal beside the facts.
+// Shown by `fastfetch` when it is your config.jsonc; otherwise `fastfetch -c the-olympus`.
+{
+  "$schema": "https://github.com/fastfetch-cli/fastfetch/raw/dev/doc/json_schema.json",
+  "logo": {
+    "type": "file",
+    "source": "~/.config/fastfetch/the-olympus-logo.txt",
+    "color": { "1": "38;2;250;250;250" },
+    "padding": { "top": 1, "left": 1, "right": 3 }
+  },
+  "display": {
+    "separator": "  ",
+    "color": { "keys": "38;2;122;122;122", "title": "38;2;250;250;250", "output": "38;2;201;201;201" }
+  },
+  "modules": [
+    { "type": "custom", "format": "THE OLYMPUS · theolympus.cloud" },
+    "separator",
+    "title",
+    "os",
+    "host",
+    "kernel",
+    "uptime",
+    "packages",
+    "shell",
+    "terminal",
+    "cpu",
+    "memory",
+    "disk",
+    "localip"
+  ]
+}

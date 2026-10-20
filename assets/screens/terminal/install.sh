@@ -21,7 +21,7 @@ reload_ssh() {
 }
 
 if [ "${1:-}" = "--restore" ]; then
-  rm -f "$MOTD" "$BANNER" "$DROPIN" /etc/default/the-olympus
+  rm -f "$MOTD" "$BANNER" "$DROPIN" /etc/default/the-olympus /etc/motd.d/the-olympus
   [ -f /etc/issue.the-olympus.orig ] && mv /etc/issue.the-olympus.orig /etc/issue
   reload_ssh || true
   echo "Removed."
@@ -34,12 +34,15 @@ case "${1:-}" in
   *) echo "unknown option: $1" >&2; exit 2 ;;
 esac
 
-# Message of the day (Debian, Ubuntu, Proxmox VE: run by pam_motd at login).
+# Message of the day. Debian, Ubuntu, Proxmox VE: a script pam_motd runs at login, with the host and uptime.
+# Arch, CachyOS and other systems whose pam_motd reads /etc/motd.d/: the crest as text.
 if [ -d /etc/update-motd.d ]; then
   install -m 755 "$DIR/20-the-olympus" "$MOTD"
   echo "OLYMPUS_ART=$art" > /etc/default/the-olympus
+elif grep -qs pam_motd /etc/pam.d/system-login /etc/pam.d/login /etc/pam.d/sshd; then
+  install -D -m 644 "$DIR/motd-$art.txt" /etc/motd.d/the-olympus
 else
-  echo "no /etc/update-motd.d: copy motd-$art.txt to /etc/motd instead" >&2
+  echo "no /etc/update-motd.d and no pam_motd: copy motd-$art.txt to /etc/motd instead" >&2
 fi
 
 # Console login.

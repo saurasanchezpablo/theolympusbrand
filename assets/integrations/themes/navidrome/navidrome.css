@@ -1,0 +1,55 @@
+/* The Olympus — Navidrome's accents in greys. Not a Navidrome setting: a
+   reverse proxy adds this stylesheet to the page (see nginx.conf). It names
+   the interface's component classes, which a Navidrome update may change. */
+
+.MuiButton-containedPrimary,
+.MuiButton-containedSecondary,
+.MuiFab-primary,
+.MuiFab-secondary,
+.MuiChip-colorPrimary,
+.MuiChip-colorSecondary {
+  background-color: #EDEDED !important;
+  color: #0E0E0E !important;
+}
+
+.MuiButton-textPrimary,
+.MuiButton-textSecondary,
+.MuiButton-outlinedPrimary,
+.MuiButton-outlinedSecondary,
+.MuiIconButton-colorPrimary,
+.MuiIconButton-colorSecondary,
+.MuiSvgIcon-colorPrimary,
+.MuiSvgIcon-colorSecondary,
+.MuiTab-textColorPrimary.Mui-selected,
+.MuiTypography-colorPrimary,
+.MuiLink-root {
+  color: #EDEDED !important;
+}
+
+.MuiTabs-indicator,
+.MuiLinearProgress-barColorPrimary,
+.MuiLinearProgress-barColorSecondary,
+.MuiSlider-thumb,
+.MuiSlider-track,
+.MuiSwitch-colorPrimary.Mui-checked + .MuiSwitch-track,
+.MuiSwitch-colorSecondary.Mui-checked + .MuiSwitch-track {
+  background-color: #EDEDED !important;
+}
+
+.MuiCheckbox-colorPrimary.Mui-checked,
+.MuiCheckbox-colorSecondary.Mui-checked,
+.MuiRadio-colorPrimary.Mui-checked,
+.MuiRadio-colorSecondary.Mui-checked,
+.MuiSwitch-colorPrimary.Mui-checked,
+.MuiSwitch-colorSecondary.Mui-checked,
+.MuiSlider-root {
+  color: #EDEDED !important;
+}
+
+.MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline {
+  border-color: #9A9A9A !important;
+}
+.MuiInputLabel-root.Mui-focused,
+.MuiFormLabel-root.Mui-focused {
+  color: #9A9A9A !important;
+}

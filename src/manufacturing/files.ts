@@ -15,6 +15,7 @@ import { threeMf } from '../export/threemf.ts';
 import { buildModel, estimate, modelVolume, DEFAULT_SETTINGS, PRODUCTS, type Model, type Params, type PrintSettings, type ProductId } from './products.ts';
 import { backlit, heightmap } from './lithophane.ts';
 import { scadSource } from './scad.ts';
+import { mdText, xmlText } from '../catalog/text.ts';
 
 /** A print-edition mark; a crest also comes in its parts, for the layered medallion. */
 export type MarkSource = { d: string; minDiameterMM: number; svg: string; file: string; parts?: Record<CrestPart, string> };
@@ -53,7 +54,7 @@ function ringsSvg(rings: Ring[], title: string): string {
   const [x0, x1, y0, y1] = [Math.min(...xs), Math.max(...xs), Math.min(...ys), Math.max(...ys)];
   const d = rings.map((r) => `M${r.map(([x, y]) => `${x.toFixed(3)} ${(-y).toFixed(3)}`).join('L')}Z`).join('');
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${x0.toFixed(3)} ${y0.toFixed(3)} ${(x1 - x0).toFixed(3)} ${(y1 - y0).toFixed(3)}" width="${(x1 - x0).toFixed(3)}mm" height="${(y1 - y0).toFixed(3)}mm">
-  <title>${title}</title>
+  <title>${xmlText(title)}</title>
   <path d="${d}" fill="#1C1C1C" fill-rule="nonzero"/>
 </svg>
 `;
@@ -130,7 +131,7 @@ export function modelReadme(title: string, model: Model, base: string, mark: Mar
   const rows = spec.params.filter((p) => !p.when || model.params[p.when.key] === p.when.is).map((p) => `| ${p.label} | ${value(p)} | ${p.hint} |`);
   const files = model.parts.length === 1 ? [`\`${base}.stl\` — the solid, ready to slice`] : model.parts.map((pt) => `\`${base}-${pt.name}.stl\` — the ${pt.name}`);
   const infill = model.product === 'lithophane' ? 100 : model.settings.infill;
-  return `# ${title} — ${spec.name}
+  return `# ${mdText(title)} — ${spec.name}
 
 ${spec.summary}
 

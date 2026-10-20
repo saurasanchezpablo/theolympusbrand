@@ -2,7 +2,7 @@
 # The Olympus — screens, every part in one command. Run as root.
 #
 #   sudo sh install.sh                     every part this machine can take
-#   sudo sh install.sh grub plymouth          only the parts named
+#   sudo sh install.sh grub limine          only the parts named
 #   sudo sh install.sh terminal --ascii    options go to the parts that take them
 #   sudo sh install.sh --restore           undo every part that is installed
 #   sh install.sh --list                   the parts, and which this machine can take
@@ -13,16 +13,17 @@
 #   curl -fsSL <your site>/files/assets/screens/install.sh | sudo OLYMPUS_FROM=<your site>/files/assets/screens/ sh -s -- terminal
 #
 # Every file fetched is checked against the SHA-256 written below before
-# anything runs. Parts: grub, plymouth, terminal, wallpapers.
+# anything runs. Parts: grub, limine, plymouth, terminal, wallpapers.
 set -eu
 
 FROM=${OLYMPUS_FROM:-}
-ALL='grub plymouth terminal wallpapers'
+ALL='grub limine plymouth terminal wallpapers'
 OPTIONS=--ascii
 
 fits() {
   case "$1" in
     grub) [ -f /etc/default/grub ] ;;
+    limine) ( for c in ${LIMINE_CONF:-} /boot/limine.conf /boot/limine/limine.conf /boot/EFI/limine/limine.conf /efi/limine.conf /efi/EFI/limine/limine.conf /boot/efi/limine.conf /boot/efi/EFI/limine/limine.conf /boot/EFI/BOOT/limine.conf; do [ -f "$c" ] && exit 0; done; exit 1 ) ;;
     plymouth) command -v plymouth-set-default-theme >/dev/null 2>&1 ;;
     terminal) [ -f /etc/issue ] ;;
     wallpapers) [ -d /usr/share/xsessions ] || [ -d /usr/share/wayland-sessions ] ;;
@@ -31,22 +32,25 @@ fits() {
 installed() {
   case "$1" in
     grub) [ -f /etc/default/grub.the-olympus.orig ] ;;
+    limine) ( for c in ${LIMINE_CONF:-} /boot/limine.conf /boot/limine/limine.conf /boot/EFI/limine/limine.conf /efi/limine.conf /efi/EFI/limine/limine.conf /boot/efi/limine.conf /boot/efi/EFI/limine/limine.conf /boot/EFI/BOOT/limine.conf; do grep -qsF "# The Olympus — begin" "$c" && exit 0; done; exit 1 ) ;;
     plymouth) [ -d /usr/share/plymouth/themes/the-olympus ] ;;
-    terminal) [ -f /etc/update-motd.d/20-the-olympus ] || [ -f /etc/issue.the-olympus.orig ] ;;
+    terminal) [ -f /etc/update-motd.d/20-the-olympus ] || [ -f /etc/motd.d/the-olympus ] || [ -f /etc/issue.the-olympus.orig ] ;;
     wallpapers) [ -d /usr/share/backgrounds/the-olympus ] ;;
   esac
 }
 unfit() {
   case "$1" in
     grub) echo 'this machine does not boot with GRUB' ;;
-    plymouth) echo 'Plymouth is not installed (apt install plymouth)' ;;
-    terminal) echo 'no /etc/issue: not a Debian-style system' ;;
+    limine) echo 'this machine does not boot with Limine' ;;
+    plymouth) echo 'Plymouth is not installed (apt install plymouth, or pacman -S plymouth)' ;;
+    terminal) echo 'no /etc/issue: not a Linux system with a console login' ;;
     wallpapers) echo 'no desktop installed' ;;
   esac
 }
 label() {
   case "$1" in
     grub) echo 'GRUB background' ;;
+    limine) echo 'Limine boot menu' ;;
     plymouth) echo 'Plymouth boot splash' ;;
     terminal) echo 'Terminal: message of the day, console login, SSH banner' ;;
     wallpapers) echo 'Wallpapers, in the desktop’s own picker' ;;
@@ -55,6 +59,7 @@ label() {
 dir_of() {
   case "$1" in
     grub) echo boot/grub ;;
+    limine) echo boot/limine ;;
     plymouth) echo boot/plymouth ;;
     terminal) echo terminal ;;
     wallpapers) echo wallpapers ;;
@@ -69,20 +74,22 @@ accepts() {
 
 MANIFEST='grub boot/grub/background.png 070b5b2c7cd66b08e9e5d201c9da4ac340da738d6f0eb009681b6bf8f7a725cf
 grub boot/grub/install.sh 65604bbd0f8e94b25511d99cfc1c07a0b5ac300e1b0529e940a4a39cd1358d61
-plymouth boot/plymouth/install.sh 5afaf170870c11f35bbc52791a0077a5b74c9b837fecfcca5f1827c20899721e
+limine boot/limine/install.sh b9af25546247d9ce76a9cbba858db9279cbf976988b182d605af856e08a0ae82
+limine boot/limine/wallpaper.png 070b5b2c7cd66b08e9e5d201c9da4ac340da738d6f0eb009681b6bf8f7a725cf
+plymouth boot/plymouth/install.sh 438862aee04027ce1dd3e6b04cd7a6ebec85f5ba946f76cc463ace9bc4b41414
 plymouth boot/plymouth/the-olympus/background.png 5bcc9c08ed6f171c52b883f712f8c39ccbca86643f58a1f6b0865351c1343ebe
 plymouth boot/plymouth/the-olympus/crest.png fcf9d5debedba637da40bb35178ca3a7245fd5916a85e901f303493d17b932aa
 plymouth boot/plymouth/the-olympus/fill.png 75224f4c181e906bbe244f22e788fce6c5d42d01fd0347fd64e709b38eb2810f
 plymouth boot/plymouth/the-olympus/the-olympus.plymouth e7d8995c45a53eeb1f8348d382c8d280f9d75d2f9069af1b20ae09fcae1fff22
 plymouth boot/plymouth/the-olympus/the-olympus.script 932306a73b4ba9f9fa5ee179b6f27bcb4f297fa88a1ee77da8a56283d7877896
 plymouth boot/plymouth/the-olympus/track.png 1f349e1b4f25f5a12883851fad81c46bdbd5a19bed74ec687ab5040e49c65b11
-terminal terminal/20-the-olympus 930a3c21d5dc11939259c734467a2b3269f429bfaa8664e36fdf3493e286d985
-terminal terminal/install.sh 50dec2d734f6c624eda42081885e7e6d3acf3d885636c2694ed919d188ac9052
+terminal terminal/20-the-olympus 51d7b8a037e1a8942e8a5857dc7ba7425bff9dd6e916926f771ea54c0d47359d
+terminal terminal/install.sh 839492d659c6dea7b6b2d828068d5dd7882e396567fe542ec54d696c93e67c81
 terminal terminal/issue 7d2f6e9df37721e89780c6cea9d2e45b813f2a2a7b8d47e2d61cad29cded0468
 terminal terminal/issue.net e21452397fbc8992458bfd7bf696a45039faac305091d16882d686cf024c3daf
 terminal terminal/motd-ascii.txt 4a36e8020e322ef427861d85bab023762c9e3ff5e624a352fdc41603e0140c23
 terminal terminal/motd-braille.txt dd173672768206bd38b78287d76c3e85a3b086c506ed7ff00dd4b49aabc87336
-wallpapers wallpapers/install.sh 4191e72291769b5ae06c6381a20f63506d573276bfe9411d05ad5404d53357fc
+wallpapers wallpapers/install.sh e5619d5db758477b9dcdf03fa54d45d1b86f083659d68763b973ed5aa9472d99
 wallpapers wallpapers/the-olympus-master-wallpaper-blueprint-1080p.png 9fd5537e96071408444ee648bfe9253d332382cf82cb88a0dff939cb6fe81380
 wallpapers wallpapers/the-olympus-master-wallpaper-blueprint-1440p.png bd69b028cd3530ff6c83705cd86a7664dec3bf4d6fa9eeca43d0fb15f17a59f4
 wallpapers wallpapers/the-olympus-master-wallpaper-blueprint-4k.png 3ae89f84b3190e8cb767195d319d284c83c69e368a0d1766ce173b2d4121bd04
@@ -102,7 +109,8 @@ wallpapers wallpapers/the-olympus-master-wallpaper-marble-light-4k.png 028221ac0
 wallpapers wallpapers/the-olympus-master-wallpaper-marble-light-phone.png d79f48bd80f27adda3897942be95228427f26dc3e2d53b49caf52c8687a81a72
 wallpapers wallpapers/the-olympus-master-wallpaper-marble-light-ultrawide.png c0fdc1af859d0e9aa82f31bac6fb2ffc0a807f4540dfa04af106c92976ed09e9
 wallpapers wallpapers/the-olympus-master-wallpaper-marble-phone.png 74078dd2f7b710fb9cab44473beac81eb167e942ff8d3199846dc79c60eca4f6
-wallpapers wallpapers/the-olympus-master-wallpaper-marble-ultrawide.png b70803e0a1c46289defa140eb66e705db7fcdb09b24112e6cdfffcd3125b0aa0'
+wallpapers wallpapers/the-olympus-master-wallpaper-marble-ultrawide.png b70803e0a1c46289defa140eb66e705db7fcdb09b24112e6cdfffcd3125b0aa0
+wallpapers wallpapers/the-olympus-wallpapers.xml 20ce7f6c54669234828fd68c288b9bd8eb1a10dbf0592d295da8029fcbdc14f1'
 
 restore=0
 list=0

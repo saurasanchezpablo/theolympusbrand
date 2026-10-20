@@ -1,0 +1,235 @@
+# The Olympus — boot screens, the crest at login, wallpapers and your terminal,
+# as a pacman package. Build and install it with the address of the house's site:
+#
+#   OLYMPUS_SITE=http://olympus.lan:8080 makepkg -si
+#
+# then apply it:  sudo the-olympus   (and, as yourself, the-olympus-terminal)
+
+pkgname=the-olympus-screens
+pkgver=0
+pkgrel=1
+pkgdesc="The Olympus: boot screens, the crest at login, wallpapers and terminal colours"
+arch=('any')
+url="https://theolympus.cloud"
+license=('LicenseRef-AllRightsReserved')
+optdepends=('plymouth: the boot splash' 'grub: the boot menu background' 'limine: the boot menu theme' 'fastfetch: the seal beside the facts of the machine')
+install=the-olympus.install
+_site=${OLYMPUS_SITE:?set OLYMPUS_SITE to the address of the site of the house, e.g. OLYMPUS_SITE=http://olympus.lan:8080 makepkg -si}
+_site=${_site%/}
+
+source=(
+  "the-olympus"
+  "the-olympus-terminal"
+  "the-olympus.install"
+  "boot__grub__background.png::$_site/files/assets/screens/boot/grub/background.png"
+  "boot__grub__install.sh::$_site/files/assets/screens/boot/grub/install.sh"
+  "boot__limine__install.sh::$_site/files/assets/screens/boot/limine/install.sh"
+  "boot__limine__wallpaper.png::$_site/files/assets/screens/boot/limine/wallpaper.png"
+  "boot__plymouth__install.sh::$_site/files/assets/screens/boot/plymouth/install.sh"
+  "boot__plymouth__the-olympus__background.png::$_site/files/assets/screens/boot/plymouth/the-olympus/background.png"
+  "boot__plymouth__the-olympus__crest.png::$_site/files/assets/screens/boot/plymouth/the-olympus/crest.png"
+  "boot__plymouth__the-olympus__fill.png::$_site/files/assets/screens/boot/plymouth/the-olympus/fill.png"
+  "boot__plymouth__the-olympus__the-olympus.plymouth::$_site/files/assets/screens/boot/plymouth/the-olympus/the-olympus.plymouth"
+  "boot__plymouth__the-olympus__the-olympus.script::$_site/files/assets/screens/boot/plymouth/the-olympus/the-olympus.script"
+  "boot__plymouth__the-olympus__track.png::$_site/files/assets/screens/boot/plymouth/the-olympus/track.png"
+  "install.sh::$_site/files/assets/screens/install.sh"
+  "shell__alacritty__install.sh::$_site/files/assets/screens/shell/alacritty/install.sh"
+  "shell__alacritty__the-olympus.toml::$_site/files/assets/screens/shell/alacritty/the-olympus.toml"
+  "shell__bash__install.sh::$_site/files/assets/screens/shell/bash/install.sh"
+  "shell__bash__prompt.bash::$_site/files/assets/screens/shell/bash/prompt.bash"
+  "shell__fastfetch__install.sh::$_site/files/assets/screens/shell/fastfetch/install.sh"
+  "shell__fastfetch__the-olympus-logo.txt::$_site/files/assets/screens/shell/fastfetch/the-olympus-logo.txt"
+  "shell__fastfetch__the-olympus.jsonc::$_site/files/assets/screens/shell/fastfetch/the-olympus.jsonc"
+  "shell__fish__install.sh::$_site/files/assets/screens/shell/fish/install.sh"
+  "shell__fish__the-olympus.fish::$_site/files/assets/screens/shell/fish/the-olympus.fish"
+  "shell__gnome-terminal__install.sh::$_site/files/assets/screens/shell/gnome-terminal/install.sh"
+  "shell__gnome-terminal__the-olympus.dconf::$_site/files/assets/screens/shell/gnome-terminal/the-olympus.dconf"
+  "shell__install.sh::$_site/files/assets/screens/shell/install.sh"
+  "shell__kitty__install.sh::$_site/files/assets/screens/shell/kitty/install.sh"
+  "shell__kitty__the-olympus.conf::$_site/files/assets/screens/shell/kitty/the-olympus.conf"
+  "shell__omarchy__install.sh::$_site/files/assets/screens/shell/omarchy/install.sh"
+  "shell__omarchy__the-olympus__backgrounds__blueprint.png::$_site/files/assets/screens/shell/omarchy/the-olympus/backgrounds/blueprint.png"
+  "shell__omarchy__the-olympus__backgrounds__graphite.png::$_site/files/assets/screens/shell/omarchy/the-olympus/backgrounds/graphite.png"
+  "shell__omarchy__the-olympus__backgrounds__marble.png::$_site/files/assets/screens/shell/omarchy/the-olympus/backgrounds/marble.png"
+  "shell__omarchy__the-olympus__colors.toml::$_site/files/assets/screens/shell/omarchy/the-olympus/colors.toml"
+  "shell__ptyxis__install.sh::$_site/files/assets/screens/shell/ptyxis/install.sh"
+  "shell__ptyxis__the-olympus.palette::$_site/files/assets/screens/shell/ptyxis/the-olympus.palette"
+  "shell__tmux__install.sh::$_site/files/assets/screens/shell/tmux/install.sh"
+  "shell__tmux__the-olympus.conf::$_site/files/assets/screens/shell/tmux/the-olympus.conf"
+  "shell__wezterm__install.sh::$_site/files/assets/screens/shell/wezterm/install.sh"
+  "shell__wezterm__the-olympus.toml::$_site/files/assets/screens/shell/wezterm/the-olympus.toml"
+  "terminal__20-the-olympus::$_site/files/assets/screens/terminal/20-the-olympus"
+  "terminal__install.sh::$_site/files/assets/screens/terminal/install.sh"
+  "terminal__issue::$_site/files/assets/screens/terminal/issue"
+  "terminal__issue.net::$_site/files/assets/screens/terminal/issue.net"
+  "terminal__motd-ascii.txt::$_site/files/assets/screens/terminal/motd-ascii.txt"
+  "terminal__motd-braille.txt::$_site/files/assets/screens/terminal/motd-braille.txt"
+  "wallpapers__install.sh::$_site/files/assets/screens/wallpapers/install.sh"
+  "wallpapers__the-olympus-master-wallpaper-blueprint-1080p.png::$_site/files/assets/screens/wallpapers/the-olympus-master-wallpaper-blueprint-1080p.png"
+  "wallpapers__the-olympus-master-wallpaper-blueprint-1440p.png::$_site/files/assets/screens/wallpapers/the-olympus-master-wallpaper-blueprint-1440p.png"
+  "wallpapers__the-olympus-master-wallpaper-blueprint-4k.png::$_site/files/assets/screens/wallpapers/the-olympus-master-wallpaper-blueprint-4k.png"
+  "wallpapers__the-olympus-master-wallpaper-blueprint-phone.png::$_site/files/assets/screens/wallpapers/the-olympus-master-wallpaper-blueprint-phone.png"
+  "wallpapers__the-olympus-master-wallpaper-blueprint-ultrawide.png::$_site/files/assets/screens/wallpapers/the-olympus-master-wallpaper-blueprint-ultrawide.png"
+  "wallpapers__the-olympus-master-wallpaper-graphite-1080p.png::$_site/files/assets/screens/wallpapers/the-olympus-master-wallpaper-graphite-1080p.png"
+  "wallpapers__the-olympus-master-wallpaper-graphite-1440p.png::$_site/files/assets/screens/wallpapers/the-olympus-master-wallpaper-graphite-1440p.png"
+  "wallpapers__the-olympus-master-wallpaper-graphite-4k.png::$_site/files/assets/screens/wallpapers/the-olympus-master-wallpaper-graphite-4k.png"
+  "wallpapers__the-olympus-master-wallpaper-graphite-phone.png::$_site/files/assets/screens/wallpapers/the-olympus-master-wallpaper-graphite-phone.png"
+  "wallpapers__the-olympus-master-wallpaper-graphite-ultrawide.png::$_site/files/assets/screens/wallpapers/the-olympus-master-wallpaper-graphite-ultrawide.png"
+  "wallpapers__the-olympus-master-wallpaper-marble-1080p.png::$_site/files/assets/screens/wallpapers/the-olympus-master-wallpaper-marble-1080p.png"
+  "wallpapers__the-olympus-master-wallpaper-marble-1440p.png::$_site/files/assets/screens/wallpapers/the-olympus-master-wallpaper-marble-1440p.png"
+  "wallpapers__the-olympus-master-wallpaper-marble-4k.png::$_site/files/assets/screens/wallpapers/the-olympus-master-wallpaper-marble-4k.png"
+  "wallpapers__the-olympus-master-wallpaper-marble-light-1080p.png::$_site/files/assets/screens/wallpapers/the-olympus-master-wallpaper-marble-light-1080p.png"
+  "wallpapers__the-olympus-master-wallpaper-marble-light-1440p.png::$_site/files/assets/screens/wallpapers/the-olympus-master-wallpaper-marble-light-1440p.png"
+  "wallpapers__the-olympus-master-wallpaper-marble-light-4k.png::$_site/files/assets/screens/wallpapers/the-olympus-master-wallpaper-marble-light-4k.png"
+  "wallpapers__the-olympus-master-wallpaper-marble-light-phone.png::$_site/files/assets/screens/wallpapers/the-olympus-master-wallpaper-marble-light-phone.png"
+  "wallpapers__the-olympus-master-wallpaper-marble-light-ultrawide.png::$_site/files/assets/screens/wallpapers/the-olympus-master-wallpaper-marble-light-ultrawide.png"
+  "wallpapers__the-olympus-master-wallpaper-marble-phone.png::$_site/files/assets/screens/wallpapers/the-olympus-master-wallpaper-marble-phone.png"
+  "wallpapers__the-olympus-master-wallpaper-marble-ultrawide.png::$_site/files/assets/screens/wallpapers/the-olympus-master-wallpaper-marble-ultrawide.png"
+  "wallpapers__the-olympus-wallpapers.xml::$_site/files/assets/screens/wallpapers/the-olympus-wallpapers.xml"
+)
+sha256sums=(
+  'ce6b4a002bbac906ff49f4685b10c48460c11a9fbb077cce57ebf8910884ea85'
+  '78d4c3d280519dccfc00dbcf35d1e3bfc6cb55bcc64848ad1f375210deceb56b'
+  '66d747db962e0e2e85050eec32e6c345e8378999f51634d78715c36c5fd2b82a'
+  '070b5b2c7cd66b08e9e5d201c9da4ac340da738d6f0eb009681b6bf8f7a725cf'
+  '65604bbd0f8e94b25511d99cfc1c07a0b5ac300e1b0529e940a4a39cd1358d61'
+  'b9af25546247d9ce76a9cbba858db9279cbf976988b182d605af856e08a0ae82'
+  '070b5b2c7cd66b08e9e5d201c9da4ac340da738d6f0eb009681b6bf8f7a725cf'
+  '438862aee04027ce1dd3e6b04cd7a6ebec85f5ba946f76cc463ace9bc4b41414'
+  '5bcc9c08ed6f171c52b883f712f8c39ccbca86643f58a1f6b0865351c1343ebe'
+  'fcf9d5debedba637da40bb35178ca3a7245fd5916a85e901f303493d17b932aa'
+  '75224f4c181e906bbe244f22e788fce6c5d42d01fd0347fd64e709b38eb2810f'
+  'e7d8995c45a53eeb1f8348d382c8d280f9d75d2f9069af1b20ae09fcae1fff22'
+  '932306a73b4ba9f9fa5ee179b6f27bcb4f297fa88a1ee77da8a56283d7877896'
+  '1f349e1b4f25f5a12883851fad81c46bdbd5a19bed74ec687ab5040e49c65b11'
+  'f9446b1dd663839fe3eda33fb8f682157f1445c176ccc246f9df37d3867fd5c3'
+  '45032bcdf26070f2b31e676f386f105981b51746f1239d74de1244116d04add2'
+  '63c7f09837f4e1451d76cd67c96e27a6321cb6d09448e987c1908a2e841a8222'
+  '6e0ad094c0fcbf938add5dc2f020eaf6037203d3f200a22834bebba2537c3bd5'
+  'e6e89abd3d155e47a1ae0a2be3f411c7b07b739287107821d3138514c9512b37'
+  '4a0c7a862b4cffe10aedd83a421f61fff7c79dd99a380c8bfc244b1037f5b2ed'
+  'e1b7fd0dfacc8b87ea85e538f5b6878aa21d3143108d49d30e68b4ab34f56be0'
+  '7c451a6f9ed38b9c99409c5a8db6159082e1ab28d1d5eb7cbef84a71bef1caa4'
+  '63d606c97cfd49e2fd91e02debe86227f6311cb56fc2aa95fdd0c13b0c74ed52'
+  '1d608d598316898f39f45c10b8fc90383ad3f470729d32621423ad95f8a35eb6'
+  '83c5c130c908d150f503c59598a262b4f6371b6347ffa8104f26fde5d765ff92'
+  '38cd28a458c576619d7319c8632cb3078e74d69d213d0084b8235a65e0299663'
+  '15d8bf135b44edd84c089116dc39a0fafbf45755fe22f201dcbb21e53801ac38'
+  '20d08d40c551cec4322e14e77d3a355c5224ab9fc512e4244ddb6c60a6fd8456'
+  '6fe590ccc63d450d0d18ddb4c28eb70f3a29e0311477ff25e3541d47497c7839'
+  'c498f9d831ed5e8b6a8d78d37c14e68d4b4c7f635e1562a856fa94d72d5ae9b4'
+  'bd69b028cd3530ff6c83705cd86a7664dec3bf4d6fa9eeca43d0fb15f17a59f4'
+  '57eff700f81846ed05323fea5bea8fe65b2f61ea155872abd4d3af99691471da'
+  'c5e7e984e01f30c049a6ce01622d863a6753149c912000a9026e7513e0467e62'
+  'd4146c4c0e02fd3a58f8705e9a4d8a55bbefb3d93979bf928561d3fbc7240f19'
+  '0f412066c22a3b6452d2147c5f77f7e953bf93575ca9a4d7f1226fa6dfc81212'
+  '8f4549e2ef881adcb5001af5b58b8f6c8d65c0165e8fb3356599f560ca31869b'
+  'ef20928621934e472d769f8693c2ae6d9d767129b978cf91b3695b446e1f0983'
+  'de00ff90c907ce3e562f28a43261b2b5ea25b99ff829f52cd21927e1e875b837'
+  'cc811e14261b59ed9e9a5b31d261c9039a341bfc94c211aafdf8ec75ff17ce8c'
+  '78ae7be8d087a670775267cd20d7e0a6730408170cb6a5d12380de51f5ed9a2c'
+  '51d7b8a037e1a8942e8a5857dc7ba7425bff9dd6e916926f771ea54c0d47359d'
+  '839492d659c6dea7b6b2d828068d5dd7882e396567fe542ec54d696c93e67c81'
+  '7d2f6e9df37721e89780c6cea9d2e45b813f2a2a7b8d47e2d61cad29cded0468'
+  'e21452397fbc8992458bfd7bf696a45039faac305091d16882d686cf024c3daf'
+  '4a36e8020e322ef427861d85bab023762c9e3ff5e624a352fdc41603e0140c23'
+  'dd173672768206bd38b78287d76c3e85a3b086c506ed7ff00dd4b49aabc87336'
+  'e5619d5db758477b9dcdf03fa54d45d1b86f083659d68763b973ed5aa9472d99'
+  '9fd5537e96071408444ee648bfe9253d332382cf82cb88a0dff939cb6fe81380'
+  'bd69b028cd3530ff6c83705cd86a7664dec3bf4d6fa9eeca43d0fb15f17a59f4'
+  '3ae89f84b3190e8cb767195d319d284c83c69e368a0d1766ce173b2d4121bd04'
+  '05edd49e82e87c5915b795ad711b94b533e22576584c42604913135937e106d3'
+  '217d1bd8d2d8c345dc3614dc55a6edea4ff6f7df9a7fa3690ec718e16cd7587e'
+  'ed5ab1d42293bf45920e70f2a37bca467af0df8a33c84bdc47bd4675c60607eb'
+  '57eff700f81846ed05323fea5bea8fe65b2f61ea155872abd4d3af99691471da'
+  '135480c5e338ddd4d0a622353e98aa80968241b9baa7079e329240ef6b275be6'
+  'bf1ca73813bc18f9fe8604f8dbb2a59710c64f61b5b81dbac0ba201cc74a16e7'
+  '5205378c637e46bdd6f9be5d316a095f49f7a3aa2c34374e73e5d57ccee1f33f'
+  '7b9235ca1a90ca60536c1cbcc5f2684aca989dc01425c027e334cb7e383de9a3'
+  'c5e7e984e01f30c049a6ce01622d863a6753149c912000a9026e7513e0467e62'
+  'df6690a58683b35b37b1261049b11a08e09c653eff8a792309ac9ce0d943003c'
+  'd5eca811aab1d050d68a41ca870db3ee3889adef951086dc2d9ba9c81c9b5317'
+  'a1f815505d7062e716d4e73efee5caf61e5952f2df8408efb6046b36850e4654'
+  '028221ac03fd77f672b85becd5ca943f7dda6a6a8109a22c30c5e81878ad3a61'
+  'd79f48bd80f27adda3897942be95228427f26dc3e2d53b49caf52c8687a81a72'
+  'c0fdc1af859d0e9aa82f31bac6fb2ffc0a807f4540dfa04af106c92976ed09e9'
+  '74078dd2f7b710fb9cab44473beac81eb167e942ff8d3199846dc79c60eca4f6'
+  'b70803e0a1c46289defa140eb66e705db7fcdb09b24112e6cdfffcd3125b0aa0'
+  '20ce7f6c54669234828fd68c288b9bd8eb1a10dbf0592d295da8029fcbdc14f1'
+)
+
+# Each build is newer than the last: the site's files may have changed.
+pkgver() {
+  date -u +%Y%m%d.%H%M
+}
+
+package() {
+  local d="$pkgdir/usr/share/the-olympus/screens"
+  install -Dm755 "$srcdir/the-olympus" "$pkgdir/usr/bin/the-olympus"
+  install -Dm755 "$srcdir/the-olympus-terminal" "$pkgdir/usr/bin/the-olympus-terminal"
+  install -Dm644 "$srcdir/boot__grub__background.png" "$d/boot/grub/background.png"
+  install -Dm755 "$srcdir/boot__grub__install.sh" "$d/boot/grub/install.sh"
+  install -Dm755 "$srcdir/boot__limine__install.sh" "$d/boot/limine/install.sh"
+  install -Dm644 "$srcdir/boot__limine__wallpaper.png" "$d/boot/limine/wallpaper.png"
+  install -Dm755 "$srcdir/boot__plymouth__install.sh" "$d/boot/plymouth/install.sh"
+  install -Dm644 "$srcdir/boot__plymouth__the-olympus__background.png" "$d/boot/plymouth/the-olympus/background.png"
+  install -Dm644 "$srcdir/boot__plymouth__the-olympus__crest.png" "$d/boot/plymouth/the-olympus/crest.png"
+  install -Dm644 "$srcdir/boot__plymouth__the-olympus__fill.png" "$d/boot/plymouth/the-olympus/fill.png"
+  install -Dm644 "$srcdir/boot__plymouth__the-olympus__the-olympus.plymouth" "$d/boot/plymouth/the-olympus/the-olympus.plymouth"
+  install -Dm644 "$srcdir/boot__plymouth__the-olympus__the-olympus.script" "$d/boot/plymouth/the-olympus/the-olympus.script"
+  install -Dm644 "$srcdir/boot__plymouth__the-olympus__track.png" "$d/boot/plymouth/the-olympus/track.png"
+  install -Dm755 "$srcdir/install.sh" "$d/install.sh"
+  install -Dm755 "$srcdir/shell__alacritty__install.sh" "$d/shell/alacritty/install.sh"
+  install -Dm644 "$srcdir/shell__alacritty__the-olympus.toml" "$d/shell/alacritty/the-olympus.toml"
+  install -Dm755 "$srcdir/shell__bash__install.sh" "$d/shell/bash/install.sh"
+  install -Dm644 "$srcdir/shell__bash__prompt.bash" "$d/shell/bash/prompt.bash"
+  install -Dm755 "$srcdir/shell__fastfetch__install.sh" "$d/shell/fastfetch/install.sh"
+  install -Dm644 "$srcdir/shell__fastfetch__the-olympus-logo.txt" "$d/shell/fastfetch/the-olympus-logo.txt"
+  install -Dm644 "$srcdir/shell__fastfetch__the-olympus.jsonc" "$d/shell/fastfetch/the-olympus.jsonc"
+  install -Dm755 "$srcdir/shell__fish__install.sh" "$d/shell/fish/install.sh"
+  install -Dm644 "$srcdir/shell__fish__the-olympus.fish" "$d/shell/fish/the-olympus.fish"
+  install -Dm755 "$srcdir/shell__gnome-terminal__install.sh" "$d/shell/gnome-terminal/install.sh"
+  install -Dm644 "$srcdir/shell__gnome-terminal__the-olympus.dconf" "$d/shell/gnome-terminal/the-olympus.dconf"
+  install -Dm755 "$srcdir/shell__install.sh" "$d/shell/install.sh"
+  install -Dm755 "$srcdir/shell__kitty__install.sh" "$d/shell/kitty/install.sh"
+  install -Dm644 "$srcdir/shell__kitty__the-olympus.conf" "$d/shell/kitty/the-olympus.conf"
+  install -Dm755 "$srcdir/shell__omarchy__install.sh" "$d/shell/omarchy/install.sh"
+  install -Dm644 "$srcdir/shell__omarchy__the-olympus__backgrounds__blueprint.png" "$d/shell/omarchy/the-olympus/backgrounds/blueprint.png"
+  install -Dm644 "$srcdir/shell__omarchy__the-olympus__backgrounds__graphite.png" "$d/shell/omarchy/the-olympus/backgrounds/graphite.png"
+  install -Dm644 "$srcdir/shell__omarchy__the-olympus__backgrounds__marble.png" "$d/shell/omarchy/the-olympus/backgrounds/marble.png"
+  install -Dm644 "$srcdir/shell__omarchy__the-olympus__colors.toml" "$d/shell/omarchy/the-olympus/colors.toml"
+  install -Dm755 "$srcdir/shell__ptyxis__install.sh" "$d/shell/ptyxis/install.sh"
+  install -Dm644 "$srcdir/shell__ptyxis__the-olympus.palette" "$d/shell/ptyxis/the-olympus.palette"
+  install -Dm755 "$srcdir/shell__tmux__install.sh" "$d/shell/tmux/install.sh"
+  install -Dm644 "$srcdir/shell__tmux__the-olympus.conf" "$d/shell/tmux/the-olympus.conf"
+  install -Dm755 "$srcdir/shell__wezterm__install.sh" "$d/shell/wezterm/install.sh"
+  install -Dm644 "$srcdir/shell__wezterm__the-olympus.toml" "$d/shell/wezterm/the-olympus.toml"
+  install -Dm755 "$srcdir/terminal__20-the-olympus" "$d/terminal/20-the-olympus"
+  install -Dm755 "$srcdir/terminal__install.sh" "$d/terminal/install.sh"
+  install -Dm644 "$srcdir/terminal__issue" "$d/terminal/issue"
+  install -Dm644 "$srcdir/terminal__issue.net" "$d/terminal/issue.net"
+  install -Dm644 "$srcdir/terminal__motd-ascii.txt" "$d/terminal/motd-ascii.txt"
+  install -Dm644 "$srcdir/terminal__motd-braille.txt" "$d/terminal/motd-braille.txt"
+  install -Dm755 "$srcdir/wallpapers__install.sh" "$d/wallpapers/install.sh"
+  install -Dm644 "$srcdir/wallpapers__the-olympus-master-wallpaper-blueprint-1080p.png" "$d/wallpapers/the-olympus-master-wallpaper-blueprint-1080p.png"
+  install -Dm644 "$srcdir/wallpapers__the-olympus-master-wallpaper-blueprint-1440p.png" "$d/wallpapers/the-olympus-master-wallpaper-blueprint-1440p.png"
+  install -Dm644 "$srcdir/wallpapers__the-olympus-master-wallpaper-blueprint-4k.png" "$d/wallpapers/the-olympus-master-wallpaper-blueprint-4k.png"
+  install -Dm644 "$srcdir/wallpapers__the-olympus-master-wallpaper-blueprint-phone.png" "$d/wallpapers/the-olympus-master-wallpaper-blueprint-phone.png"
+  install -Dm644 "$srcdir/wallpapers__the-olympus-master-wallpaper-blueprint-ultrawide.png" "$d/wallpapers/the-olympus-master-wallpaper-blueprint-ultrawide.png"
+  install -Dm644 "$srcdir/wallpapers__the-olympus-master-wallpaper-graphite-1080p.png" "$d/wallpapers/the-olympus-master-wallpaper-graphite-1080p.png"
+  install -Dm644 "$srcdir/wallpapers__the-olympus-master-wallpaper-graphite-1440p.png" "$d/wallpapers/the-olympus-master-wallpaper-graphite-1440p.png"
+  install -Dm644 "$srcdir/wallpapers__the-olympus-master-wallpaper-graphite-4k.png" "$d/wallpapers/the-olympus-master-wallpaper-graphite-4k.png"
+  install -Dm644 "$srcdir/wallpapers__the-olympus-master-wallpaper-graphite-phone.png" "$d/wallpapers/the-olympus-master-wallpaper-graphite-phone.png"
+  install -Dm644 "$srcdir/wallpapers__the-olympus-master-wallpaper-graphite-ultrawide.png" "$d/wallpapers/the-olympus-master-wallpaper-graphite-ultrawide.png"
+  install -Dm644 "$srcdir/wallpapers__the-olympus-master-wallpaper-marble-1080p.png" "$d/wallpapers/the-olympus-master-wallpaper-marble-1080p.png"
+  install -Dm644 "$srcdir/wallpapers__the-olympus-master-wallpaper-marble-1440p.png" "$d/wallpapers/the-olympus-master-wallpaper-marble-1440p.png"
+  install -Dm644 "$srcdir/wallpapers__the-olympus-master-wallpaper-marble-4k.png" "$d/wallpapers/the-olympus-master-wallpaper-marble-4k.png"
+  install -Dm644 "$srcdir/wallpapers__the-olympus-master-wallpaper-marble-light-1080p.png" "$d/wallpapers/the-olympus-master-wallpaper-marble-light-1080p.png"
+  install -Dm644 "$srcdir/wallpapers__the-olympus-master-wallpaper-marble-light-1440p.png" "$d/wallpapers/the-olympus-master-wallpaper-marble-light-1440p.png"
+  install -Dm644 "$srcdir/wallpapers__the-olympus-master-wallpaper-marble-light-4k.png" "$d/wallpapers/the-olympus-master-wallpaper-marble-light-4k.png"
+  install -Dm644 "$srcdir/wallpapers__the-olympus-master-wallpaper-marble-light-phone.png" "$d/wallpapers/the-olympus-master-wallpaper-marble-light-phone.png"
+  install -Dm644 "$srcdir/wallpapers__the-olympus-master-wallpaper-marble-light-ultrawide.png" "$d/wallpapers/the-olympus-master-wallpaper-marble-light-ultrawide.png"
+  install -Dm644 "$srcdir/wallpapers__the-olympus-master-wallpaper-marble-phone.png" "$d/wallpapers/the-olympus-master-wallpaper-marble-phone.png"
+  install -Dm644 "$srcdir/wallpapers__the-olympus-master-wallpaper-marble-ultrawide.png" "$d/wallpapers/the-olympus-master-wallpaper-marble-ultrawide.png"
+  install -Dm644 "$srcdir/wallpapers__the-olympus-wallpapers.xml" "$d/wallpapers/the-olympus-wallpapers.xml"
+}

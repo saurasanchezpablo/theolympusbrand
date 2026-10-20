@@ -3,7 +3,7 @@
 
 import { useEffect, useState } from 'react';
 
-export type FileIndex = { groups: { dir: string; group: string; label: string }[]; files: { path: string; size: number; title?: string }[] };
+export type FileIndex = { groups: { dir: string; group: string; label: string }[]; files: { path: string; size: number; title?: string; sha256?: string }[] };
 
 /** URL of a published file, relative to the page (works from any sub-path). */
 export const fileUrl = (path: string) => `files/${path.split('/').map(encodeURIComponent).join('/')}`;

@@ -1,0 +1,5 @@
+# The Olympus — Navidrome, installed without Docker: add these lines to
+# navidrome.toml, putting the address of the house's site in the second.
+DefaultTheme = "Extra Dark"
+UILoginBackgroundURL = "http://<the house's site>/files/assets/integrations/backgrounds/olympus-background.png"
+UIWelcomeMessage = "The Olympus · theolympus.cloud"

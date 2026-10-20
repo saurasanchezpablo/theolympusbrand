@@ -51,16 +51,19 @@ export function validateSpec(raw: unknown, where = 'service'): ServiceSpec {
   const o = raw as Record<string, unknown>;
   for (const k of Object.keys(o)) if (!KEYS.has(k)) errors.push(`unknown field "${k}"`);
   if (typeof o.id !== 'string' || !ID.test(o.id)) errors.push('"id" must be kebab-case (a-z, 0-9, hyphens)');
-  if (typeof o.name !== 'string' || !o.name.trim()) errors.push('"name" is required');
+  // Free text goes into scripts, stylesheets and pages: one line, no control characters, a sensible length.
+  const text = (v: unknown, max: number) => typeof v === 'string' && v.trim().length > 0 && v.length <= max && !/[\u0000-\u001f\u007f-\u009f]/.test(v);
+  if (!text(o.name, 48)) errors.push('"name" is required: one line of at most 48 characters, without control characters');
   if (typeof o.category !== 'string' || !(o.category in CATEGORIES)) errors.push(`"category" must be one of: ${Object.keys(CATEGORIES).join(', ')}`);
   if (o.god !== undefined && (typeof o.god !== 'string' || !(o.god === 'monogram' || o.god in GODS))) errors.push(`"god" must be "monogram" or one of: ${Object.keys(GODS).join(', ')}`);
   if (o.god === 'zeus') errors.push('"zeus" is reserved for the master crest');
   if (o.monogram !== undefined && (typeof o.monogram !== 'string' || !/^[A-Za-z0-9]$/.test(o.monogram))) errors.push('"monogram" must be a single letter or digit');
-  if (o.logo !== undefined && (typeof o.logo !== 'string' || !o.logo.endsWith('.svg'))) errors.push('"logo" must be a path to an .svg file');
-  if (o.caption !== undefined && (typeof o.caption !== 'string' || !o.caption.trim() || o.caption.length > 48)) errors.push('"caption" must be text of at most 48 characters');
-  if (o.url !== undefined && (typeof o.url !== 'string' || !/^https?:\/\/[^\s]+$/.test(o.url) || o.url.length > 120)) errors.push('"url" must be an http(s) address of at most 120 characters');
+  if (o.logo !== undefined && (typeof o.logo !== 'string' || !/^logos\/[a-z0-9]+(?:-[a-z0-9]+)*\.svg$/.test(o.logo))) errors.push('"logo" must be a file in catalog/logos/, such as "logos/jellyfin.svg"');
+  if (o.caption !== undefined && !text(o.caption, 48)) errors.push('"caption" must be one line of at most 48 characters, without control characters');
+  // Addresses: the characters of a URL, but none that quote or substitute in a shell, a stylesheet or a page.
+  if (o.url !== undefined && (typeof o.url !== 'string' || !/^https?:\/\/[A-Za-z0-9._~:/?#@!&()*+,;=%-]+$/.test(o.url) || o.url.length > 120)) errors.push('"url" must be an http(s) address of at most 120 characters, without quotes, spaces, $, <, > or backslashes');
   if (o.app !== undefined && (typeof o.app !== 'string' || !ID.test(o.app))) errors.push('"app" must be an application id in kebab-case, such as "nextcloud"');
-  if (o.description !== undefined && typeof o.description !== 'string') errors.push('"description" must be text');
+  if (o.description !== undefined && !(o.description === '' || text(o.description, 120))) errors.push('"description" must be one line of at most 120 characters, without control characters');
   if (errors.length) throw new Error(`${where}:\n  - ${errors.join('\n  - ')}`);
   return o as unknown as ServiceSpec;
 }

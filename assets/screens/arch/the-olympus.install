@@ -1,0 +1,17 @@
+# The Olympus — pacman install hooks.
+
+post_install() {
+  echo "The Olympus is installed. To apply it to this machine:"
+  echo "  sudo the-olympus            (sudo the-olympus --list shows what it can take)"
+  echo "And to your own terminal:"
+  echo "  the-olympus-terminal"
+}
+
+post_upgrade() {
+  echo "The Olympus was updated. Run sudo the-olympus (and the-olympus-terminal) again to apply the new files."
+}
+
+pre_remove() {
+  # Undo what sudo the-olympus set (each user undoes their terminal with: the-olympus-terminal --restore).
+  sh /usr/share/the-olympus/screens/install.sh --restore >/dev/null 2>&1 || true
+}

@@ -1,0 +1,14 @@
+# The Olympus — WezTerm colour scheme.
+[colors]
+background = "#0e0e0e"
+foreground = "#c9c9c9"
+cursor_bg = "#ededed"
+cursor_fg = "#0e0e0e"
+cursor_border = "#ededed"
+selection_bg = "#3a3a3a"
+selection_fg = "#fafafa"
+ansi = ["#1c1c1c", "#8a8a8a", "#b4b4b4", "#d2d2d2", "#727272", "#9a9a9a", "#c2c2c2", "#dadada"]
+brights = ["#6a6a6a", "#a6a6a6", "#c8c8c8", "#e6e6e6", "#8e8e8e", "#b0b0b0", "#d6d6d6", "#fafafa"]
+
+[metadata]
+name = "The Olympus"

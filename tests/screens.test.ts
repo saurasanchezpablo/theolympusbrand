@@ -5,6 +5,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
+import { createHash } from 'node:crypto';
 import { chmodSync, existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -200,6 +201,8 @@ function standInUmbrella(sys: string): string {
   return readFileSync(join(KIT, 'install.sh'), 'utf8')
     .replaceAll('/etc/', `${sys}/etc/`)
     .replaceAll('/usr/share/', `${sys}/usr/share/`)
+    .replaceAll(' /boot/', ` ${sys}/boot/`)
+    .replaceAll(' /efi/', ` ${sys}/efi/`)
     .replaceAll('command -v plymouth-set-default-theme >/dev/null 2>&1', `[ -e ${sys}/has-plymouth ]`)
     .replace('[ "$(id -u)" = 0 ]', 'true');
 }
@@ -216,7 +219,7 @@ test('one command installs every screen part the machine can take, passes option
     // The kit as committed, but each part's own installer replaced by one that records how it was called.
     const umbrella = readFileSync(join(KIT, 'install.sh'), 'utf8');
     const manifest = [...umbrella.matchAll(/^(?:MANIFEST=')?(\w+) (\S+) ([0-9a-f]{64})'?$/gm)].map(([, part, path]) => ({ part, path }));
-    assert.deepEqual([...new Set(manifest.map((m) => m.part))], ['grub', 'plymouth', 'terminal', 'wallpapers']);
+    assert.deepEqual([...new Set(manifest.map((m) => m.part))], ['grub', 'limine', 'plymouth', 'terminal', 'wallpapers']);
     for (const { path } of manifest) {
       mkdirSync(join(kit, path, '..'), { recursive: true });
       writeFileSync(join(kit, path), path.endsWith('install.sh') ? `#!/bin/sh\necho "${path.split('/').slice(-2, -1)[0]} $*" >> ${log}\n` : readFileSync(join(KIT, path)));
@@ -233,7 +236,7 @@ test('one command installs every screen part the machine can take, passes option
     const out = run('--ascii');
     assert.deepEqual(calls(), ['grub ', 'terminal --ascii'], 'only the parts that fit; --ascii only to the terminal');
     assert.match(out, /Installed: grub terminal/);
-    assert.match(out, /Skipped: plymouth wallpapers/);
+    assert.match(out, /Skipped: limine plymouth wallpapers/);
 
     // Restore undoes only what is installed.
     rmSync(log);
@@ -274,11 +277,12 @@ test('the wallpapers are offered to GNOME and KDE Plasma, and removed again', ()
     const kit = join(dir, 'wallpapers');
     mkdirSync(kit, { recursive: true });
     for (const f of readdirSync(join(KIT, 'wallpapers'))) if (f.endsWith('.png')) writeFileSync(join(kit, f), `png ${f}`);
+    writeFileSync(join(kit, 'the-olympus-wallpapers.xml'), readFileSync(join(KIT, 'wallpapers/the-olympus-wallpapers.xml')));
     writeFileSync(join(kit, 'install.sh'), readFileSync(join(KIT, 'wallpapers/install.sh'), 'utf8').replaceAll('/usr/share/', `${sys}/usr/share/`).replace('[ "$(id -u)" = 0 ]', 'true'));
     execFileSync('sh', [join(kit, 'install.sh')]);
     const xml = readFileSync(`${sys}/usr/share/gnome-background-properties/the-olympus.xml`, 'utf8');
     assert.ok(XMLValidator.validate(xml) === true);
-    const named = [...xml.matchAll(/<filename>([^<]+)<\/filename>/g)].map((m) => m[1]);
+    const named = [...xml.matchAll(/<filename>([^<]+)<\/filename>/g)].map((m) => m[1].replace('/usr/share/', `${sys}/usr/share/`));
     assert.equal(named.length, Object.keys(WALLPAPER_STYLES).length);
     for (const f of named) assert.ok(existsSync(f), f);
     const plasma = readdirSync(`${sys}/usr/share/wallpapers`);
@@ -296,4 +300,89 @@ test('the wallpapers are offered to GNOME and KDE Plasma, and removed again', ()
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }
+});
+
+test('Limine: the theme in a marked block, the same options set aside and given back, entries untouched; refused when enrolled without the tool', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'olympus-limine-'));
+  try {
+    const boot = join(dir, 'boot');
+    const bin = join(dir, 'bin');
+    const kit = join(dir, 'kit');
+    for (const d of [boot, bin, kit]) mkdirSync(d);
+    const original = 'timeout: 5\nwallpaper: boot():/old.png\nterm_palette: 000000;aa0000\n\n/+CachyOS\n    comment: machine-id=abc\n//linux-cachyos\n    protocol: linux\n    kernel_path: boot():/vmlinuz-linux-cachyos\n    cmdline: quiet splash\n';
+    const conf = join(boot, 'limine.conf');
+    writeFileSync(conf, original);
+    writeFileSync(join(kit, 'wallpaper.png'), readFileSync(join(KIT, 'boot/limine/wallpaper.png')));
+    writeFileSync(join(bin, 'findmnt'), `#!/bin/sh\necho ${boot}\n`);
+    const limine = (v: string) => writeFileSync(join(bin, 'limine'), `#!/bin/sh\necho "Limine ${v}"\n`);
+    for (const f of ['findmnt']) chmodSync(join(bin, f), 0o755);
+    limine('12.9.4');
+    chmodSync(join(bin, 'limine'), 0o755);
+    const defaults = join(dir, 'defaults');
+    writeFileSync(join(kit, 'install.sh'), readFileSync(join(KIT, 'boot/limine/install.sh'), 'utf8').replace('[ "$(id -u)" = 0 ]', 'true').replace('DEFAULTS=/etc/default/limine', `DEFAULTS=${defaults}`));
+    const env = { ...process.env, PATH: `${bin}:${process.env.PATH}`, LIMINE_CONF: conf };
+    const run = (...a: string[]) => execFileSync('sh', [join(kit, 'install.sh'), ...a], { env, encoding: 'utf8' });
+
+    run();
+    run(); // twice: still one block
+    const themed = readFileSync(conf, 'utf8');
+    assert.equal(themed.split('# The Olympus — begin').length, 2);
+    assert.match(themed, /^wallpaper: boot\(\):\/the-olympus\.png#[0-9a-f]{128}$/m, 'the wallpaper beside limine.conf, with its BLAKE2 hash');
+    assert.match(themed, /^interface_branding_colour: fafafa$/m, 'Limine 12: RRGGBB');
+    assert.match(themed, /^#the-olympus# wallpaper: boot\(\):\/old\.png$/m, 'the old wallpaper set aside');
+    assert.match(themed, /^timeout: 5$/m, 'other options untouched');
+    assert.ok(themed.endsWith(original.slice(original.indexOf('\n/+CachyOS'))), 'the entries untouched');
+    for (const [, palette] of themed.matchAll(/^term_palette(?:_bright)?: (.+)$/gm)) for (const c of palette.split(';')) assert.ok(c.slice(0, 2) === c.slice(2, 4) && c.slice(2, 4) === c.slice(4, 6), c);
+    assert.ok(existsSync(join(boot, 'the-olympus.png')));
+
+    run('--restore');
+    assert.equal(readFileSync(conf, 'utf8'), original, 'exactly as it was');
+    assert.ok(!existsSync(join(boot, 'the-olympus.png')) && !existsSync(`${conf}.the-olympus.orig`));
+
+    // Before Limine 12, the menu's colours are palette indexes.
+    limine('11.4.0');
+    run();
+    assert.match(readFileSync(conf, 'utf8'), /^interface_branding_colour: 7$/m);
+    run('--restore');
+
+    // CachyOS with the configuration enrolled: without limine-enroll-config, nothing is changed.
+    writeFileSync(defaults, 'ENABLE_ENROLL_LIMINE_CONFIG=yes\n');
+    assert.throws(() => execFileSync('sh', [join(kit, 'install.sh')], { env, stdio: 'ignore' }));
+    assert.equal(readFileSync(conf, 'utf8'), original);
+    writeFileSync(join(bin, 'limine-enroll-config'), `#!/bin/sh\ntouch ${dir}/enrolled\n`);
+    chmodSync(join(bin, 'limine-enroll-config'), 0o755);
+    run();
+    assert.ok(existsSync(join(dir, 'enrolled')), 'enrolled again after the change');
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('Arch: the login text goes to /etc/motd.d where pam_motd reads it, and Plymouth asks for its mkinitcpio hook', () => {
+  const t = terminalInstall();
+  assert.match(t, /grep -qs pam_motd \/etc\/pam\.d\/system-login/);
+  assert.match(t, /install -D -m 644 "\$DIR\/motd-\$art\.txt" \/etc\/motd\.d\/the-olympus/);
+  assert.match(t, /\/etc\/motd\.d\/the-olympus/);
+  assert.match(plymouthInstall(), /mkinitcpio/);
+});
+
+test('the Arch package: makepkg would fetch every file of the kit, each pinned to the checksum of the file the site serves', () => {
+  const pkg = readFileSync(join(KIT, 'arch/PKGBUILD'), 'utf8');
+  // Read it the way makepkg does: as bash.
+  const out = execFileSync('bash', ['-c', 'set -eu; source "$1"; printf "%s\n" "${#source[@]}" "${#sha256sums[@]}"; printf "%s\n" "${source[@]}"', 'x', join(KIT, 'arch/PKGBUILD')], { env: { ...process.env, OLYMPUS_SITE: 'http://olympus.lan:8080/' }, encoding: 'utf8' }).trim().split('\n');
+  const [nSources, nSums, ...sources] = out;
+  assert.equal(nSources, nSums);
+  const sums = [...pkg.matchAll(/^  '([0-9a-f]{64})'$/gm)].map((m) => m[1]);
+  assert.equal(sums.length, Number(nSums));
+  const sha = (p: string) => createHash('sha256').update(readFileSync(p)).digest('hex');
+  sources.forEach((s, i) => {
+    const m = s.match(/^[^:]+::http:\/\/olympus\.lan:8080\/files\/assets\/screens\/(.+)$/);
+    const file = m ? join(KIT, decodeURIComponent(m[1])) : join(KIT, 'arch', s);
+    assert.ok(existsSync(file), s);
+    assert.equal(sha(file), sums[i], `${s}: the pinned checksum is the served file's`);
+  });
+  assert.ok(sources.some((s) => s.includes('boot/limine/install.sh')) && sources.some((s) => s.includes('shell/omarchy/the-olympus/colors.toml')));
+  // Removing the package undoes what the machine was given.
+  assert.match(readFileSync(join(KIT, 'arch/the-olympus.install'), 'utf8'), /pre_remove\(\) \{[\s\S]*install\.sh --restore/);
+  assert.throws(() => execFileSync('bash', ['-c', 'source "$1"', 'x', join(KIT, 'arch/PKGBUILD')], { env: { ...process.env, OLYMPUS_SITE: '' }, stdio: 'ignore' }), 'it asks for the site');
 });

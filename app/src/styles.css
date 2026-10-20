@@ -63,6 +63,11 @@ body {
     outline: 2px solid var(--charcoal);
     outline-offset: 2px;
   }
+
+  /* No browser blue: a link takes the colour of the text around it. */
+  a {
+    color: inherit;
+  }
 }
 
 .mono {
@@ -1698,6 +1703,18 @@ p.notes {
   font-weight: 500;
 }
 
+/* The documents of a chapter's folder (the integrations' guides), set in under it. */
+.guide__nav .guide__sections {
+  margin: 2px 0 6px 12px;
+  padding-left: 8px;
+  border-left: 1px solid var(--line);
+}
+
+.guide__sections a {
+  padding: 5px 10px;
+  font-size: 13px;
+}
+
 .doc {
   max-width: 780px;
   font-size: 15px;
@@ -1840,6 +1857,38 @@ p.notes {
   font-size: 13.5px;
   line-height: 1.55;
   color: var(--graphite);
+}
+
+.dl__install a {
+  color: var(--charcoal);
+  text-underline-offset: 3px;
+}
+
+.dl__warn {
+  padding: 8px 12px;
+  border-left: 2px solid var(--charcoal);
+  background: var(--white);
+  color: var(--charcoal);
+}
+
+.dl__verify {
+  margin-top: 8px;
+  font-size: 13px;
+  color: var(--graphite);
+}
+
+.dl__verify summary {
+  cursor: pointer;
+  width: max-content;
+  max-width: 100%;
+}
+
+.dl__verify code {
+  overflow-wrap: anywhere;
+}
+
+.dl__install p.dl__install-next {
+  margin-top: 14px;
 }
 
 .dl__command {

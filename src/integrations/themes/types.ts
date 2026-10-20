@@ -5,6 +5,7 @@ import type { Category } from '../../geometry/pantheon.ts';
 import type { Entry } from '../dashboards.ts';
 import type { KitMarks } from '../marks.ts';
 import type { ScreenTone } from '../../render/wallpaper.ts';
+import type { Guide } from './shared.ts';
 
 /** What a kit is made from: the service it themes (or the master), and the means to draw. */
 export type ThemeContext = {
@@ -29,4 +30,6 @@ export type ThemeKit = {
   how: string;
   /** The kit's files, relative to its folder. */
   files: (ctx: ThemeContext) => Promise<[path: string, data: string | Uint8Array][]>;
+  /** Its step-by-step guide: the folder's README, and a chapter of the site's guide. */
+  guide: (ctx: ThemeContext) => Guide;
 };

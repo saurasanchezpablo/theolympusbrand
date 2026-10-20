@@ -1,0 +1,4 @@
+#!/bin/sh
+# The Olympus — your own terminal: prompt, fastfetch, tmux, colours, Omarchy.
+# Run as yourself:  the-olympus-terminal   (--list, --restore, or parts by name)
+exec sh /usr/share/the-olympus/screens/shell/install.sh "$@"

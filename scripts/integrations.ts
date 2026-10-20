@@ -10,7 +10,7 @@
 // runs the application — see `npm run service -- apps`. --icons-url makes the dashboards load the icons from a URL instead of
 // their own icon folders (written to --out only, never to the repository).
 
-import { mkdirSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdirSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { Resvg } from '@resvg/resvg-js';
 import { loadNodeFonts } from '../src/node/fonts.ts';
@@ -73,3 +73,18 @@ for (const f of files) {
   bytes += typeof f.data === 'string' ? Buffer.byteLength(f.data) : f.data.length;
 }
 console.log(`✔ ${files.length} files, ${(bytes / 1e6).toFixed(1)} MB → ${out}`);
+
+// Each application's guide is also a chapter of the site's guide (docs/integrations/), rebuilt with the kit.
+if (out === defaultOut) {
+  const docs = join(ROOT, 'docs', 'integrations');
+  mkdirSync(docs, { recursive: true });
+  for (const f of readdirSync(docs)) if (f.endsWith('.md')) rmSync(join(docs, f));
+  let guides = 0;
+  for (const f of files) {
+    const m = f.path.match(/^themes\/([^/]+)\/README\.md$/);
+    if (!m) continue;
+    writeFileSync(join(docs, `${m[1]}.md`), f.data);
+    guides++;
+  }
+  console.log(`✔ ${guides} guides → ${docs}`);
+}

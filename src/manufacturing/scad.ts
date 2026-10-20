@@ -6,6 +6,7 @@
 // this file is their source, not their proof.
 
 import { PRODUCTS, KEYHOLE_SPEC, RACK_SPEC, type Model } from './products.ts';
+import { commentText } from '../catalog/text.ts';
 
 const snake = (k: string) => k.replace(/[A-Z]/g, (c) => `_${c.toLowerCase()}`);
 const n = (v: number) => (Number.isInteger(v) ? String(v) : v.toFixed(3).replace(/0+$/, ''));
@@ -23,7 +24,7 @@ export function scadSource(model: Model, title: string, files: { mark?: string; 
     return `${line}${' '.repeat(Math.max(1, 26 - line.length))}// ${range}${s.label}${s.unit && s.unit !== '%' ? ` (${s.unit})` : s.unit === '%' ? ' (%)' : ''}`;
   });
   const reads = [files.mark, files.art, files.heightmap?.file, ...(files.tiers ?? []).map((t) => t.file)].filter(Boolean);
-  const head = `// ${title}
+  const head = `// ${commentText(title)}
 // ${spec.name} — ${spec.summary}
 //
 // Parametric source for OpenSCAD 2021.01 or later. Change the values below

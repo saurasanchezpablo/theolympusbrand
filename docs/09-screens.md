@@ -46,6 +46,19 @@ installed, and the options it accepts. The umbrella script is written from
 that list, so a new part — generated into its folder by `screensKit`, with an
 `install.sh` that also takes `--restore` — is one entry there.
 
+## Your terminal
+
+Per user, without sudo: a prompt for bash and fish, fastfetch with the seal, a
+tmux status bar, and the house's sixteen greys for GNOME Terminal, Ptyxis,
+kitty, Alacritty and WezTerm — with schemes for Windows Terminal, iTerm2 and
+macOS Terminal. It is in `shell/`, with its own one-command installer:
+
+```sh
+curl -fsSL http://<site>/files/assets/screens/shell/install.sh | OLYMPUS_FROM=http://<site>/files/assets/screens/shell/ sh
+```
+
+The whole guide: [Your terminal](screens/terminal.md).
+
 ## Wallpapers
 
 | Style | Look |
@@ -89,6 +102,34 @@ sets the resolution to 1920 × 1080 when none is set, and on Proxmox VE also
 refreshes the boot partitions. A Proxmox VE node on ZFS with UEFI boots with
 systemd-boot, which has no background: there the script changes nothing.
 
+### Limine — `boot/limine/`
+
+The boot menu of CachyOS and Omarchy (and of any machine that boots with
+Limine): the same picture as GRUB's — the crest faint on black marble — the
+house's name as the menu's title, and the house's greys for the menu and its
+terminal.
+
+```sh
+sudo sh install.sh            # sets the theme in limine.conf
+sudo sh install.sh --restore  # takes it out again
+```
+
+The script finds `limine.conf` (or takes `LIMINE_CONF=…`) and puts the
+options in a marked block at its top. If the file already sets one of them —
+a wallpaper, a palette — that line is set aside as a comment and given back on
+`--restore`; the kernel entries are never touched, so CachyOS's
+`limine-entry-tool` and Omarchy's snapshot entries carry on as before. The
+wallpaper is copied beside `limine.conf`, with its BLAKE2 hash, so it still
+loads when Secure Boot checks every file. Limine 12 and later take the menu's
+colours as RRGGBB; earlier releases get palette indexes.
+
+- **CachyOS with an enrolled configuration** (`ENABLE_ENROLL_LIMINE_CONFIG=yes`
+  in `/etc/default/limine`): an edited `limine.conf` would not boot until it is
+  enrolled again, so the script runs `limine-enroll-config` after each change —
+  and refuses to change anything if that tool is missing.
+- **Omarchy**: `omarchy-refresh-limine` replaces `limine.conf` with Omarchy's
+  own; run this part again after it.
+
 ### Plymouth — `boot/plymouth/`
 
 A boot splash theme for machines that show one (desktops, laptops — servers
@@ -101,8 +142,34 @@ sudo sh install.sh            # installs it, makes it the default, rebuilds the 
 sudo sh install.sh --restore  # back to the previous theme
 ```
 
-Plymouth must be installed (`apt install plymouth`) and the kernel command
-line must include `quiet splash`.
+Plymouth must be installed (`apt install plymouth`, `pacman -S plymouth`) and
+the kernel command line must include `quiet splash`. On Arch, CachyOS and
+Omarchy the initramfs needs Plymouth's hook: the script says so if `plymouth`
+is missing from `HOOKS` in `/etc/mkinitcpio.conf`. The theme then replaces
+CachyOS's or Omarchy's own splash; `--restore` gives it back.
+
+## Arch, CachyOS and Omarchy
+
+The same kit works there — the *terminal* part writes the crest to
+`/etc/motd.d/the-olympus` (Arch's login reads that folder; it has no
+`update-motd.d`), *grub*, *limine* and *plymouth* as above — and it is also a
+pacman package, so the system owns its files and removing the package undoes
+it:
+
+```sh
+mkdir the-olympus && cd the-olympus
+curl -fsSLO http://<site>/files/assets/screens/arch/{PKGBUILD,the-olympus,the-olympus-terminal,the-olympus.install}
+OLYMPUS_SITE=http://<site> makepkg -si
+sudo the-olympus            # every part this machine can take (--list, --restore)
+the-olympus-terminal        # your own terminal, as yourself
+```
+
+`makepkg` fetches every file of the kit from the site and checks each against
+the SHA-256 written in the `PKGBUILD`. Its version is the time it was built,
+so building again after a change on the site is an upgrade. `pacman -R
+the-olympus-screens` first undoes what `the-olympus` set (each user undoes
+their terminal with `the-olympus-terminal --restore`). A service's set has its
+own package, `the-olympus-<id>-screens`, in place of the master's.
 
 ## The terminal — `terminal/`
 
@@ -147,6 +214,14 @@ with `sshd -t` before reloading, and takes the drop-in back out if sshd
 rejects it, so a mistake never locks you out.
 
 ## How they are checked
+
+The Limine script is run against a stand-in `limine.conf` with entries and
+options of its own: the block is written once however often it runs, the
+options it replaces are set aside and given back, the entries are untouched,
+`--restore` leaves the file exactly as it was, Limine 11 gets palette indexes,
+and an enrolled configuration without `limine-enroll-config` is left alone.
+The `PKGBUILD` is read by bash, as makepkg reads it, and every file it names is
+checked against the checksum it pins.
 
 The test suite reads every committed wallpaper's size and colour type, and
 checks that GRUB's background is RGBA. It runs each install script against a

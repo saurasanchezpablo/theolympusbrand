@@ -1,0 +1,4 @@
+#!/bin/sh
+# The Olympus — boot screens, the crest at login, wallpapers: every part this
+# machine can take. Run as root:  sudo the-olympus   (--list, --restore, or parts by name)
+exec sh /usr/share/the-olympus/screens/install.sh "$@"

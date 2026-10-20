@@ -15,10 +15,11 @@ import { grafana } from './grafana.ts';
 import { uptimeKuma } from './uptime-kuma.ts';
 import { homeAssistant } from './home-assistant.ts';
 import { vaultwarden } from './vaultwarden.ts';
+import { navidrome } from './navidrome.ts';
 
 export type { ThemeContext, ThemeKit } from './types.ts';
 
-export const THEME_KITS: readonly ThemeKit[] = [nextcloud, jellyfin, proxmox, grafana, uptimeKuma, homeAssistant, vaultwarden];
+export const THEME_KITS: readonly ThemeKit[] = [nextcloud, jellyfin, proxmox, grafana, uptimeKuma, homeAssistant, vaultwarden, navidrome];
 
 export const themeKit = (id: string): ThemeKit | undefined => THEME_KITS.find((k) => k.id === id);
 

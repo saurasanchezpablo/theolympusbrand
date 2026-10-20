@@ -28,13 +28,14 @@ Each service's seal struck as a coin: `olympus-<id>.png` (dark, 256 px),
 
 | Application | How | Made from |
 |---|---|---|
-| Nextcloud | `apply.sh` sets the Theming app with `occ` | Nextcloud’s seal |
+| Nextcloud | `apply.sh` sets the Theming app with `occ`, and the dark themes’ accent through the Custom CSS app (`--with-css`) | Nextcloud’s seal |
 | Jellyfin | `custom.css`, `login-disclaimer.html`, `splashscreen.png` — Dashboard → Branding | Jellyfin’s seal |
-| Proxmox VE | `apply.sh` installs the header logo and favicon (`--restore` undoes) | Proxmox’s seal |
+| Proxmox VE | `apply.sh` turns the web interface grey, installs the logo and favicon, and keeps them after updates (`--restore` undoes) | Proxmox’s seal |
 | Grafana | `docker-compose.override.yml` mounts the logo, favicon and icon | Monitoring’s seal |
 | Uptime Kuma | `status-page.css` and `logo.png` — status page settings | Monitoring’s seal |
 | Home Assistant | `apply.sh` installs the theme (light and dark) and the images; `picture-card.yaml` puts the seal on a dashboard | Home Assistant’s seal |
 | Vaultwarden | `apply.sh` installs `user.vaultwarden.scss.hbs` in the data folder: greys for the web vault, the house’s logo | the master’s seal |
+| Navidrome | compose override or `navidrome.toml` lines: the neutral theme, marble behind the sign-in, a welcome line; optionally greys through a reverse proxy | the master’s seal |
 
 Each is written for a current release of the application (named in the
 file) and only uses what it offers for customisation. They have not been run

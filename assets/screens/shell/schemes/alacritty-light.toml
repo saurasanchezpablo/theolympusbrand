@@ -1,0 +1,33 @@
+# The Olympus Light — Alacritty colours.
+[colors.primary]
+background = "#fafafa"
+foreground = "#1c1c1c"
+bright_foreground = "#0e0e0e"
+
+[colors.cursor]
+cursor = "#1c1c1c"
+text = "#fafafa"
+
+[colors.selection]
+background = "#c9c9c9"
+text = "#0e0e0e"
+
+[colors.normal]
+black = "#1c1c1c"
+red = "#5a5a5a"
+green = "#4a4a4a"
+yellow = "#6e6e6e"
+blue = "#3e3e3e"
+magenta = "#5e5e5e"
+cyan = "#525252"
+white = "#8e8e8e"
+
+[colors.bright]
+black = "#4e4e4e"
+red = "#444444"
+green = "#343434"
+yellow = "#5e5e5e"
+blue = "#2e2e2e"
+magenta = "#3a3a3a"
+cyan = "#2a2a2a"
+white = "#0e0e0e"

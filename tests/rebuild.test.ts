@@ -12,23 +12,23 @@ test('nothing changed: nothing to do', () => {
 });
 
 test('a first start installs and builds everything', () => {
-  assert.deepEqual(kinds(null, base), ['install', 'build-all', 'site']);
+  assert.deepEqual(kinds(null, base), ['install', 'build-all', 'screens:jellyfin,nextcloud', 'site']);
 });
 
 test('code or dependencies changed: everything is rebuilt', () => {
-  assert.deepEqual(kinds(base, { ...base, code: 'c2' }), ['build-all', 'site']);
-  assert.deepEqual(kinds(base, { ...base, deps: 'd2', code: 'c2' }), ['install', 'build-all', 'site']);
+  assert.deepEqual(kinds(base, { ...base, code: 'c2' }), ['build-all', 'screens:jellyfin,nextcloud', 'site']);
+  assert.deepEqual(kinds(base, { ...base, deps: 'd2', code: 'c2' }), ['install', 'build-all', 'screens:jellyfin,nextcloud', 'site']);
 });
 
-test('a service added or changed: only it, then what lists every service, then the site', () => {
-  assert.deepEqual(kinds(base, { ...base, services: { ...base.services, vault: 'v1' } }), ['build-services:vault', 'integrations', 'site']);
-  assert.deepEqual(kinds(base, { ...base, services: { ...base.services, jellyfin: 'j2' } }), ['build-services:jellyfin', 'integrations', 'site']);
+test('a service added, changed or renamed: only it — its files and its screens — then what lists every service, then the site', () => {
+  assert.deepEqual(kinds(base, { ...base, services: { ...base.services, vault: 'v1' } }), ['build-services:vault', 'integrations', 'screens:vault', 'site']);
+  assert.deepEqual(kinds(base, { ...base, services: { ...base.services, jellyfin: 'j2' } }), ['build-services:jellyfin', 'integrations', 'screens:jellyfin', 'site']);
 });
 
 test('a service removed: its files go, the lists are rebuilt without it', () => {
   assert.deepEqual(kinds(base, { ...base, services: { nextcloud: 'n1' } }), ['remove-services:jellyfin', 'index', 'integrations', 'site']);
   // Removed and another changed at once: the build of the changed one rebuilds the index too.
-  assert.deepEqual(kinds(base, { ...base, services: { nextcloud: 'n2' } }), ['remove-services:jellyfin', 'build-services:nextcloud', 'integrations', 'site']);
+  assert.deepEqual(kinds(base, { ...base, services: { nextcloud: 'n2' } }), ['remove-services:jellyfin', 'build-services:nextcloud', 'integrations', 'screens:nextcloud', 'site']);
 });
 
 test('only the published content changed (a pulled commit): just the site', () => {
@@ -39,8 +39,11 @@ test('only the published content changed (a pulled commit): just the site', () =
 test('the commands: service builds never fail on a print warning; the site goes to the release folder', () => {
   assert.deepEqual(command({ kind: 'build-services', ids: ['vault'] }, '/x'), ['node', 'scripts/service.ts', 'build', 'vault', '--warn-only']);
   assert.deepEqual(command({ kind: 'site' }, '/site/releases/r1').slice(-3), ['--outDir', '/site/releases/r1', '--emptyOutDir']);
-  // Removal names only ids, quoted as JSON inside the script.
-  assert.match(command({ kind: 'remove-services', ids: ['a-b'] }, '/x')[2], /\["a-b"\]/);
+  // Removal names only ids, quoted as JSON inside the script, and takes the service's screens too.
+  assert.match(command({ kind: 'remove-services', ids: ['a-b'] }, '/x')[2], /\["a-b"\][\s\S]*assets\/screens\/services\//);
+  assert.deepEqual(command({ kind: 'screens', ids: ['a', 'b'] }, '/x'), ['node', 'scripts/screens.ts', 'a', 'b']);
+  // Dependencies are installed without running any package's install script.
+  assert.ok(command({ kind: 'install' }, '/x').includes('--ignore-scripts'));
 });
 
 test('the automatic deployment: two containers sharing the releases, the web server serving the current one', async () => {

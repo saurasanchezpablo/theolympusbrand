@@ -19,6 +19,7 @@ import { pathRings, roundedRect } from './products.ts';
 import { marble } from './lithophane.ts';
 import { pdf, type PdfItem } from '../export/pdf.ts';
 import { png, base64 } from '../export/png.ts';
+import { mdText, xmlText } from '../catalog/text.ts';
 
 export type StickerArt = 'crest' | 'emblem' | 'seal' | 'lockup-horizontal' | 'lockup-vertical' | 'qr-label';
 export type StickerStyle = 'white' | 'dark' | 'clear-dark' | 'clear-light' | 'marble-light' | 'marble-dark';
@@ -246,7 +247,7 @@ export function stickerSvg(st: Sticker, title: string, { preview = false, bare =
     const g = marbleGround(style.ground, st.width, st.height, preview ? 150 : 300);
     ground = `<clipPath id="bleed-clip"><path d="${svgPath([st.bleed], st.height)}"/></clipPath><image clip-path="url(#bleed-clip)" x="0" y="0" width="${W}" height="${H}" preserveAspectRatio="none" href="data:image/png;base64,${base64(png(g.gray, g.px[0], g.px[1], 1))}"/>`;
   }
-  let out = `<svg xmlns="http://www.w3.org/2000/svg" xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape" viewBox="0 0 ${W} ${H}" width="${W}mm" height="${H}mm">\n  <title>${title}</title>\n`;
+  let out = `<svg xmlns="http://www.w3.org/2000/svg" xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape" viewBox="0 0 ${W} ${H}" width="${W}mm" height="${H}mm">\n  <title>${xmlText(title)}</title>\n`;
   if (preview) {
     // The substrate: white vinyl; clear vinyl on the surface it is meant for (dark for light ink, light for dark ink).
     // `bare`: no surface and no cut line — the sticker as applied, for mockups.
@@ -270,7 +271,7 @@ export function stickerSvg(st: Sticker, title: string, { preview = false, bare =
 
 /** Only the cut path — some providers ask for it as a separate file. */
 export function cutlineSvg(st: Sticker, title: string): string {
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${st.width.toFixed(3)} ${st.height.toFixed(3)}" width="${st.width.toFixed(3)}mm" height="${st.height.toFixed(3)}mm">\n  <title>${title} — cut path</title>\n  <path id="CutContour" d="${svgPath([st.cut], st.height)}" fill="none" stroke="#000000" stroke-width="0.088"/>\n</svg>\n`;
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${st.width.toFixed(3)} ${st.height.toFixed(3)}" width="${st.width.toFixed(3)}mm" height="${st.height.toFixed(3)}mm">\n  <title>${xmlText(title)} — cut path</title>\n  <path id="CutContour" d="${svgPath([st.cut], st.height)}" fill="none" stroke="#000000" stroke-width="0.088"/>\n</svg>\n`;
 }
 
 /** The sticker's PDF items, placed at (x, y) mm. */
@@ -364,7 +365,7 @@ export function sheetPreviewSvg(layout: SheetLayout, page = 0): string {
 /** The sticker's sheet: sizes, substrate, files and notes. */
 export function stickerReadme(st: Sticker, base: string, label: string, perSheet: number, paper: Paper): string {
   const style = STICKER_STYLES[st.spec.style];
-  return `# ${label}
+  return `# ${mdText(label)}
 
 ![Preview](${base}-preview.png)
 

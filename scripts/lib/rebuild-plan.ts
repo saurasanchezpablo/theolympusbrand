@@ -19,6 +19,7 @@ export type Step =
   | { kind: 'install' }
   | { kind: 'build-all' }
   | { kind: 'build-services'; ids: string[] }
+  | { kind: 'screens'; ids: string[] }
   | { kind: 'remove-services'; ids: string[] }
   | { kind: 'index' }
   | { kind: 'integrations' }
@@ -41,7 +42,10 @@ export function plan(before: Snapshot | null, now: Snapshot): Plan {
   }
   if (!before || before.code !== now.code) {
     if (before) why.push('the code changed');
-    steps.push({ kind: 'build-all' }, { kind: 'site' });
+    // Every service's screens carry its name and seal too: all of them, after the rest.
+    steps.push({ kind: 'build-all' });
+    if (Object.keys(now.services).length) steps.push({ kind: 'screens', ids: Object.keys(now.services).sort() });
+    steps.push({ kind: 'site' });
     return { steps, why };
   }
   const changed = Object.keys(now.services).filter((id) => before.services[id] !== now.services[id]).sort();
@@ -55,6 +59,8 @@ export function plan(before: Snapshot | null, now: Snapshot): Plan {
     why.push(`${changed.filter((id) => !(id in before.services)).length ? 'added or changed' : 'changed'}: ${changed.join(', ')}`);
   } else if (removed.length) steps.push({ kind: 'index' });
   if (changed.length || removed.length) steps.push({ kind: 'integrations' });
+  // A renamed or redrawn service: its boot screens, wallpapers and terminal kit carry the name and seal.
+  if (changed.length) steps.push({ kind: 'screens', ids: changed });
   if (before.content !== now.content) why.push('the published content changed');
   if (steps.length || before.content !== now.content) steps.push({ kind: 'site' });
   return { steps, why };
@@ -64,13 +70,16 @@ export function plan(before: Snapshot | null, now: Snapshot): Plan {
 export function command(step: Step, out: string): string[] {
   switch (step.kind) {
     case 'install':
-      return ['npm', 'ci', '--no-audit', '--no-fund'];
+      // No package's install script runs: none of the house's dependencies needs one (only fsevents, on macOS, has any).
+      return ['npm', 'ci', '--ignore-scripts', '--no-audit', '--no-fund'];
     case 'build-all':
       return ['npm', 'run', 'build'];
     case 'build-services':
       return ['node', 'scripts/service.ts', 'build', ...step.ids, '--warn-only'];
     case 'remove-services':
-      return ['node', '-e', `for (const id of ${JSON.stringify(step.ids)}) require('node:fs').rmSync('assets/services/' + id, { recursive: true, force: true })`];
+      return ['node', '-e', `for (const id of ${JSON.stringify(step.ids)}) for (const d of ['assets/services/', 'assets/screens/services/']) require('node:fs').rmSync(d + id, { recursive: true, force: true })`];
+    case 'screens':
+      return ['node', 'scripts/screens.ts', ...step.ids];
     case 'index':
       return ['node', 'scripts/service.ts', 'index'];
     case 'integrations':

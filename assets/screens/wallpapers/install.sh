@@ -22,44 +22,7 @@ fi
 mkdir -p "$DEST"
 for f in "$DIR"/*.png; do install -m 644 "$f" "$DEST/"; done
 mkdir -p "$(dirname "$GNOME")"
-cat > "$GNOME" <<'XML'
-<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE wallpapers SYSTEM "gnome-wp-list.dtd">
-<wallpapers>
-  <wallpaper deleted="false">
-    <name>The Olympus — Black marble</name>
-    <filename>/usr/share/backgrounds/the-olympus/the-olympus-master-wallpaper-marble-4k.png</filename>
-    <options>zoom</options>
-    <shade_type>solid</shade_type>
-    <pcolor>#0E0E0E</pcolor>
-    <scolor>#0E0E0E</scolor>
-  </wallpaper>
-  <wallpaper deleted="false">
-    <name>The Olympus — White marble</name>
-    <filename>/usr/share/backgrounds/the-olympus/the-olympus-master-wallpaper-marble-light-4k.png</filename>
-    <options>zoom</options>
-    <shade_type>solid</shade_type>
-    <pcolor>#0E0E0E</pcolor>
-    <scolor>#0E0E0E</scolor>
-  </wallpaper>
-  <wallpaper deleted="false">
-    <name>The Olympus — Graphite</name>
-    <filename>/usr/share/backgrounds/the-olympus/the-olympus-master-wallpaper-graphite-4k.png</filename>
-    <options>zoom</options>
-    <shade_type>solid</shade_type>
-    <pcolor>#0E0E0E</pcolor>
-    <scolor>#0E0E0E</scolor>
-  </wallpaper>
-  <wallpaper deleted="false">
-    <name>The Olympus — Blueprint</name>
-    <filename>/usr/share/backgrounds/the-olympus/the-olympus-master-wallpaper-blueprint-4k.png</filename>
-    <options>zoom</options>
-    <shade_type>solid</shade_type>
-    <pcolor>#0E0E0E</pcolor>
-    <scolor>#0E0E0E</scolor>
-  </wallpaper>
-</wallpapers>
-XML
+install -m 644 "$DIR/the-olympus-wallpapers.xml" "$GNOME"
 mkdir -p "$KDE/TheOlympus-Marble"/contents/images
 ln -sf "$DEST/the-olympus-master-wallpaper-marble-1080p.png" "$KDE/TheOlympus-Marble"/contents/images/1920x1080.png
 ln -sf "$DEST/the-olympus-master-wallpaper-marble-1440p.png" "$KDE/TheOlympus-Marble"/contents/images/2560x1440.png

@@ -10,6 +10,40 @@ import type { ThemeKit } from './types.ts';
 const P = PALETTE;
 export const LOGIN_BACKGROUND = { width: 2560, height: 1440 } as const;
 
+/**
+ * The stylesheet for the Custom CSS app: Nextcloud already takes the house's
+ * charcoal as its primary colour, but in its dark themes charcoal sinks into
+ * the ground — there the accent becomes marble. Status and favourite colours
+ * keep their meaning.
+ */
+export function nextcloudCss(): string {
+  const dark = `  --color-primary: ${P.marble};
+  --color-primary-hover: ${P.paper};
+  --color-primary-text: ${P.obsidian};
+  --color-primary-light: ${P.graphite};
+  --color-primary-light-hover: #4A4A4A;
+  --color-primary-light-text: ${P.marble};
+  --color-primary-element: ${P.marble};
+  --color-primary-element-hover: ${P.paper};
+  --color-primary-element-text: ${P.obsidian};
+  --color-primary-element-light: ${P.graphite};
+  --color-primary-element-light-hover: #4A4A4A;
+  --color-primary-element-light-text: ${P.marble};`;
+  return `/* The Olympus — Nextcloud (Custom CSS app). In the dark themes the accent
+   is marble rather than charcoal, so it stays visible on dark grounds. */
+body[data-theme-dark],
+body[data-theme-dark-highcontrast] {
+${dark}
+}
+
+@media (prefers-color-scheme: dark) {
+  body[data-theme-default] {
+${dark.replace(/^/gm, '  ')}
+  }
+}
+`;
+}
+
 export function nextcloudScript({ name, url }: { name: string; url: string }): string {
   return `#!/bin/sh
 # The Olympus — Nextcloud theming (the Theming app; Nextcloud 28 or later).
@@ -17,20 +51,41 @@ export function nextcloudScript({ name, url }: { name: string; url: string }): s
 #   Docker:     NEXTCLOUD_CONTAINER=nextcloud sh apply.sh
 #   Bare metal: OCC="sudo -u www-data php /var/www/nextcloud/occ" sh apply.sh
 #
-# Undo any time in Administration settings → Theming (each value has a reset).
+#   --with-css  also install and enable the Custom CSS app, for the dark themes' accent
+#   --restore   Nextcloud's own name, colours, images and stylesheet back
 set -eu
 DIR=$(cd "$(dirname "$0")" && pwd)
 FILES="logo.svg logoheader.svg favicon.png background.png"
+with_css=0
+restore=0
+for a in "$@"; do
+  case "$a" in
+    --with-css) with_css=1 ;;
+    --restore) restore=1 ;;
+    *) echo "unknown option: $a" >&2; exit 2 ;;
+  esac
+done
 
 if [ -n "\${NEXTCLOUD_CONTAINER:-}" ]; then
-  SRC=/tmp/the-olympus-theme
-  docker exec "$NEXTCLOUD_CONTAINER" mkdir -p "$SRC"
-  for f in $FILES; do docker cp "$DIR/$f" "$NEXTCLOUD_CONTAINER:$SRC/$f"; done
-  docker exec "$NEXTCLOUD_CONTAINER" chmod -R a+rX "$SRC"
+  SRC=
   occ() { docker exec -u www-data "$NEXTCLOUD_CONTAINER" php occ "$@"; }
 else
   SRC=$DIR
   occ() { \${OCC:-php occ} "$@"; }
+fi
+
+if [ "$restore" = 1 ]; then
+  for k in name url slogan primary_color color background_color logo logoheader favicon background; do occ theming:config "$k" --reset >/dev/null 2>&1 || true; done
+  occ config:app:delete theming_customcss customcss >/dev/null 2>&1 || true
+  echo "Nextcloud's own look is back. Reload Nextcloud (Ctrl+Shift+R)."
+  exit 0
+fi
+
+if [ -n "\${NEXTCLOUD_CONTAINER:-}" ]; then
+  # A fresh folder of its own in the container, not a name another process could have prepared.
+  SRC=$(docker exec "$NEXTCLOUD_CONTAINER" mktemp -d)
+  for f in $FILES; do docker cp "$DIR/$f" "$NEXTCLOUD_CONTAINER:$SRC/$f"; done
+  docker exec "$NEXTCLOUD_CONTAINER" chmod -R a+rX "$SRC"
 fi
 
 occ theming:config name ${sq(name)}
@@ -44,8 +99,18 @@ occ theming:config logoheader "$SRC/logoheader.svg"
 occ theming:config favicon "$SRC/favicon.png"
 occ theming:config background "$SRC/background.png"
 
-if [ -n "\${NEXTCLOUD_CONTAINER:-}" ]; then docker exec "$NEXTCLOUD_CONTAINER" rm -rf "$SRC"; fi
-echo "The Olympus theme applied. Reload Nextcloud (Ctrl+Shift+R)."
+if [ -n "\${NEXTCLOUD_CONTAINER:-}" ] && [ -n "$SRC" ]; then docker exec "$NEXTCLOUD_CONTAINER" rm -rf "$SRC"; fi
+
+# The dark themes' accent, through the Custom CSS app.
+if [ "$with_css" = 1 ]; then occ app:install theming_customcss >/dev/null 2>&1 || occ app:enable theming_customcss; fi
+if [ "$(occ config:app:get theming_customcss enabled 2>/dev/null || true)" = yes ]; then
+  occ config:app:set theming_customcss customcss --value="$(cat "$DIR/custom.css")"
+  occ config:app:set theming_customcss cachebuster --value="$(date +%s)"
+  echo "The Olympus theme and stylesheet applied. Reload Nextcloud (Ctrl+Shift+R)."
+else
+  echo "The Olympus theme applied. Reload Nextcloud (Ctrl+Shift+R)."
+  echo "For the dark themes' accent too, run again with --with-css (it installs the Custom CSS app)."
+fi
 `;
 }
 
@@ -53,9 +118,40 @@ export const nextcloud: ThemeKit = {
   id: 'nextcloud',
   label: 'Nextcloud',
   match: { ids: ['nextcloud'], category: 'cloud' },
-  how: '`apply.sh` sets the Theming app with `occ`',
+  how: '`apply.sh` sets the Theming app with `occ`, and the dark themes’ accent through the Custom CSS app (`--with-css`)',
+  guide: (t) => ({
+    title: 'Nextcloud',
+    intro: `Nextcloud's Theming app takes a name, colours and images; the kit's script sets them all with \`occ\`, and adds a small stylesheet so that the accent stays visible in the dark themes. Every user sees the house's look, whatever theme they pick.`,
+    changes: [
+      'The name (*The Olympus*), the address, and the slogan (*theolympus.cloud*) on the sign-in page.',
+      'The primary colour: charcoal; the background colour: obsidian.',
+      'The sign-in logo (the emblem), the header logo (the seal) and the favicon.',
+      'The sign-in background: black marble.',
+      'With the Custom CSS app: in the dark themes, the accent in marble instead of charcoal.',
+    ],
+    limits: ['Error, warning, success and the favourite star keep their colours.', 'The desktop and phone apps draw their own interface.', 'Users can still choose their own background and colour unless you turn that off (*Administration → Theming → Disable user theming*).'],
+    requires: ['Nextcloud 28 or later (older releases get the colour through its older setting).', 'A shell on the server: `docker exec` into the container, or `occ` as the web server’s user.', 'For `--with-css`: the server can reach the App Store, or the *Custom CSS* app is already installed.'],
+    steps: [
+      { text: 'Copy this folder to the server.' },
+      { text: 'Run the script — with Docker naming the container, otherwise telling it how to call `occ`. Add `--with-css` for the dark themes’ accent.', code: 'NEXTCLOUD_CONTAINER=nextcloud sh apply.sh --with-css\n# or\nOCC="sudo -u www-data php /var/www/nextcloud/occ" sh apply.sh --with-css' },
+      { text: 'Reload Nextcloud (Ctrl+Shift+R).' },
+    ],
+    check: ['Signed out, the sign-in page shows the emblem on black marble and *theolympus.cloud*.', 'Signed in, the header shows the seal; buttons are charcoal (light theme) or marble (dark theme).'],
+    undo: [{ text: 'Reset every value the script set, and the stylesheet.', code: 'NEXTCLOUD_CONTAINER=nextcloud sh apply.sh --restore' }, { text: 'Or reset each value by hand in *Administration settings → Theming*.' }],
+    updates: 'Nextcloud keeps theming settings and the Custom CSS app’s stylesheet across updates.',
+    files: [
+      ['apply.sh', 'Sets everything with `occ` (`--with-css`, `--restore`)'],
+      ['custom.css', 'The dark themes’ accent, for the Custom CSS app'],
+      ['logo.svg', 'The sign-in logo: the emblem in marble'],
+      ['logoheader.svg', 'The header logo: the seal in marble'],
+      ['favicon.png', 'The favicon'],
+      ['background.png', 'The sign-in background: black marble, 2560 × 1440'],
+    ],
+    tested: 'Written for Nextcloud 28 to 31. The test suite runs the script with a stand-in for `occ` (in dash and bash): every setting, the fallback for older releases, the stylesheet only when the app is enabled, and the restore; it has not been applied to a live server here.',
+  }),
   files: async (t) => [
     ['apply.sh', nextcloudScript({ name: 'The Olympus', url: t.url })],
+    ['custom.css', nextcloudCss()],
     ['logo.svg', markSvg(t.marks.emblem, P.marble)],
     ['logoheader.svg', markSvg(t.marks.seal, P.marble)],
     ['favicon.png', await t.png(coinSvg(t.marks.seal, 'dark'), 256)],

@@ -1,0 +1,12 @@
+# The Olympus — Navidrome. Merge into the compose file that runs Navidrome
+# (rename "navidrome" to your service's name), or keep it beside it as an
+# override. OLYMPUS_SITE is the address of the house's site — the sign-in
+# background is served from there:
+#
+#   OLYMPUS_SITE=http://olympus.lan:8080 docker compose up -d navidrome
+services:
+  navidrome:
+    environment:
+      ND_DEFAULTTHEME: "Extra Dark"
+      ND_UILOGINBACKGROUNDURL: "${OLYMPUS_SITE:?set OLYMPUS_SITE to the address of the house's site}/files/assets/integrations/backgrounds/olympus-background.png"
+      ND_UIWELCOMEMESSAGE: "The Olympus · theolympus.cloud"

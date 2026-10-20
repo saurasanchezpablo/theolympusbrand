@@ -122,44 +122,94 @@ test('the Nextcloud script sets the Theming app, falling back for older releases
       assert.ok(calls.includes('theming:config|color|#1C1C1C|'), `${shell}: falls back to color`);
       assert.ok(calls.includes(`theming:config|logo|${dir}/logo.svg|`), shell);
       assert.ok(calls.includes(`theming:config|background|${dir}/background.png|`), shell);
+      assert.ok(!calls.some((c) => c.startsWith('config:app:set|theming_customcss')), `${shell}: no stylesheet without the Custom CSS app`);
     }
+    // With the Custom CSS app enabled (and --with-css installing it), the stylesheet goes in, whole.
+    writeFileSync(join(dir, 'custom.css'), 'body[data-theme-dark] { --color-primary: #EDEDED; }\n');
+    writeFileSync(occ, `#!/bin/sh\n[ "$1 $2 $3" = "config:app:get theming_customcss enabled" ] && { echo yes; exit 0; }\nprintf '%s|' "$@" >> ${log}\necho >> ${log}\n`);
+    rmSync(log, { force: true });
+    execFileSync('sh', [script, '--with-css'], { env: { ...process.env, OCC: occ, NEXTCLOUD_CONTAINER: '' } });
+    const withCss = readFileSync(log, 'utf8').trim().split('\n');
+    assert.ok(withCss.includes('app:install|theming_customcss|'));
+    assert.ok(withCss.includes('config:app:set|theming_customcss|customcss|--value=body[data-theme-dark] { --color-primary: #EDEDED; }|'));
+    assert.ok(withCss.some((c) => /^config:app:set\|theming_customcss\|cachebuster\|--value=\d+\|$/.test(c)));
+    rmSync(log, { force: true });
+    execFileSync('sh', [script, '--restore'], { env: { ...process.env, OCC: occ, NEXTCLOUD_CONTAINER: '' } });
+    const restored = readFileSync(log, 'utf8').trim().split('\n');
+    for (const k of ['name', 'primary_color', 'logo', 'background']) assert.ok(restored.includes(`theming:config|${k}|--reset|`), k);
+    assert.ok(restored.includes('config:app:delete|theming_customcss|customcss|'));
+    assert.throws(() => execFileSync('sh', [script, '--bogus'], { stdio: 'ignore' }));
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }
 });
 
-test('the Proxmox script installs, keeps the originals and restores them', () => {
+test('the Proxmox script: a grey theme made from the dark one, the logo, a hook that makes it again, and a full restore', () => {
   const dir = mkdtempSync(join(tmpdir(), 'olympus-pve-'));
   try {
-    // The script, pointed at a stand-in system and allowed to run unprivileged.
+    // A stand-in node, and the script pointed at it and allowed to run unprivileged.
     const sys = join(dir, 'sys');
     const kit = join(dir, 'kit');
-    execFileSync('mkdir', ['-p', `${sys}/images`, `${sys}/apt`, kit]);
+    for (const d of ['images', 'css', 'themes', 'apt']) execFileSync('mkdir', ['-p', `${sys}/${d}`]);
+    execFileSync('mkdir', ['-p', kit]);
     writeFileSync(`${sys}/images/proxmox_logo.png`, 'original logo');
     writeFileSync(`${sys}/images/favicon.ico`, 'original icon');
+    const template = '<html>\n  <head>\n    <title>[% nodename %] - Proxmox Virtual Environment</title>\n  </head>\n  <body></body>\n</html>\n';
+    writeFileSync(`${sys}/index.html.tpl`, template);
+    // A sample of Proxmox's dark theme: blue accents, blue-grey grounds, status colours.
+    writeFileSync(`${sys}/themes/theme-proxmox-dark.css`, '.x-btn { background-color: #3892d4; }\n.x-panel { background: #262b31; color: #f5f5f5 }\n.running { color: #21bf4b; }\n.error { color: #c60f0f !important; }\n.warn { color: #ff9b00; }\n.sel { background: rgba(56, 146, 212, 0.4); }\n#ace { color: #fff; }\n');
     for (const f of ['logo-light-theme.png', 'logo-dark-theme.png', 'favicon.ico']) writeFileSync(join(kit, f), `olympus ${f}`);
     const script = proxmoxScript()
       .replace('IMG=/usr/share/pve-manager/images', `IMG=${sys}/images`)
+      .replace('CSS=/usr/share/pve-manager/css', `CSS=${sys}/css`)
+      .replace('TPL=/usr/share/pve-manager/index.html.tpl', `TPL=${sys}/index.html.tpl`)
+      .replace('DARK=/usr/share/javascript/proxmox-widget-toolkit/themes/theme-proxmox-dark.css', `DARK=${sys}/themes/theme-proxmox-dark.css`)
       .replace('KEEP=/usr/local/share/the-olympus/proxmox', `KEEP=${sys}/keep`)
       .replace('HOOK=/etc/apt/apt.conf.d/99-the-olympus-logo', `HOOK=${sys}/apt/99-the-olympus-logo`)
       .replace('[ "$(id -u)" = 0 ]', 'true');
-    assert.ok(script.includes(`IMG=${sys}/images`) && script.includes(`HOOK=${sys}/apt/`));
     writeFileSync(join(kit, 'apply.sh'), script);
-    execFileSync('dash', ['-n', join(kit, 'apply.sh')]);
-    const run = (...a: string[]) => execFileSync('sh', [join(kit, 'apply.sh'), ...a]).toString();
-    const read = (f: string) => readFileSync(`${sys}/images/${f}`, 'utf8');
+    for (const shell of ['dash', 'bash']) execFileSync(shell, ['-n', join(kit, 'apply.sh')]);
+    const run = (...a: string[]) => execFileSync('sh', [join(kit, 'apply.sh'), ...a], { env: { ...process.env, PATH: process.env.PATH } }).toString();
+    const read = (f: string) => readFileSync(`${sys}/${f}`, 'utf8');
 
-    run('--dark', '--persist');
-    assert.equal(read('proxmox_logo.png'), 'olympus logo-dark-theme.png');
-    assert.equal(read('favicon.ico'), 'olympus favicon.ico');
-    assert.equal(read('proxmox_logo.png.orig'), 'original logo');
-    assert.ok(readFileSync(`${sys}/apt/99-the-olympus-logo`, 'utf8').includes(`install -m 644 ${sys}/keep/proxmox_logo.png ${sys}/images/proxmox_logo.png`));
-    run(); // again, light: the originals are kept, not overwritten by ours
-    assert.equal(read('proxmox_logo.png'), 'olympus logo-light-theme.png');
-    assert.equal(read('proxmox_logo.png.orig'), 'original logo');
+    run();
+    const css = read('css/the-olympus.css');
+    assert.match(css, /\.x-btn \{ background-color: #848484; \}/, 'blue accent → grey of the same lightness');
+    assert.match(css, /\.x-panel \{ background: #2a2a2a; color: #f5f5f5 \}/, 'blue-grey ground → grey');
+    assert.match(css, /#21bf4b/, 'running stays green');
+    assert.match(css, /#c60f0f !important/, 'errors stay red');
+    assert.match(css, /#ff9b00/, 'warnings stay orange');
+    assert.match(css, /rgba\(132, 132, 132, 0\.4\)/);
+    assert.match(css, /#ace \{ color: #ffffff; \}/, 'an id selector is not mistaken for a colour');
+    for (const [, hex] of css.matchAll(/#([0-9a-f]{6})\b/g)) if (!['21bf4b', 'c60f0f', 'ff9b00'].includes(hex)) assert.ok(hex.slice(0, 2) === hex.slice(2, 4) && hex.slice(2, 4) === hex.slice(4, 6), `#${hex} is grey`);
+    assert.equal(read('index.html.tpl').split('/pve2/css/the-olympus.css').length, 2, 'the template links the theme once');
+    assert.ok(read('index.html.tpl').indexOf('the-olympus.css') < read('index.html.tpl').indexOf('</head>'));
+    assert.equal(read('images/proxmox_logo.png'), 'olympus logo-dark-theme.png');
+    assert.equal(read('images/proxmox_logo.png.orig'), 'original logo');
+    const hook = read('apt/99-the-olympus-logo');
+    assert.ok(hook.includes(`sh ${sys}/keep/apply.sh --reapply`), 'the hook runs the kept copy');
+
+    // Run again: still linked once, the originals not overwritten by ours.
+    run();
+    assert.equal(read('index.html.tpl').split('/pve2/css/the-olympus.css').length, 2);
+    assert.equal(read('images/proxmox_logo.png.orig'), 'original logo');
+
+    // An update puts Proxmox's template and logo back; the hook (the kept copy) makes them again.
+    writeFileSync(`${sys}/index.html.tpl`, template);
+    writeFileSync(`${sys}/images/proxmox_logo.png`, 'updated logo');
+    execFileSync('sh', [`${sys}/keep/apply.sh`, '--reapply']);
+    assert.equal(read('index.html.tpl').split('/pve2/css/the-olympus.css').length, 2, 'the theme is linked again after the update');
+    assert.equal(read('images/proxmox_logo.png'), 'olympus logo-dark-theme.png');
+
+    // Logo only: the theme is taken back out.
+    run('--logo-only');
+    assert.ok(!read('index.html.tpl').includes('the-olympus.css') && !existsSync(`${sys}/css/the-olympus.css`));
+    assert.equal(read('images/proxmox_logo.png'), 'olympus logo-light-theme.png');
+
     run('--restore');
-    assert.equal(read('proxmox_logo.png'), 'original logo');
-    assert.equal(read('favicon.ico'), 'original icon');
+    assert.equal(read('index.html.tpl'), template, 'the template exactly as it was');
+    assert.equal(read('images/proxmox_logo.png'), 'updated logo');
+    assert.equal(read('images/favicon.ico'), 'original icon');
     assert.ok(!existsSync(`${sys}/images/proxmox_logo.png.orig`) && !existsSync(`${sys}/apt/99-the-olympus-logo`) && !existsSync(`${sys}/keep`));
     assert.throws(() => execFileSync('sh', [join(kit, 'apply.sh'), '--bogus'], { stdio: 'ignore' }));
   } finally {
@@ -267,4 +317,31 @@ test('the Vaultwarden kit: a stylesheet Handlebars leaves alone, grey in both th
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }
+});
+
+test('the Navidrome kit: the settings it can make, a background the house serves, and greys for the optional stylesheet', () => {
+  const compose = parse(readFileSync(join(KIT, 'themes/navidrome/docker-compose.override.yml'), 'utf8'));
+  const env = compose.services.navidrome.environment;
+  assert.equal(env.ND_DEFAULTTHEME, 'Extra Dark');
+  assert.match(env.ND_UILOGINBACKGROUNDURL, /^\$\{OLYMPUS_SITE:\?.+\}\/files\/assets\/integrations\/backgrounds\/olympus-background\.png$/);
+  assert.ok(existsSync(join(KIT, 'backgrounds/olympus-background.png')), 'the background it names is published');
+  const css = readFileSync(join(KIT, 'themes/navidrome/navidrome.css'), 'utf8');
+  for (const [hex] of css.matchAll(/#[0-9A-Fa-f]{6}\b/g)) assert.ok(hex.slice(1, 3) === hex.slice(3, 5) && hex.slice(3, 5) === hex.slice(5, 7), hex);
+  assert.match(readFileSync(join(KIT, 'themes/navidrome/nginx.conf'), 'utf8'), /sub_filter '<\/head>' '<link rel="stylesheet" href="\/the-olympus\/navidrome\.css"><\/head>';/);
+});
+
+test('every kit has its guide: the folder’s README, the same as its chapter of the site’s guide', () => {
+  const chapters = readdirSync(join(ROOT, 'docs/integrations')).filter((f) => f.endsWith('.md')).sort();
+  const kits = readdirSync(join(KIT, 'themes')).sort();
+  assert.deepEqual(chapters, kits.map((k) => `${k}.md`));
+  for (const k of kits) {
+    const readme = readFileSync(join(KIT, 'themes', k, 'README.md'), 'utf8');
+    assert.equal(readFileSync(join(ROOT, 'docs/integrations', `${k}.md`), 'utf8'), readme, k);
+    for (const section of ['## What it changes', '## Before you start', '## Install', '## Check that it worked', '## Undo', '## Files']) assert.ok(readme.includes(section), `${k}: ${section}`);
+    // Every file the guide lists is in the kit, and every file in the kit is listed.
+    const listed = [...readme.matchAll(/^\| `([^`]+)` \|/gm)].map((m) => m[1]).sort();
+    const walk = (d: string, p = ''): string[] => readdirSync(d, { withFileTypes: true }).flatMap((e) => (e.isDirectory() ? walk(join(d, e.name), `${p}${e.name}/`) : [`${p}${e.name}`]));
+    assert.deepEqual(listed, walk(join(KIT, 'themes', k)).filter((f) => f !== 'README.md').sort(), `${k}: the files table`);
+  }
+  for (const kit of THEME_KITS) assert.ok(kits.includes(kit.id), `${kit.id} has a folder`);
 });

@@ -3,6 +3,7 @@
 // an index the site reads. In development they are served live from the
 // repository; a build copies them next to the page.
 
+import { createHash } from 'node:crypto';
 import { copyFileSync, existsSync, mkdirSync, readFileSync, readdirSync, statSync, writeFileSync } from 'node:fs';
 import { dirname, extname, join, relative, resolve, sep } from 'node:path';
 import type { Plugin } from 'vite';
@@ -39,7 +40,7 @@ const TYPES: Record<string, string> = {
   '.sh': 'text/plain; charset=utf-8',
 };
 
-type Published = { path: string; size: number; title?: string };
+type Published = { path: string; size: number; title?: string; sha256?: string };
 
 function walk(root: string, dir: string, out: Published[]) {
   for (const name of readdirSync(dir).sort()) {
@@ -50,8 +51,10 @@ function walk(root: string, dir: string, out: Published[]) {
     else {
       const path = relative(root, full).split(sep).join('/');
       // The guide's chapters carry their titles, so the site need not fetch each one to list them.
-      const title = /^docs\/[^/]+\.md$/.test(path) ? readFileSync(full, 'utf8').match(/^#\s+(.+)$/m)?.[1] : undefined;
-      out.push({ path, size: st.size, ...(title ? { title } : {}) });
+      const title = /^docs\/(?:[^/]+\/)?[^/]+\.md$/.test(path) ? readFileSync(full, 'utf8').match(/^#\s+(.+)$/m)?.[1] : undefined;
+      // The installers carry their checksum, so a copy fetched elsewhere can be checked before it runs.
+      const sha256 = name === 'install.sh' ? createHash('sha256').update(readFileSync(full)).digest('hex') : undefined;
+      out.push({ path, size: st.size, ...(title ? { title } : {}), ...(sha256 ? { sha256 } : {}) });
     }
   }
 }

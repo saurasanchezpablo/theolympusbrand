@@ -7,6 +7,7 @@
 import type { Mark } from '../geometry/crest.ts';
 import { ARTBOARD } from '../geometry/math.ts';
 import { PALETTE } from '../brand/palette.ts';
+import { commentText } from './text.ts';
 
 const S = ARTBOARD;
 
@@ -51,7 +52,7 @@ export function webIcons(seal: Mark, { name, short, base = '/' }: { name: string
     background_color: PALETTE.paper,
     display: 'standalone',
   };
-  const head = `<!-- ${name} — icons -->
+  const head = `<!-- ${commentText(name)} — icons -->
 <link rel="icon" href="${base}favicon.svg" type="image/svg+xml">
 <link rel="icon" href="${base}favicon.ico" sizes="48x48">
 <link rel="apple-touch-icon" href="${base}apple-touch-icon.png">

@@ -10,6 +10,8 @@ import { marbleScreen, type ScreenTone } from '../render/wallpaper.ts';
 import { bookmarks, dashy, homepage, homer, iconName, servicesCsv, addressOf, type DashboardOptions, type Entry } from './dashboards.ts';
 import { coinSvg, BACKGROUND, type KitMarks } from './marks.ts';
 import { themeAssignments, type ThemeAssignment } from './themes/index.ts';
+import { guideMarkdown } from './themes/shared.ts';
+import { mdText } from '../catalog/text.ts';
 
 export { coinSvg, bannerMark, BACKGROUND, type CoinTone, type KitMarks } from './marks.ts';
 
@@ -65,6 +67,8 @@ export async function integrationKit(src: KitSource, host: KitHost, opts: Dashbo
     const id = entry?.id ?? 'master';
     const ctx = { entry, id, name: entry?.name ?? 'The Olympus', url: entry ? addressOf(entry) : `https://${DOMAIN}`, marks: src.marks(id), png: render, ground };
     for (const [path, data] of await kit.files(ctx)) add(`themes/${dir}/${path}`, data);
+    // The guide is Markdown the site renders: the service's name goes in escaped.
+    add(`themes/${dir}/README.md`, guideMarkdown(kit.guide({ ...ctx, name: mdText(ctx.name) }), entry ? `${mdText(entry.name)}’s seal` : 'the master’s seal', dir));
   }
 
   add('README.md', kitReadme(src, opts, assignments));
@@ -73,8 +77,8 @@ export async function integrationKit(src: KitSource, host: KitHost, opts: Dashbo
 
 function kitReadme(src: KitSource, opts: DashboardOptions, assignments: ThemeAssignment[]): string {
   const rows = assignments.map(({ kit, entry, dir }) => {
-    const label = dir === kit.id ? kit.label : `${kit.label} — ${entry!.name} (\`${dir}/\`)`;
-    return `| ${label} | ${kit.how} | ${entry ? `${entry.name}’s seal` : 'the master’s seal'} |`;
+    const label = dir === kit.id ? kit.label : `${kit.label} — ${mdText(entry!.name)} (\`${dir}/\`)`;
+    return `| ${label} | ${kit.how} | ${entry ? `${mdText(entry.name)}’s seal` : 'the master’s seal'} |`;
   });
   return `# The Olympus — integrations
 

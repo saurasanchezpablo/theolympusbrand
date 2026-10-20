@@ -1,0 +1,34 @@
+# The Olympus — Starship, in the house's greys.
+# Use it with: export STARSHIP_CONFIG=~/.config/the-olympus/starship.toml
+format = """
+$fill
+[▲](quiet) $hostname$directory$git_branch$status
+$character"""
+palette = "olympus"
+
+[palettes.olympus]
+quiet = "#7a7a7a"
+text = "#c9c9c9"
+strong = "#fafafa"
+
+[fill]
+symbol = " "
+
+[hostname]
+ssh_only = false
+format = "[$hostname](strong) "
+
+[directory]
+style = "text"
+truncation_length = 4
+
+[git_branch]
+format = "[· $branch](quiet) "
+
+[status]
+disabled = false
+format = "[✕ $status](strong) "
+
+[character]
+success_symbol = "[❯](strong)"
+error_symbol = "[❯](strong)"

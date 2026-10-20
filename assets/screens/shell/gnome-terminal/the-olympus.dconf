@@ -1,0 +1,14 @@
+[/]
+visible-name='The Olympus'
+use-theme-colors=false
+background-color='#0e0e0e'
+foreground-color='#c9c9c9'
+bold-color-same-as-fg=false
+bold-color='#fafafa'
+cursor-colors-set=true
+cursor-background-color='#ededed'
+cursor-foreground-color='#0e0e0e'
+highlight-colors-set=true
+highlight-background-color='#3a3a3a'
+highlight-foreground-color='#fafafa'
+palette=['#1c1c1c', '#8a8a8a', '#b4b4b4', '#d2d2d2', '#727272', '#9a9a9a', '#c2c2c2', '#dadada', '#6a6a6a', '#a6a6a6', '#c8c8c8', '#e6e6e6', '#8e8e8e', '#b0b0b0', '#d6d6d6', '#fafafa']

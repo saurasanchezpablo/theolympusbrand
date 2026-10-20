@@ -113,11 +113,11 @@ designed in the Atelier with an application also carries the kit in its
 asset pack, under `theme/`.
 
 **Adding or removing an application.** Each kit is one module in
-`src/integrations/themes/` (its files, how it is applied, which services fit
-it) listed once in `src/integrations/themes/index.ts`. Add a module and a line
-to support a new application; delete both to drop one. Everything else — the
-kit folder, the README, the Atelier's choices, `service apps` — follows the
-list.
+`src/integrations/themes/` (its files, its guide, how it is applied, which
+services fit it) listed once in `src/integrations/themes/index.ts`. Add a
+module and a line to support a new application; delete both to drop one.
+Everything else — the kit folder, its README and its chapter of this guide,
+the Atelier's choices, `service apps` — follows the list.
 
 They are written
 for current releases (named in each file) and have not been run against live
@@ -125,105 +125,25 @@ instances here: if an update renames something, the rest still applies.
 Status colours — up, down, alerts — are left alone; only the chrome is
 re-inked.
 
-### Nextcloud — `themes/nextcloud/`
+### The guides
 
-`apply.sh` sets the Theming app with `occ`: name, address, slogan
-(*theolympus.cloud*), charcoal primary colour, obsidian background colour,
-the login logo (the emblem), the header logo (the seal), the favicon and a
-black-marble login background (2560 × 1440).
+Each application has its own chapter — what the kit changes and what it
+cannot, what you need, the steps, how to check it and how to undo it. The same
+text is the README in the kit's folder.
 
-```sh
-NEXTCLOUD_CONTAINER=nextcloud sh apply.sh                            # Docker
-OCC="sudo -u www-data php /var/www/nextcloud/occ" sh apply.sh        # installed
-```
+| Application | How it is applied | Guide |
+|---|---|---|
+| Proxmox VE | A script turns the whole web interface grey — made from Proxmox's own dark theme on the node — with the logo and favicon, and makes it again after updates | [Proxmox VE](integrations/proxmox.md) |
+| Nextcloud | A script sets the Theming app with `occ`; the Custom CSS app keeps the accent visible in dark themes | [Nextcloud](integrations/nextcloud.md) |
+| Home Assistant | A theme with light and dark modes, and a dashboard card | [Home Assistant](integrations/home-assistant.md) |
+| Navidrome | Its most neutral theme, marble behind the sign-in, a welcome line; optional greys through nginx | [Navidrome](integrations/navidrome.md) |
+| Jellyfin | Custom CSS, a sign-in line and a splash screen, pasted into Branding | [Jellyfin](integrations/jellyfin.md) |
+| Vaultwarden | A stylesheet in its data folder | [Vaultwarden](integrations/vaultwarden.md) |
+| Grafana | Its logo, favicon and icon replaced by mounted files | [Grafana](integrations/grafana.md) |
+| Uptime Kuma | A status page's logo and stylesheet | [Uptime Kuma](integrations/uptime-kuma.md) |
 
-Written for Nextcloud 28 or later; on older releases it falls back to the
-older name of the colour setting. Undo in *Administration settings →
-Theming*: each value has a reset.
-
-### Jellyfin — `themes/jellyfin/`
-
-In *Dashboard → Branding*:
-
-- **Custom CSS code** — paste `custom.css`. With the *Dark* theme it turns the
-  grounds obsidian and charcoal, the accent from blue to marble, and puts the
-  service's seal and name in the header.
-- **Login disclaimer** — paste `login-disclaimer.html`.
-- **Splash screen** — upload `splashscreen.png` (the crest on black marble).
-
-Written for Jellyfin 10.10. Clear the field to undo.
-
-### Proxmox VE — `themes/proxmox/`
-
-`apply.sh`, run as root on each node, installs the header logo — the seal and
-the service's name, 30 px tall, so it reads *Proxmox · Virtual Environment* —
-and the favicon. Proxmox's own files are kept beside them.
-
-```sh
-sh apply.sh             # for the light theme (the default)
-sh apply.sh --dark      # for the dark theme
-sh apply.sh --persist   # also restore them after Proxmox updates (an APT hook)
-sh apply.sh --restore   # put Proxmox's files back and remove the hook
-```
-
-Updates to `pve-manager` replace the logo; `--persist` adds a hook that puts
-it back after every package operation. The test suite runs the script
-against a stand-in system: install, re-install, restore.
-
-### Grafana — `themes/grafana/`
-
-Grafana's open-source edition has no branding settings, but serves its logo,
-favicon and home-screen icon as files. `docker-compose.override.yml` mounts
-the kit's files over them (read-only, so they survive updates) and sets the
-dark theme as the default. For an installed Grafana, copy the three files to
-`/usr/share/grafana/public/img/` (an update overwrites them).
-
-### Uptime Kuma — `themes/uptime-kuma/`
-
-On a status page, *Edit Status Page*: upload `logo.png` and paste
-`status-page.css` into **Custom CSS**. Written for Uptime Kuma 1.23 with the
-dark theme; the up and down colours keep their meaning.
-
-### Home Assistant — `themes/home-assistant/`
-
-`apply.sh` copies the theme to the configuration's `themes/` folder and the
-seal and banner to `www/the-olympus/`:
-
-```sh
-HA_CONTAINER=homeassistant sh apply.sh      # Docker
-sh apply.sh /path/to/homeassistant/config   # a folder
-sh apply.sh … --restore                     # remove both
-```
-
-If `configuration.yaml` does not read the themes folder yet, the script
-prints the two lines to add (then restart Home Assistant once). Afterwards:
-*Developer tools → Actions → Frontend: Reload themes*, and choose *The
-Olympus* on your profile page — it has a light and a dark mode, following
-the profile's setting. `picture-card.yaml` is a dashboard card with the
-service's banner.
-
-Written for Home Assistant 2026.10. Home Assistant documents only a few theme
-variables; the kit also sets the frontend's own colour scale, without which
-newer screens stay blue — an update may rename those. No theme can change the
-sidebar title, add a logo there or change the favicon.
-
-### Vaultwarden — `themes/vaultwarden/`
-
-`apply.sh` puts `user.vaultwarden.scss.hbs` in the data folder's
-`templates/scss/`, where Vaultwarden (1.33 or later) compiles it into its own
-stylesheet: neutral greys for every blue in the light and dark themes, and
-the service's banner and seal in place of the logos on the sign-in page, in
-the side navigation and on the loading screen.
-
-```sh
-VAULTWARDEN_CONTAINER=vaultwarden sh apply.sh   # Docker: copies it and restarts
-sh apply.sh /path/to/vaultwarden/data            # a folder: restart Vaultwarden after
-sh apply.sh … --restore                          # remove it
-```
-
-Written for Vaultwarden 1.37 with web vault 2026.7. Danger, success and
-warning colours keep their meaning. The favicon belongs to the web vault's
-files and is not changed.
+The terminal — prompts, fastfetch, tmux and the colours of the terminal apps —
+has its own chapter under *Screens*: [Your terminal](screens/terminal.md).
 
 ## How the kit is checked
 
@@ -232,7 +152,10 @@ service is there, at its address, with an icon that exists — including names
 with colons, quotes and accents. It reads the bookmarks and the table back,
 runs the Nextcloud script with a stand-in for `occ` (in `dash` and `bash`),
 runs the Proxmox, Home Assistant and Vaultwarden scripts against stand-in
-folders (and a stand-in `docker`), checks that the Home Assistant theme and the
-Vaultwarden stylesheet are grey in both modes, and decodes the header
+folders (and a stand-in `docker`) — the Proxmox theme made from a sample of
+its dark theme, blues to grey and status colours kept, re-applied after a
+simulated update — checks that the Home Assistant theme, the Vaultwarden and
+Navidrome stylesheets are grey, checks that every guide lists exactly the
+files of its kit, and decodes the header
 logo embedded in the Jellyfin CSS. The kit is rebuilt on every push and must
 come out byte for byte the same.

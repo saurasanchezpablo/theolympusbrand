@@ -107,13 +107,33 @@ const clipped = (page: Page) =>
     return out.slice(0, 6);
   });
 
+/** Any element drawn with a colour that is not a grey — a browser default, a library's accent. */
+const hues = (page: Page) =>
+  page.evaluate(() => {
+    const out: string[] = [];
+    for (const el of Array.from(document.querySelectorAll<HTMLElement>('body *'))) {
+      if (!el.getClientRects().length || el.closest('svg, canvas, img, video')) continue;
+      const cs = getComputedStyle(el);
+      for (const prop of ['color', 'background-color', 'border-top-color', 'outline-color'] as const) {
+        const m = cs.getPropertyValue(prop).match(/rgba?\((\d+), (\d+), (\d+)(?:, ([\d.]+))?\)/);
+        if (!m || m[4] === '0') continue;
+        if (m[1] !== m[2] || m[2] !== m[3]) {
+          const cls = typeof el.className === 'string' && el.className ? `.${el.className.trim().split(/\s+/).join('.')}` : '';
+          out.push(`${el.tagName.toLowerCase()}${cls} ${prop} ${m[0]}`);
+        }
+      }
+    }
+    return [...new Set(out)].slice(0, 6);
+  });
+
 const browser = await chromium.launch({ executablePath: chrome, headless: true });
 try {
   for (const motion of ['no-preference', 'reduce'] as const) {
     for (const vp of VIEWPORTS) {
       // Reduced motion: one pass at phone and desktop sizes is enough.
       if (motion === 'reduce' && vp.name !== 'phone' && vp.name !== 'desktop') continue;
-      const context = await browser.newContext({ viewport: { width: vp.width, height: vp.height }, reducedMotion: motion, deviceScaleFactor: 1 });
+      // The page's own content policy forbids injected scripts — the audit's checker is one, so it is let in here alone.
+      const context = await browser.newContext({ viewport: { width: vp.width, height: vp.height }, reducedMotion: motion, deviceScaleFactor: 1, bypassCSP: true });
       const page = await context.newPage();
       const tag = `${vp.name}${motion === 'reduce' ? ' · reduced motion' : ''}`;
       page.on('console', (m) => m.type() === 'error' && findings.push({ page: page.url(), viewport: tag, kind: 'console error', detail: m.text() }));
@@ -126,6 +146,7 @@ try {
         await page.waitForTimeout(400);
         for (const o of await overflow(page)) findings.push({ page: route.name, viewport: tag, kind: 'horizontal overflow', detail: o });
         for (const o of await clipped(page)) findings.push({ page: route.name, viewport: tag, kind: 'clipped content', detail: o });
+        for (const o of await hues(page)) findings.push({ page: route.name, viewport: tag, kind: 'colour with a hue', detail: o });
         if (motion === 'no-preference') {
           await page.addScriptTag({ content: AXE });
           const result = await page.evaluate(async () => {

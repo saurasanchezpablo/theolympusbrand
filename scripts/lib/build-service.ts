@@ -16,6 +16,7 @@ import { serviceMarks, svgFiles, rasterJobs, FAVICON } from '../../src/catalog/f
 import { ico } from '../../src/export/ico.ts';
 import { webIcons } from '../../src/catalog/webicons.ts';
 import { board, header, text, place, pixels } from './board.ts';
+import { mdText } from '../../src/catalog/text.ts';
 
 export const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
 export const SERVICES_OUT = join(ROOT, 'assets', 'services');
@@ -144,7 +145,7 @@ function writeCatalogDoc(services: Service[]): void {
   doc = between(doc, 'pantheon', ['| Category | Patron | Attribute | Domain |', '|---|---|---|---|', ...pantheon].join('\n'));
   const rows = services.map((s) => {
     const patron = 'god' in s.patron ? `${sentence(GODS[s.patron.god].name)} — ${GODS[s.patron.god].attribute.toLowerCase()}` : `Monogram ${s.letter}`;
-    return `| <img src="../assets/services/${s.id}/png/the-olympus-${s.id}-seal-64.png" width="32"> | **${s.name}** | ${s.category} | ${patron} | [files](../assets/services/${s.id}/) |`;
+    return `| <img src="../assets/services/${s.id}/png/the-olympus-${s.id}-seal-64.png" width="32"> | **${mdText(s.name)}** | ${s.category} | ${patron} | [files](../assets/services/${s.id}/) |`;
   });
   doc = between(doc, 'catalog', ['| Seal | Service | Category | Patron | Files |', '|---|---|---|---|---|', ...rows].join('\n'));
   writeFileSync(file, doc);

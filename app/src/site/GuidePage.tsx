@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { marked } from 'marked';
+import { guideMarked, safeUrl } from './markdown.ts';
 import { fileUrl, useIndex } from './files.ts';
 
 /** A chapter's title from its first heading, without the number and the house's name. */
@@ -8,8 +8,18 @@ const clean = (t: string) => t.replace(/^\d+\s*—\s*/, '').replace(/^The Olympu
 /** The guide: the repository's docs, rendered, with their links and pictures pointed at the site. */
 export function GuidePage({ doc }: { doc?: string }) {
   const { index, error: indexError } = useIndex();
-  const chapters = (index?.files ?? []).filter((f) => /^docs\/[^/]+\.md$/.test(f.path)).map((f) => ({ id: f.path.slice(5, -3), title: clean(f.title ?? f.path.slice(5, -3)) }));
-  const current = chapters.find((c) => c.id === doc) ?? chapters.find((c) => c.id.startsWith('02')) ?? chapters[0];
+  const files = index?.files ?? [];
+  const chapter = (path: string) => ({ id: path.slice(5, -3), title: clean(files.find((f) => f.path === path)?.title ?? path.slice(5, -3).split('/').pop()!) });
+  // A folder of documents (docs/integrations/) sits under the chapter named after it (08-integrations).
+  const chapters = files
+    .filter((f) => /^docs\/[^/]+\.md$/.test(f.path))
+    .map((f) => {
+      const c = chapter(f.path);
+      const folder = c.id.replace(/^\d+-/, '');
+      return { ...c, sections: files.filter((g) => g.path.startsWith(`docs/${folder}/`) && /^docs\/[^/]+\/[^/]+\.md$/.test(g.path)).map((g) => chapter(g.path)) };
+    });
+  const all = chapters.flatMap((c) => [c, ...c.sections]);
+  const current = all.find((c) => c.id === doc) ?? all.find((c) => c.id.startsWith('02')) ?? all[0];
   const [html, setHtml] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [chaptersOpen, setChaptersOpen] = useState(false);
@@ -24,7 +34,7 @@ export function GuidePage({ doc }: { doc?: string }) {
         if (!r.ok) throw new Error(`This chapter could not be loaded (${r.status}). Reload the page; if it persists, rebuild the site.`);
         return r.text();
       })
-      .then((md) => live && setHtml(marked.parse(md, { async: false }) as string))
+      .then((md) => live && setHtml(guideMarked.parse(md) as string))
       .catch((e: Error) => live && setError(e.message));
     setChaptersOpen(false);
     return () => {
@@ -43,10 +53,14 @@ export function GuidePage({ doc }: { doc?: string }) {
     }
     for (const a of el.querySelectorAll('a')) {
       const href = a.getAttribute('href') ?? '';
+      if (!safeUrl(href)) {
+        a.removeAttribute('href');
+        continue;
+      }
       if (/^[a-z]+:/i.test(href) || href.startsWith('#')) continue;
       const target = new URL(href, base);
       const path = decodeURIComponent(target.pathname);
-      const m = path.match(/\/files\/docs\/([^/]+)\.md$/);
+      const m = path.match(/\/files\/docs\/((?:[^/]+\/)?[^/]+)\.md$/);
       if (m) a.setAttribute('href', `#/guide/${m[1]}`);
       else if (path.endsWith('/') || /README\.md$/.test(path)) a.setAttribute('href', '#/downloads');
       else a.href = target.href;
@@ -84,6 +98,17 @@ export function GuidePage({ doc }: { doc?: string }) {
                 <a href={`#/guide/${c.id}`} aria-current={c.id === current?.id ? 'page' : undefined}>
                   {c.title}
                 </a>
+                {c.sections.length > 0 && (
+                  <ol className="guide__sections">
+                    {c.sections.map((s) => (
+                      <li key={s.id}>
+                        <a href={`#/guide/${s.id}`} aria-current={s.id === current?.id ? 'page' : undefined}>
+                          {s.title}
+                        </a>
+                      </li>
+                    ))}
+                  </ol>
+                )}
               </li>
             ))}
           </ol>

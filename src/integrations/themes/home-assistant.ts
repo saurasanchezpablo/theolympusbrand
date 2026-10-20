@@ -174,6 +174,43 @@ export const homeAssistant: ThemeKit = {
   label: 'Home Assistant',
   match: { ids: ['home-assistant', 'homeassistant', 'hass'], category: 'home' },
   how: '`apply.sh` installs the theme (light and dark) and the images; `picture-card.yaml` puts the seal on a dashboard',
+  guide: (t) => ({
+    title: 'Home Assistant',
+    intro: `A Home Assistant theme: the house's greys for the whole interface, in a light and a dark mode that follow each user's own setting, with ${t.name}'s banner for a dashboard card.`,
+    changes: [
+      'Grounds, cards, sidebar and header: the house’s greys, light or dark.',
+      'Home Assistant’s accent colour and its whole colour scale: greys instead of blue.',
+      'Card corners: square, as the house’s are.',
+      `A picture card with ${t.name}'s banner, for the top of a dashboard.`,
+    ],
+    limits: [
+      'The sidebar title (*Home Assistant*), a logo in the sidebar and the favicon: no theme can change them.',
+      'Colours that carry meaning — a light that is on, an alarm, an error — keep them.',
+      'Home Assistant documents only a few theme variables; the kit also sets the colour scale newer screens use, which an update may rename (blue would then show again in places — rebuild the kit).',
+    ],
+    requires: ['Home Assistant 2026.10 or close to it.', 'Access to its configuration folder: through Docker (`HA_CONTAINER`), or as a folder on disk (the *Samba share* or *File editor* add-ons, or SSH).'],
+    steps: [
+      { text: 'Run the script — with Docker, naming the container; otherwise, giving the configuration folder.', code: 'HA_CONTAINER=homeassistant sh apply.sh\n# or\nsh apply.sh /path/to/homeassistant/config' },
+      { text: 'If the script says Home Assistant does not read the themes folder yet, add these two lines to `configuration.yaml` and restart Home Assistant once.', code: 'frontend:\n  themes: !include_dir_merge_named themes' },
+      { text: 'Reload the themes: **Developer tools → Actions → Frontend: Reload themes**.' },
+      { text: 'On your **profile** page, choose **The Olympus** as the theme. Each user chooses for themselves; *Mode* there picks light or dark.' },
+      { text: 'Optional: on a dashboard, **Edit → Add card → Manual**, and paste `picture-card.yaml`.' },
+    ],
+    check: ['The sidebar, header and cards are grey; switches and sliders are grey rather than blue.', 'Switching the profile’s mode between light and dark changes the whole interface with it.'],
+    undo: [
+      { text: 'Choose another theme on your profile page.' },
+      { text: 'Remove the files the script installed, then reload the themes.', code: 'sh apply.sh /path/to/homeassistant/config --restore' },
+    ],
+    updates: 'Home Assistant keeps themes across updates. If an update renames the colour scale, parts of the interface turn blue again: rebuild the kit and run the script again.',
+    files: [
+      ['apply.sh', 'Installs the theme and the images (`--restore` removes them)'],
+      ['the-olympus.yaml', 'The theme, with its light and dark modes'],
+      ['picture-card.yaml', 'A dashboard card with the banner'],
+      ['www/banner.svg', 'The banner, served by Home Assistant as /local/the-olympus/banner.svg'],
+      ['www/seal.svg', 'The seal on its own disc'],
+    ],
+    tested: 'Written for Home Assistant 2026.10. The test suite parses the theme, checks that both modes are grey, and runs the script against a stand-in configuration folder; it has not been applied to a live instance here.',
+  }),
   files: async (t) => [
     ['apply.sh', homeAssistantScript()],
     ['the-olympus.yaml', homeAssistantTheme()],
