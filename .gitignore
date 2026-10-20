@@ -16,3 +16,5 @@ manufacturing/3d/master/lithophane/
 manufacturing/stickers/*
 !manufacturing/stickers/master/
 !manufacturing/stickers/sheets/
+# A service's screens are generated on demand (npm run screens -- <id>); the master's are kept.
+assets/screens/services/

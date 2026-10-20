@@ -1,0 +1,92 @@
+# The Olympus — Plymouth boot theme (script plugin).
+# The marble fills the screen; the crest sits above a thin progress line;
+# passphrase prompts (encrypted disks) and messages appear beneath it.
+
+Window.SetBackgroundTopColor(0.055, 0.055, 0.055);
+Window.SetBackgroundBottomColor(0.055, 0.055, 0.055);
+
+screen_x = Window.GetX();
+screen_y = Window.GetY();
+screen_w = Window.GetWidth();
+screen_h = Window.GetHeight();
+
+marble = Image("background.png");
+cover = Math.Max(screen_w / marble.GetWidth(), screen_h / marble.GetHeight());
+marble_w = Math.Int(marble.GetWidth() * cover);
+marble_h = Math.Int(marble.GetHeight() * cover);
+ground = Sprite(marble.Scale(marble_w, marble_h));
+ground.SetX(screen_x + (screen_w - marble_w) / 2);
+ground.SetY(screen_y + (screen_h - marble_h) / 2);
+ground.SetZ(-100);
+
+crest_size = Math.Int(Math.Min(screen_w, screen_h) * 0.42);
+crest = Sprite(Image("crest.png").Scale(crest_size, crest_size));
+crest_top = screen_y + Math.Int(screen_h * 0.44) - crest_size / 2;
+crest.SetX(screen_x + (screen_w - crest_size) / 2);
+crest.SetY(crest_top);
+crest.SetZ(10);
+
+bar_w = Math.Int(crest_size * 0.7);
+bar_x = screen_x + (screen_w - bar_w) / 2;
+bar_y = crest_top + crest_size + Math.Int(screen_h * 0.05);
+track = Sprite(Image("track.png").Scale(bar_w, 2));
+track.SetX(bar_x);
+track.SetY(bar_y);
+track.SetZ(10);
+fill_image = Image("fill.png");
+fill = Sprite();
+fill.SetX(bar_x);
+fill.SetY(bar_y);
+fill.SetZ(11);
+
+fun progress_callback(duration, progress) {
+  width = Math.Int(bar_w * progress);
+  if (width < 1) width = 1;
+  fill.SetImage(fill_image.Scale(width, 2));
+}
+Plymouth.SetBootProgressFunction(progress_callback);
+
+prompt = Sprite();
+prompt.SetZ(20);
+entry = Sprite();
+entry.SetZ(20);
+message = Sprite();
+message.SetZ(20);
+
+fun centre(sprite, image, y) {
+  sprite.SetImage(image);
+  sprite.SetX(screen_x + (screen_w - image.GetWidth()) / 2);
+  sprite.SetY(y);
+  sprite.SetOpacity(1);
+}
+
+fun password_callback(text, bullets) {
+  centre(prompt, Image.Text(text, 0.93, 0.93, 0.93), bar_y + 24);
+  dots = "";
+  i = 0;
+  while (i < bullets && i < 40) {
+    dots = dots + "•";
+    i = i + 1;
+  }
+  if (dots == "") dots = " ";
+  centre(entry, Image.Text(dots, 0.93, 0.93, 0.93), bar_y + 52);
+}
+Plymouth.SetDisplayPasswordFunction(password_callback);
+
+fun question_callback(text, answer) {
+  centre(prompt, Image.Text(text, 0.93, 0.93, 0.93), bar_y + 24);
+  if (answer == "") answer = " ";
+  centre(entry, Image.Text(answer, 0.93, 0.93, 0.93), bar_y + 52);
+}
+Plymouth.SetDisplayQuestionFunction(question_callback);
+
+fun normal_callback() {
+  prompt.SetOpacity(0);
+  entry.SetOpacity(0);
+}
+Plymouth.SetDisplayNormalFunction(normal_callback);
+
+fun message_callback(text) {
+  centre(message, Image.Text(text, 0.6, 0.6, 0.6), screen_y + screen_h - 60);
+}
+Plymouth.SetMessageFunction(message_callback);

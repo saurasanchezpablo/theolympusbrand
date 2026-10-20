@@ -209,7 +209,20 @@ try {
   assert.equal(strFromU8(zip['the-olympus-vaultwarden/dashboard/olympus-vaultwarden.svg']), coinSvg(baseMarks({ god: 'hades' }).seal, 'dark', 'The Olympus — Vaultwarden'));
   assert.ok(strFromU8(zip['the-olympus-vaultwarden/dashboard/README.md']).includes('https://vaultwarden.theolympus.cloud'));
   for (const p of ['dashboard/olympus-vaultwarden.png', 'dashboard/olympus-vaultwarden-light.png']) assert.ok(inPack(p), p);
-  step(`asset pack: ${names.length} files — SVGs, PNGs, favicon, manifest, catalogue entry, logo, dashboard icons`);
+  assert.ok(strFromU8(zip['the-olympus-vaultwarden/terminal/issue.net']).includes('V A U L T W A R D E N'));
+  for (const p of ['terminal/20-the-olympus', 'terminal/motd-braille.txt', 'terminal/install.sh']) assert.ok(inPack(p), p);
+  step(`asset pack: ${names.length} files — SVGs, PNGs, favicon, manifest, catalogue entry, logo, dashboard icons, terminal crest`);
+
+  // A wallpaper drawn in the browser: the marble from the worker, the crest on it, at the size chosen.
+  await page.getByLabel('Wallpaper style').selectOption('marble');
+  await page.getByLabel('Wallpaper size').selectOption('phone');
+  const wall = await downloadOf(page, () => page.getByRole('button', { name: 'Wallpaper (PNG)' }).click());
+  assert.equal(wall.name, 'the-olympus-vaultwarden-wallpaper-marble-phone.png');
+  assert.deepEqual([wall.data.readUInt32BE(16), wall.data.readUInt32BE(20)], [1179, 2556]);
+  await page.getByLabel('Wallpaper style').selectOption('blueprint');
+  const bp = await downloadOf(page, () => page.getByRole('button', { name: 'Wallpaper (PNG)' }).click());
+  assert.equal(bp.name, 'the-olympus-vaultwarden-wallpaper-blueprint-phone.png');
+  step('wallpapers: marble (drawn in a worker) and blueprint, at the size chosen');
 
   // Export the design, delete it, import it back.
   const designJson = await downloadOf(page, () => page.getByRole('button', { name: 'Design file (.json)' }).click());

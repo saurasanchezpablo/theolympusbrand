@@ -13,7 +13,7 @@
     "build:docs": "node scripts/build-docs.ts",
     "service": "node scripts/service.ts",
     "build:services": "node scripts/service.ts build",
-    "build": "npm run build:master && npm run build:services && npm run build:docs && npm run brandbook && npm run integrations",
+    "build": "npm run build:master && npm run build:services && npm run build:docs && npm run brandbook && npm run integrations && npm run screens",
     "app": "vite --config app/vite.config.ts",
     "app:build": "vite build --config app/vite.config.ts",
     "app:preview": "vite preview --config app/vite.config.ts",
@@ -22,7 +22,8 @@
     "sticker": "node scripts/sticker.ts",
     "site": "vite build --config app/vite.config.ts",
     "integrations": "node scripts/integrations.ts",
-    "brandbook": "node scripts/brandbook.ts"
+    "brandbook": "node scripts/brandbook.ts",
+    "screens": "node scripts/screens.ts"
   },
   "devDependencies": {
     "@fontsource/cinzel": "5.2.8",

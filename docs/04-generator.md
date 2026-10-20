@@ -49,7 +49,8 @@ shown read-only.
 | **SVG** (this view) | The production file for the current view, on any of the four grounds: transparent with dark ink, transparent with white ink, on light, on dark. |
 | **PNG** (this view) | The same, rasterised at the chosen width. |
 | **Presentation render** | With a marble or engraved surface: a 2048 px PNG of that render, named `…-mockup.png`. |
-| **Asset pack (.zip)** | Everything `npm run service -- build` makes for a service — 28 SVGs, 11 PNGs, `favicon.ico`, the `web/` icon set, `manifest.json` — plus `catalog/services/<id>.json`, the logo in `catalog/logos/`, the design file, and a `dashboard/` folder with the service's coin icons and its entries for Homepage, Dashy and Homer (see [Integrations](08-integrations.md)). |
+| **Asset pack (.zip)** | Everything `npm run service -- build` makes for a service — 28 SVGs, 11 PNGs, `favicon.ico`, the `web/` icon set, `manifest.json` — plus `catalog/services/<id>.json`, the logo in `catalog/logos/`, the design file, a `dashboard/` folder with the service's coin icons and its entries for Homepage, Dashy and Homer (see [Integrations](08-integrations.md)), and a `terminal/` folder with its message of the day, console login and SSH banner (see [Screens](09-screens.md)). |
+| **Wallpaper** | The crest on black or white marble, graphite or a blueprint sheet, for a 1080p, 1440p or 4K desktop, an ultrawide or a phone. The stone is drawn in the browser; a 4K one takes a few seconds. |
 | **Design file (.json)** | The design itself, with its history, to back up, share or import elsewhere. |
 | **Link to this design** | The design in an address — see below. |
 | **Sticker** view | Production PDF and SVG (Bleed, Artwork, White, CutContour layers), the cut path alone, a sheet, mockups. See [Stickers](06-stickers.md). |

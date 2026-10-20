@@ -1,0 +1,42 @@
+#!/bin/sh
+# The Olympus — message of the day. Install as /etc/update-motd.d/20-the-olympus
+# (executable). Set OLYMPUS_ART=ascii in /etc/default/the-olympus for terminals
+# without braille.
+[ -r /etc/default/the-olympus ] && . /etc/default/the-olympus
+echo
+if [ "${OLYMPUS_ART:-braille}" = ascii ]; then
+cat <<'ART'
+        .-+*#%%%%#*+-.
+     .+%@%*=--::--=*%@%+.
+   .*@%=.            .=%@*.
+  =@@=        ::        =@@=
+ =@%.      -+%@%%*-      .%@=
+:@@:    :+#**++*++*#+:    :@@:
++@*     +************+     *@+    T H E   O L Y M P U S
+#@=     +@++@#**#@++@+     =@#
++@*     +@==@*==*@==@+     *@+    theolympus.cloud
+:@@:    =@==@*==*@==@=    :@@:
+ =@%.  -**************-  .%@=
+  =@@=.::::::::::::::::.=@@=
+   .*@%=.            .=%@*.
+     .+%@%*=--::--=*%@%+.
+        .-+*#%%%%#*+-.
+ART
+else
+cat <<'ART'
+⠀⠀⠀⠀⠀⠀⣀⣤⣴⣶⣾⣿⣿⣷⣶⣦⣤⣀
+⠀⠀⠀⢀⣴⣾⡿⠛⠉⠉⠀⠀⠀⠀⠉⠉⠛⢿⣷⣦⡀
+⠀⠀⣰⣿⠟⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⠻⣿⣆
+⠀⣼⣿⠋⠀⠀⠀⠀⢀⣠⣴⣿⣿⣦⣄⡀⠀⠀⠀⠀⠙⣿⣧
+⢰⣿⡇⠀⠀⠀⢠⣶⣿⣷⣷⣽⣾⣮⣷⣿⣶⡄⠀⠀⠀⢸⣿⡆    T H E   O L Y M P U S
+⣾⣿⠀⠀⠀⠀⢈⣿⣛⢻⣿⣛⣛⣿⡟⣛⣿⡁⠀⠀⠀⠀⣿⣷
+⢿⣿⠀⠀⠀⠀⢸⣿⣷⢸⣿⢲⡖⣿⡇⣾⣿⡇⠀⠀⠀⠀⣿⡿    theolympus.cloud
+⠸⣿⡇⠀⠀⠀⢸⣿⡯⢸⣿⠭⠭⣿⡇⢽⣿⡇⠀⠀⠀⢸⣿⠇
+⠀⢻⣿⣄⠀⢠⣶⣶⣶⣶⣶⣶⣶⣶⣶⣶⣶⣶⡄⠀⣠⣿⡟
+⠀⠀⠹⣿⣦⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⣴⣿⠏
+⠀⠀⠀⠈⠻⢿⣷⣤⣀⣀⠀⠀⠀⠀⣀⣀⣤⣾⡿⠟⠁
+⠀⠀⠀⠀⠀⠀⠉⠛⠻⠿⢿⣿⣿⡿⠿⠟⠛⠉
+ART
+fi
+echo
+printf '  %s · up %s\n\n' "$(hostname -f 2>/dev/null || hostname)" "$(uptime -p 2>/dev/null | sed 's/^up //')"

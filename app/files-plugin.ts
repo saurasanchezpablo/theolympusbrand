@@ -12,6 +12,7 @@ export const PUBLISHED = [
   { dir: 'assets/master', group: 'master', label: 'The master identity' },
   { dir: 'assets/services', group: 'services', label: 'Service logos' },
   { dir: 'assets/integrations', group: 'integrations', label: 'Dashboards and themes' },
+  { dir: 'assets/screens', group: 'screens', label: 'Wallpapers, boot screens and terminal' },
   { dir: 'manufacturing/3d/master', group: '3d', label: 'Printable models (master)' },
   { dir: 'manufacturing/stickers/master', group: 'stickers', label: 'Stickers (master)' },
   { dir: 'manufacturing/stickers/sheets', group: 'stickers', label: 'Sticker sheets' },

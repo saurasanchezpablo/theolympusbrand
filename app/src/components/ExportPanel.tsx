@@ -2,7 +2,8 @@ import { useState } from 'react';
 import { SHARE_LONG_LINK } from '../../../src/catalog/share.ts';
 import { GROUNDS, type MarkKey } from '../../../src/catalog/fileset.ts';
 import type { Mark } from '../../../src/geometry/crest.ts';
-import { download, fileName, markSvg, presentationSvg, svgToPng } from '../exporters.ts';
+import { download, fileName, markSvg, presentationSvg, svgToPng, wallpaperPng } from '../exporters.ts';
+import { wallpaperName, WALLPAPER_SIZES, WALLPAPER_STYLES, type ScreenSubject, type WallpaperSize, type WallpaperStyle } from '../../../src/screens/screens.ts';
 import { markKeyOf, type CanvasState } from './Canvas.tsx';
 import { Section } from './ui.tsx';
 import { Icon } from './Library.tsx';
@@ -24,11 +25,13 @@ type Props = {
   onDesignFile: (() => void) | null;
   /** The design as a link; null for the master or a design with problems. */
   shareUrl: (() => string) | null;
+  /** Who the wallpaper is for: the master or the open design. */
+  screen: ScreenSubject;
   packProgress: number | null;
   disabledReason: string | null;
 };
 
-export function ExportPanel({ canvas, marks, id, name, onPack, onDesignFile, shareUrl, packProgress, disabledReason }: Props) {
+export function ExportPanel({ canvas, marks, id, name, onPack, onDesignFile, shareUrl, screen, packProgress, disabledReason }: Props) {
   const key = markKeyOf(canvas.view, canvas.edition);
   const mark = key ? marks[key] : undefined;
   const [variant, setVariant] = useState('');
@@ -111,6 +114,7 @@ export function ExportPanel({ canvas, marks, id, name, onPack, onDesignFile, sha
         )}
         {(error || disabledReason) && <p className="notes notes--error">{error ?? disabledReason}</p>}
       </Section>
+      <Wallpaper screen={screen} />
       {shareUrl && <Share url={shareUrl} />}
     </div>
   );
@@ -147,6 +151,50 @@ function Share({ url }: { url: () => string }) {
           </p>
         </>
       )}
+    </Section>
+  );
+}
+
+/** A wallpaper of the crest, for a desktop, an ultrawide or a phone. */
+function Wallpaper({ screen }: { screen: ScreenSubject }) {
+  const [style, setStyle] = useState<WallpaperStyle>('marble');
+  const [size, setSize] = useState<WallpaperSize>('1440p');
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const make = async () => {
+    setBusy(true);
+    setError(null);
+    try {
+      download(wallpaperName(screen.id, style, size), await wallpaperPng(screen, style, size), 'image/png');
+    } catch (e) {
+      setError((e as Error).message);
+    } finally {
+      setBusy(false);
+    }
+  };
+  return (
+    <Section title="Wallpaper">
+      <div className="input-row">
+        <select className="select select--sm" value={style} onChange={(e) => setStyle(e.target.value as WallpaperStyle)} aria-label="Wallpaper style">
+          {(Object.keys(WALLPAPER_STYLES) as WallpaperStyle[]).map((k) => (
+            <option key={k} value={k}>
+              {WALLPAPER_STYLES[k].label}
+            </option>
+          ))}
+        </select>
+        <select className="select select--sm" value={size} onChange={(e) => setSize(e.target.value as WallpaperSize)} aria-label="Wallpaper size">
+          {(Object.keys(WALLPAPER_SIZES) as WallpaperSize[]).map((k) => (
+            <option key={k} value={k}>
+              {WALLPAPER_SIZES[k].label}
+            </option>
+          ))}
+        </select>
+      </div>
+      <button type="button" className="btn btn--sm" disabled={busy} onClick={make}>
+        <Icon name="download" /> {busy ? 'Drawing the stone…' : 'Wallpaper (PNG)'}
+      </button>
+      <p className="field__hint">The crest, centred on stone, graphite or a drawing sheet. A service’s terminal crest (message of the day, SSH banner) is in its asset pack; the master’s boot screens are in Downloads.</p>
+      {error && <p className="notes notes--error">{error}</p>}
     </Section>
   );
 }

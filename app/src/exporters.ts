@@ -10,6 +10,8 @@ import { ico } from '../../src/export/ico.ts';
 import { webIcons } from '../../src/catalog/webicons.ts';
 import { coinSvg } from '../../src/integrations/kit.ts';
 import { dashboardSnippets, iconName } from '../../src/integrations/dashboards.ts';
+import { issue, motd, motdScript, sshBanner, terminalInstall, wallpaperSvg, WALLPAPER_SIZES, WALLPAPER_STYLES, type ScreenSubject, type WallpaperSize, type WallpaperStyle } from '../../src/screens/screens.ts';
+import type { ScreenTone } from '../../src/render/wallpaper.ts';
 import { PRINTER_MM, type PrintReport } from '../../src/print/service.ts';
 import type { Mark } from '../../src/geometry/crest.ts';
 import type { Service } from '../../src/catalog/service.ts';
@@ -114,8 +116,40 @@ export async function assetPack(design: Design, service: Service, marks: Record<
   files[`dashboard/${iconName(id)}`] = await svgToPng(coinSvg(marks.seal, 'dark', `The Olympus — ${service.name}`), 256);
   files[`dashboard/${iconName(id, '-light')}`] = await svgToPng(coinSvg(marks.seal, 'light', `The Olympus — ${service.name}`), 256);
   files['dashboard/README.md'] = strToU8(dashboardSnippets(entry));
+  // The crest in the terminal: message of the day, console login, SSH banner.
+  const screen: ScreenSubject = { id, name: service.name, caption: service.caption, url: service.url, marks: { crest: marks['crest-fine'], seal: marks.seal } };
+  files['terminal/motd-braille.txt'] = strToU8(motd(screen, 'braille'));
+  files['terminal/motd-ascii.txt'] = strToU8(motd(screen, 'ascii'));
+  files['terminal/20-the-olympus'] = strToU8(motdScript(screen));
+  files['terminal/issue'] = strToU8(issue(screen));
+  files['terminal/issue.net'] = strToU8(sshBanner(screen));
+  files['terminal/install.sh'] = strToU8(terminalInstall());
 
   return zipSync(Object.fromEntries(Object.entries(files).map(([p, d]) => [`${root}/${p}`, d])), { level: 6 });
 }
 
 export { designFile, libraryFile };
+
+/** A marble ground, drawn in a worker, as an encoded gray PNG. */
+function marbleGround(w: number, h: number, tone: ScreenTone): Promise<Uint8Array> {
+  return new Promise((resolve, reject) => {
+    const worker = new Worker(new URL('./ground-worker.ts', import.meta.url), { type: 'module' });
+    worker.onmessage = (e: MessageEvent<Uint8Array>) => {
+      worker.terminate();
+      resolve(e.data);
+    };
+    worker.onerror = (e) => {
+      worker.terminate();
+      reject(new Error(e.message || 'The marble could not be drawn.'));
+    };
+    worker.postMessage({ w, h, tone });
+  });
+}
+
+/** A wallpaper as PNG, made in the browser (the command line's are rasterised by resvg). */
+export async function wallpaperPng(subject: ScreenSubject, style: WallpaperStyle, size: WallpaperSize): Promise<Uint8Array> {
+  const { w, h } = WALLPAPER_SIZES[size];
+  const tone = WALLPAPER_STYLES[style].ground;
+  const ground = tone ? await marbleGround(w, h, tone) : undefined;
+  return svgToPng(wallpaperSvg(subject, style, size, ground), w);
+}

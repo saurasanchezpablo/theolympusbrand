@@ -508,6 +508,7 @@ export function App() {
             onPack={onPack}
             onDesignFile={draft ? () => exportDesign(designOf(draft, savedDesign)) : null}
             shareUrl={shareUrl}
+            screen={service ? { id: service.id, name: service.name, caption: service.caption, url: service.url, marks: { crest: marks['crest-fine']!, seal: marks.seal! } } : { id: 'master', name: 'The Olympus', caption: DOMAIN, url: `https://${DOMAIN}`, marks: { crest: marks['crest-fine']!, seal: marks.seal! } }}
             packProgress={packProgress}
             disabledReason={issues.length ? 'Fix the problems above before exporting the pack.' : null}
           />}
