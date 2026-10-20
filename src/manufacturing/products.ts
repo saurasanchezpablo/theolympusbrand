@@ -156,7 +156,7 @@ export const PRODUCTS: Record<ProductId, Product> = {
     mark: 'seal',
     params: [
       N('units', 'Height', 'U', 1, 3, 1, 1, 'Rack units: 1U is 44.45 mm (the panel is 0.79 mm less, to clear its neighbours).'),
-      N('spacing', 'Hole spacing', 'mm', 220, 245, 0.1, 236.5, 'Between the mounting holes’ centres. Most 10-inch racks: 236.5 mm — measure yours.'),
+      N('spacing', 'Hole spacing', 'mm', 220, 245, 0.1, 236.5, 'Between the mounting holes’ centres: 236.5 mm on many 10-inch racks — measure yours.'),
       N('hole', 'Slot width', 'mm', 4, 7, 0.1, 6.5, 'Mounting slots: 6.5 mm for M6 screws and cage nuts, 5.5 mm for M5.'),
       T('vents', 'Vents', 1, 'Slots through the panel either side of the design, for air.'),
       T('caption', 'Caption', 0, 'The line under the name. At 1U it is small: it may print too fine.'),

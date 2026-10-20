@@ -26,6 +26,8 @@ Mount Olympus is the server, and every service is a god with a domain.
 - [Screens](docs/09-screens.md): wallpapers for desktop, ultrawide and phone;
   a GRUB background and a Plymouth boot theme; the crest in the terminal —
   message of the day, console login and SSH banner.
+- [Handoff and validation](docs/10-handoff.md): what there is, how to run and
+  extend it, how it is checked, and what is still unproven.
 - [The site on your server](docs/07-self-hosting.md): everything above as one
   static website — build it, or run it with Docker.
 - [Creative directions](docs/01-creative-directions.md): how the mark was

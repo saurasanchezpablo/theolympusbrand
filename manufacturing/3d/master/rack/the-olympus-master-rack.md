@@ -18,7 +18,7 @@ A front panel for a 10-inch rack — the seal and the service’s name raised be
 | Parameter | Value | |
 |---|---|---|
 | Height | 2 U | Rack units: 1U is 44.45 mm (the panel is 0.79 mm less, to clear its neighbours). |
-| Hole spacing | 236.5 mm | Between the mounting holes’ centres. Most 10-inch racks: 236.5 mm — measure yours. |
+| Hole spacing | 236.5 mm | Between the mounting holes’ centres: 236.5 mm on many 10-inch racks — measure yours. |
 | Slot width | 6.5 mm | Mounting slots: 6.5 mm for M6 screws and cage nuts, 5.5 mm for M5. |
 | Vents | on | Slots through the panel either side of the design, for air. |
 | Caption | off | The line under the name. At 1U it is small: it may print too fine. |

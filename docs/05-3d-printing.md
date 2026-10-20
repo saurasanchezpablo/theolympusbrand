@@ -131,7 +131,7 @@ A blanking panel for a 10-inch rack, 254 mm wide and 1, 2 or 3 units tall
   elongated sideways to take up the rack's tolerance — 6.5 mm wide for M6
   screws and cage nuts, 5.5 mm for M5. 10-inch racks are not covered by the
   EIA-310 standard and differ: the default spacing between hole centres is
-  236.5 mm, the most common; **measure yours** and set it before printing.
+  236.5 mm, a common figure; **measure yours** and set it before printing.
 - **The design** — the seal and the name, as on a horizontal nameplate — is
   centred between the slots, and made smaller if a long name needs it. The
   seal is used rather than the crest: a 1U panel leaves 36 mm of height, and
