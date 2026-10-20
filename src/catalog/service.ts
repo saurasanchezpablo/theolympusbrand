@@ -9,6 +9,7 @@
 //     "monogram": "J",                ← optional: letter for monograms and print slots
 //     "logo": "logos/jellyfin.svg",   ← optional: app logo for the fine logo slot
 //     "caption": "The Olympus · Media", ← optional: the lockup's second line
+//     "url": "https://jellyfin.theolympus.cloud", ← optional: where it lives (QR labels)
 //     "description": "Personal media streaming"
 //   }
 
@@ -22,6 +23,7 @@ export type ServiceSpec = {
   monogram?: string;
   logo?: string;
   caption?: string;
+  url?: string;
   description?: string;
 };
 
@@ -36,7 +38,7 @@ export const slugify = (name: string): string =>
     .replace(/^-+|-+$/g, '');
 
 const ID = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
-export const SPEC_KEYS = ['id', 'name', 'category', 'god', 'monogram', 'logo', 'caption', 'description'] as const;
+export const SPEC_KEYS = ['id', 'name', 'category', 'god', 'monogram', 'logo', 'caption', 'url', 'description'] as const;
 const KEYS = new Set<string>(SPEC_KEYS);
 
 /** Validate a parsed JSON value as a service spec; throws with every problem found. */
@@ -53,6 +55,7 @@ export function validateSpec(raw: unknown, where = 'service'): ServiceSpec {
   if (o.monogram !== undefined && (typeof o.monogram !== 'string' || !/^[A-Za-z0-9]$/.test(o.monogram))) errors.push('"monogram" must be a single letter or digit');
   if (o.logo !== undefined && (typeof o.logo !== 'string' || !o.logo.endsWith('.svg'))) errors.push('"logo" must be a path to an .svg file');
   if (o.caption !== undefined && (typeof o.caption !== 'string' || !o.caption.trim() || o.caption.length > 48)) errors.push('"caption" must be text of at most 48 characters');
+  if (o.url !== undefined && (typeof o.url !== 'string' || !/^https?:\/\/[^\s]+$/.test(o.url) || o.url.length > 120)) errors.push('"url" must be an http(s) address of at most 120 characters');
   if (o.description !== undefined && typeof o.description !== 'string') errors.push('"description" must be text');
   if (errors.length) throw new Error(`${where}:\n  - ${errors.join('\n  - ')}`);
   return o as unknown as ServiceSpec;

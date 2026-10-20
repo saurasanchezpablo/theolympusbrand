@@ -158,11 +158,15 @@ Every service in the family is defined by one small file in
 
 - **Production files** are one path in one ink: charcoal on light grounds,
   marble on dark ones. Transparent versions are the default.
-- **Marble is a treatment, never the mark.** White and black marble reliefs
-  and the engraved medallion are presentation renders, used for previews,
-  documentation and mock-ups. The veining is seeded, so it is identical on
-  every render. A real marble look on a physical object comes from the
-  material or the printing technique, not from the file.
+- **Marble is a treatment, never the mark.** White and black marble reliefs,
+  the engraved medallion and the graphite monolith are presentation renders,
+  used for previews, documentation and mock-ups. The veining and grain are
+  seeded, so they are identical on every render. A real marble look on a
+  physical object comes from the material or the printing technique (see the
+  marble lithophane and the marble stickers), not from the file.
+- **The blueprint** is the mark as a construction drawing: grid, centre lines,
+  the border's construction circles and the rim's diameter, measured from the
+  geometry in units of the 512 artboard.
 - **External application logos** in the logo slot follow three rules:
   - reduce the logo to a single grey from the palette (the importer does
     this: fills become one ink, white fills become cut-outs);
@@ -222,7 +226,8 @@ the printable mesh (STL / 3MF) are specified with the 3D models.
 | `png/emblem/…-{64,128,256}.png` | Emblem rasters |
 | `png/seal/…-{16,32,48,64,180,192,512}.png` | Seal rasters, for favicon, touch icon and app manifest sizes |
 | `favicon.ico` | 16, 32 and 48 px seal |
-| `presentation/*.png` | Marble relief, engraved and dark renders (not production art) |
+| `presentation/*.png` | Marble relief, engraved, graphite, dark and blueprint renders (not production art) |
+| `web/` | Web icon set: dark-mode-aware `favicon.svg`, touch, 192 / 512 and maskable icons, `site.webmanifest`, `head.html` |
 | `manifest.json` | Every file with its SHA-256, plus measured print limits |
 
 The Print SVGs contain exactly the polygon geometry that passed the print
@@ -243,7 +248,9 @@ check. The Fine SVGs keep their curves.
 | `src/print/service.ts` | The print gate for a service crest |
 | `src/export/ico.ts` | favicon.ico writer |
 | `src/manufacturing/` | Printable models: layered meshes and their validation, products, OpenSCAD sources, model files ([guide](05-3d-printing.md)) |
-| `src/export/{stl,threemf}.ts` | STL and 3MF writers |
+| `src/export/{stl,threemf,pdf,png}.ts` | STL, 3MF, PDF (layers, spot colours) and PNG writers |
+| `src/manufacturing/stickers.ts` | Die-cut stickers and sheets ([guide](06-stickers.md)) |
+| `src/render/mockups.ts` | Laptop and server mockups for stickers |
 | `src/render/mesh-render.ts` | Previews of the printable models, drawn from their meshes |
 | `app/` | The Atelier, the web generator ([guide](04-generator.md)) |
 | `src/geometry/border.ts` | Greek key and bead-and-reel bands |
@@ -261,6 +268,7 @@ npm run build:master        # assets/master/
 npm run service -- help     # the service catalogue: add, build, list, check, remove
 npm run app                 # the Atelier, the web generator
 npm run model -- master     # printable models → manufacturing/3d/
+npm run sticker -- master   # stickers → manufacturing/stickers/
 npm run build:docs          # docs/design-system/*.png
 npm run test:update-golden  # only after an intended change to the geometry; review the boards first
 ```

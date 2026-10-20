@@ -178,6 +178,38 @@
       "sha256": "37c7b9193ae3cfd11234513d411e3c70014d6644fbabe9a600234937960b51b6"
     },
     {
+      "path": "web/favicon.svg",
+      "sha256": "e5cb871a110ebecd9ebdb4ce98a3569f1e271076bff2224967f8b70481457678"
+    },
+    {
+      "path": "web/site.webmanifest",
+      "sha256": "cc75a198582f40e11d2a75d9301bd0f09d7dc675c44b5a25f99898a1c1899c5a"
+    },
+    {
+      "path": "web/head.html",
+      "sha256": "ee924a48d802dabe85612c04ccec0a2d73793b5bc3d36ad0fae554c96fdffe40"
+    },
+    {
+      "path": "web/apple-touch-icon.png",
+      "sha256": "968fedf302f91ff6de8313f1ae256c48ce7ac9a4c31f21360db82d78b13040fb"
+    },
+    {
+      "path": "web/icon-192.png",
+      "sha256": "c12d5ae65263e2d87266c0f6a35f8451a8472c59e0619171e0decf4ec5b0ca5f"
+    },
+    {
+      "path": "web/icon-512.png",
+      "sha256": "84ecc3dfb83721f4df381accd7b5e7a048270459c8908b5740e06b4ce128c760"
+    },
+    {
+      "path": "web/icon-maskable-512.png",
+      "sha256": "55529f8b682ad3b4f7e9492ee8fd1410ed026aecd42ae02d00914e4b9ef235cf"
+    },
+    {
+      "path": "web/favicon.ico",
+      "sha256": "37c7b9193ae3cfd11234513d411e3c70014d6644fbabe9a600234937960b51b6"
+    },
+    {
       "path": "preview.png",
       "sha256": "fc38450dc872420556c976b7414a0cbace6958fdfdbdd5d2bc61d843bf292df1"
     }

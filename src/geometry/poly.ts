@@ -153,9 +153,13 @@ export const difference = (subject: Ring[], ...clips: Ring[][]): Ring[] => run(C
 export const intersection = (subject: Ring[], ...clips: Ring[][]): Ring[] =>
   clips.reduce((acc, clip) => run(ClipperLib.ClipType.ctIntersection, acc, clip), subject);
 
-/** Grow (delta > 0) or shrink (delta < 0) with round joins. */
-export function offset(rings: Ring[], delta: number): Ring[] {
-  const co = new ClipperLib.ClipperOffset(2, 0.25 * SCALE);
+/**
+ * Grow (delta > 0) or shrink (delta < 0) with round joins. Arcs are drawn to
+ * within `arcTolerance` (0.25 artboard units by default; pass a finer value
+ * when working in millimetres).
+ */
+export function offset(rings: Ring[], delta: number, arcTolerance = 0.25): Ring[] {
+  const co = new ClipperLib.ClipperOffset(2, arcTolerance * SCALE);
   co.AddPaths(toC(union(rings)), ClipperLib.JoinType.jtRound, ClipperLib.EndType.etClosedPolygon);
   const out = new ClipperLib.Paths();
   co.Execute(out, delta * SCALE);

@@ -53,6 +53,7 @@ ${assembly}
       ),
       '3D/3dmodel.model': strToU8(model),
     },
-    { level: 6 },
+    // A fixed timestamp: the same model always gives the same bytes.
+    { level: 6, mtime: '1980-01-01T00:00:00Z' },
   );
 }

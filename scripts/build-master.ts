@@ -17,6 +17,7 @@ import { geometryOf, minFeature, minDiameterMM } from '../src/print/printcheck.t
 import { ringsPath } from '../src/geometry/poly.ts';
 import { PALETTE } from '../src/brand/palette.ts';
 import { ico } from '../src/export/ico.ts';
+import { webIcons } from '../src/catalog/webicons.ts';
 
 loadNodeFonts();
 
@@ -77,13 +78,19 @@ for (const { name, mark, tier } of MARKS) {
 {
   const sizes = [16, 32, 48];
   const images = sizes.map((s) => png(productionSvg(seal(), { ground: 'transparent' }), s));
-  write('favicon.ico', ico(sizes.map((size, i) => ({ size, png: images[i] }))));
+  const favicon = ico(sizes.map((size, i) => ({ size, png: images[i] })));
+  write('favicon.ico', favicon);
+  // The web icon set, for the house's own pages.
+  const web = webIcons(seal(), { name: 'The Olympus', short: 'Olympus' });
+  for (const f of web.files) write(`web/${f.path}`, f.data);
+  for (const r of web.rasters) write(`web/${r.path}`, png(r.svg, r.width));
+  write('web/favicon.ico', favicon);
 }
 
 /* ---------------------------------------------------------------- */
 /* Presentation renders (documentation and previews, not production) */
 /* ---------------------------------------------------------------- */
-for (const t of ['relief-black', 'relief-white', 'engraved', 'flat-light'] as const) {
+for (const t of ['relief-black', 'relief-white', 'engraved', 'flat-light', 'graphite', 'blueprint'] as const) {
   write(`presentation/the-olympus-crest-${t}.png`, png(treatmentSvg(crest({ detail: 'fine' }), t), 1024));
 }
 

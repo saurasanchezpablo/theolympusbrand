@@ -9,3 +9,10 @@ explorations/
 # only the master's are kept.
 manufacturing/3d/*
 !manufacturing/3d/master/
+# The lithophane mesh is heavy (≈ 15 MB) and rebuilds in seconds.
+manufacturing/3d/master/lithophane/
+# Stickers are generated on demand (npm run sticker, or the Atelier); the
+# master's and the catalogue sheets are kept.
+manufacturing/stickers/*
+!manufacturing/stickers/master/
+!manufacturing/stickers/sheets/

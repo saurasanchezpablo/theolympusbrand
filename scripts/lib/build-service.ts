@@ -14,6 +14,7 @@ import { logoOf } from '../../src/node/catalog.ts';
 import type { Service } from '../../src/catalog/service.ts';
 import { serviceMarks, svgFiles, rasterJobs, FAVICON } from '../../src/catalog/fileset.ts';
 import { ico } from '../../src/export/ico.ts';
+import { webIcons } from '../../src/catalog/webicons.ts';
 import { board, header, text, place, pixels } from './board.ts';
 
 export const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
@@ -40,7 +41,13 @@ export function buildService(s: Service): ServiceReport {
   const marks = serviceMarks(s, logo?.d);
   for (const f of svgFiles(s, marks)) write(f.path, f.svg);
   for (const j of rasterJobs(s, marks)) write(j.path, png(j.svg, j.width));
-  write('favicon.ico', ico(FAVICON.sizes.map((size) => ({ size, png: png(FAVICON.svg(marks), size) }))));
+  const favicon = ico(FAVICON.sizes.map((size) => ({ size, png: png(FAVICON.svg(marks), size) })));
+  write('favicon.ico', favicon);
+  // The web icon set: drop web/ into a service's static files or theme.
+  const web = webIcons(marks.seal, { name: `${s.name} · The Olympus`, short: s.name });
+  for (const f of web.files) write(`web/${f.path}`, f.data);
+  for (const r of web.rasters) write(`web/${r.path}`, png(r.svg, r.width));
+  write('web/favicon.ico', favicon);
 
   // Preview board.
   {

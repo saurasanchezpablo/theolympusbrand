@@ -5,7 +5,8 @@
 //   npm run service -- categories
 //   npm run service -- add --name "Vaultwarden" --category security [--god athena|monogram]
 //                          [--id vaultwarden] [--monogram V] [--logo path/to/logo.svg]
-//                          [--caption "The Olympus · Vault"] [--description "Password manager"] [--no-build]
+//                          [--caption "The Olympus · Vault"] [--url https://vault.theolympus.cloud]
+//                          [--description "Password manager"] [--no-build]
 //   npm run service -- build [id …]        (all services when no id is given)
 //   npm run service -- check [id …]        (validate and print-check, write nothing)
 //   npm run service -- remove <id>
@@ -91,6 +92,7 @@ switch (command) {
     if (flag('god')) spec.god = flag('god') as ServiceSpec['god'];
     if (flag('monogram')) spec.monogram = flag('monogram');
     if (flag('caption')) spec.caption = flag('caption');
+    if (flag('url')) spec.url = flag('url');
     if (flag('description')) spec.description = flag('description');
     const logoSrc = flag('logo');
     if (logoSrc) {
@@ -139,5 +141,5 @@ switch (command) {
     break;
   }
   default:
-    console.log(readFileSync(new URL(import.meta.url), 'utf8').split('\n').slice(2, 13).map((l) => l.replace(/^\/\/ ?/, '')).join('\n'));
+    console.log(readFileSync(new URL(import.meta.url), 'utf8').split("\n").slice(2, 14).map((l) => l.replace(/^\/\/ ?/, '')).join('\n'));
 }

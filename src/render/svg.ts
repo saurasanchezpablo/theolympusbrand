@@ -3,7 +3,8 @@
 // separate layer on top of it and never part of the mark.
 
 import { ARTBOARD, C, RIM } from '../geometry/math.ts';
-import type { Mark } from '../geometry/crest.ts';
+import { borderLayout, PROFILES, type Detail, type Mark } from '../geometry/crest.ts';
+import { lineText } from '../geometry/fonts.ts';
 import { PALETTE } from '../brand/palette.ts';
 
 const S = ARTBOARD;
@@ -45,6 +46,8 @@ export const TREATMENTS = {
   'relief-white': 'White marble relief',
   'relief-black': 'Black marble relief',
   engraved: 'Engraved in marble',
+  graphite: 'Graphite monolith',
+  blueprint: 'Technical blueprint',
 } as const;
 export type Treatment = keyof typeof TREATMENTS;
 
@@ -101,6 +104,82 @@ const recess = (id: string) => `
     <feMerge><feMergeNode in="dark"/><feMergeNode in="light"/></feMerge>
   </filter>`;
 
+// A softer recess for the graphite: shallow engraving, a faint lit lower lip.
+const recessSoft = (id: string) => `
+  ${filterHead(id)}
+    <feGaussianBlur in="SourceAlpha" stdDeviation="1.1" result="b"/>
+    <feOffset in="b" dx="1" dy="1.3" result="o"/><feComposite in="SourceAlpha" in2="o" operator="out" result="lip"/>
+    <feFlood flood-color="#000000" flood-opacity="0.85"/><feComposite in2="lip" operator="in" result="dark"/>
+    <feOffset in="b" dx="-0.7" dy="-0.7" result="o2"/><feComposite in="SourceAlpha" in2="o2" operator="out" result="lip2"/>
+    <feFlood flood-color="#FFFFFF" flood-opacity="0.14"/><feComposite in2="lip2" operator="in" result="light"/>
+    <feMerge><feMergeNode in="dark"/><feMergeNode in="light"/></feMerge>
+  </filter>`;
+
+// Fine stone grain, seeded: a faint light-and-dark speckle.
+const grain = (id: string) => `
+  ${filterHead(id)}
+    <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" seed="7" result="n"/>
+    <feColorMatrix in="n" type="matrix" values="0 0 0 0 0.5  0 0 0 0 0.5  0 0 0 0 0.5  0.9 0.9 0.9 0 -1.25"/>
+  </filter>`;
+
+/**
+ * The technical blueprint: the mark as a construction drawing — grid, centre
+ * lines, the construction circles of the border (from the crest's own
+ * layout), dimensions in artboard units, and a title block.
+ */
+function blueprintSvg(mark: Mark, size: number): string {
+  const ink = PALETTE.graphite;
+  const faint = PALETTE.silver;
+  const M = 84; // margin around the artboard for dimensions
+  const V = S + 2 * M;
+  const label = (text: string, x: number, baseline: number, cap = 7, align: 'left' | 'centre' = 'left', fill: string = ink) => {
+    const probe = lineText(text, { cx: 0, baseline, size: 100, tracking: 0.1, role: 'companion' });
+    const k = cap / probe.capHeight;
+    const t = lineText(text, { cx: 0, baseline, size: 100 * k, tracking: 0.1, role: 'companion' });
+    return `<path d="${lineText(text, { cx: align === 'left' ? x + t.width / 2 : x, baseline, size: 100 * k, tracking: 0.1, role: 'companion' }).d}" fill="${fill}"/>`;
+  };
+  const kind = mark.id.split('-')[0];
+  const detail: Detail = mark.id.includes('-print') ? 'print' : 'fine';
+  const circles: [string, number][] = [['rim', RIM]];
+  if (kind === 'crest') {
+    const b = borderLayout(PROFILES[detail]);
+    circles.push(['key band', b.keyOut], ['inner rule', b.ruleIn], ['bead ring', b.beadR], ['field', b.fieldR]);
+  }
+  let g = '';
+  // Construction circles with radial leaders to labels in the right margin.
+  circles.forEach(([name, r], i) => {
+    const a = (-62 + i * 14) * (Math.PI / 180);
+    const px = C + r * Math.cos(a);
+    const py = C + r * Math.sin(a);
+    const ly = 18 + i * 26;
+    g += `<circle cx="${C}" cy="${C}" r="${r.toFixed(2)}" fill="none" stroke="${faint}" stroke-width="0.5" stroke-dasharray="4 2.5"/>`;
+    g += `<path d="M${px.toFixed(2)} ${py.toFixed(2)} L${(S + 6).toFixed(2)} ${ly} L${(S + 14).toFixed(2)} ${ly}" fill="none" stroke="${ink}" stroke-width="0.45"/><circle cx="${px.toFixed(2)}" cy="${py.toFixed(2)}" r="1.3" fill="${ink}"/>`;
+    g += label(`R ${Math.round(r * 10) / 10}`, S + 16, ly + 3);
+    g += label(name.toUpperCase(), S + 16, ly + 13, 4.6, 'left', PALETTE.slate);
+  });
+  // Overall dimension under the mark.
+  const dy = C + RIM + 26;
+  g += `<path d="M${C - RIM} ${C + RIM + 6} V${dy + 6} M${C + RIM} ${C + RIM + 6} V${dy + 6} M${C - RIM} ${dy} H${C + RIM}" fill="none" stroke="${ink}" stroke-width="0.45"/>`;
+  g += `<path d="M${C - RIM} ${dy} l7 -2.4 v4.8 z M${C + RIM} ${dy} l-7 -2.4 v4.8 z" fill="${ink}"/>`;
+  g += `<rect x="${C - 26}" y="${dy - 7}" width="52" height="14" fill="#F3F3F3"/>` + label(`Ø ${2 * RIM}`, C, dy + 3.5, 7, 'centre');
+  // Title block.
+  const what = `${kind.toUpperCase()}${kind === 'seal' ? '' : ` · ${detail.toUpperCase()} EDITION`}`;
+  g += label('THE OLYMPUS', -M + 14, S + M - 26, 7) + label(`${what} · CONSTRUCTION · UNITS OF THE ${S} ARTBOARD`, -M + 14, S + M - 13, 4.6, 'left', PALETTE.slate);
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="${-M} ${-M} ${V} ${V}">
+<defs>
+  <pattern id="bp-minor" width="8" height="8" patternUnits="userSpaceOnUse" x="0" y="0"><path d="M8 0H0V8" fill="none" stroke="#E2E2E2" stroke-width="0.4"/></pattern>
+  <pattern id="bp-major" width="64" height="64" patternUnits="userSpaceOnUse" x="0" y="0"><rect width="64" height="64" fill="url(#bp-minor)"/><path d="M64 0H0V64" fill="none" stroke="#CDCDCD" stroke-width="0.6"/></pattern>
+</defs>
+<rect x="${-M}" y="${-M}" width="${V}" height="${V}" fill="#F3F3F3"/>
+<rect x="${-M}" y="${-M}" width="${V}" height="${V}" fill="url(#bp-major)"/>
+<path d="M${C} ${-M + 8} V${S + M - 40} M${-M + 8} ${C} H${S + M - 8}" stroke="${faint}" stroke-width="0.5" stroke-dasharray="10 3 2 3"/>
+<path d="${mark.d}" fill="${ink}" fill-opacity="0.07" stroke="${ink}" stroke-width="0.42"/>
+${g}
+<rect x="${-M + 4}" y="${-M + 4}" width="${V - 8}" height="${V - 8}" fill="none" stroke="${ink}" stroke-width="0.8"/>
+</svg>
+`;
+}
+
 /** A presentation render of a mark (screen previews and documentation — not production art). */
 export function treatmentSvg(mark: Mark, treatment: Treatment, { size = S } = {}): string {
   const u = `${mark.id}-${treatment}`;
@@ -128,6 +207,17 @@ export function treatmentSvg(mark: Mark, treatment: Treatment, { size = S } = {}
   <g mask="url(#${u}-disc)">${mb.body}<circle cx="${C}" cy="${C}" r="${RIM}" fill="#000" fill-opacity="${kind === 'white' ? 0.16 : 0.45}"/></g>
   <g filter="url(#${u}-bvd)">${disc}</g><g filter="url(#${u}-sh)">${path('#000')}</g>
   <g mask="url(#${u}-art)">${mb.body}</g><g filter="url(#${u}-bv)">${path('#000')}</g>`;
+  } else if (treatment === 'graphite') {
+    // A graphite monolith: dark, finely grained, the design shallowly engraved.
+    bg = '#D4D4D4';
+    defs = `${recessSoft(`${u}-is`)}${bevel(`${u}-bvd`, 2, 3, 0.22, 0.6)}${shadow(`${u}-dsh`, 9, 11, 0.5)}${discMask}${grain(`${u}-gr`)}
+      <radialGradient id="${u}-sheen" cx="0.38" cy="0.3" r="0.85"><stop offset="0" stop-color="#3C3C3C"/><stop offset="0.6" stop-color="#2A2A2A"/><stop offset="1" stop-color="#202020"/></radialGradient>`;
+    body = `<g filter="url(#${u}-dsh)">${disc}</g>
+  <g mask="url(#${u}-disc)"><rect width="${S}" height="${S}" fill="url(#${u}-sheen)"/><rect width="${S}" height="${S}" filter="url(#${u}-gr)"/></g>
+  <g filter="url(#${u}-bvd)">${disc}</g>
+  <path d="${mark.d}" fill="#141414" fill-opacity="0.55"/><g filter="url(#${u}-is)">${path('#000')}</g>`;
+  } else if (treatment === 'blueprint') {
+    return blueprintSvg(mark, size);
   } else {
     // Engraved: the design cut into a white-marble medallion.
     const mb = marble(`${u}-m`, 'white');

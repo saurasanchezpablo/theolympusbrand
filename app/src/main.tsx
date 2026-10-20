@@ -9,19 +9,11 @@ import '@fontsource/jetbrains-mono/400.css';
 import './styles.css';
 import { loadBrandFonts } from './fonts.ts';
 import { App } from './App.tsx';
-import { seal } from '../../src/geometry/crest.ts';
-import { productionSvg } from '../../src/render/svg.ts';
 
 const root = createRoot(document.getElementById('root')!);
 
 // The lettering is drawn from the font files themselves, so they load first.
 loadBrandFonts()
-  .then(() => {
-    // The tab icon is the master seal, drawn by the same geometry.
-    const icon = document.getElementById('icon') as HTMLLinkElement;
-    icon.type = 'image/svg+xml';
-    icon.href = URL.createObjectURL(new Blob([productionSvg(seal(), { ground: 'transparent' })], { type: 'image/svg+xml' }));
-  })
   .then(() =>
     root.render(
       <StrictMode>

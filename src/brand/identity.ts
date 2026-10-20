@@ -4,6 +4,9 @@ import type { BeadRhythm } from '../geometry/border.ts';
 
 export const NAME = 'THE OLYMPUS';
 
+/** The house's domain — the realm above the clouds. */
+export const DOMAIN = 'theolympus.cloud';
+
 /** The house's border rhythms. Fixed for The Olympus; never varied per service. */
 export type BorderRhythms = { hooks: string; beads: BeadRhythm };
 

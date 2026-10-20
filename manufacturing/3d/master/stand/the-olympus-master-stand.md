@@ -1,6 +1,6 @@
 # The Olympus — Desk stand
 
-A slotted foot that holds a medallion upright on a desk or shelf.
+A slotted foot that holds a medallion or lithophane upright on a desk or shelf.
 
 ![Preview](the-olympus-master-stand-preview.png)
 
@@ -9,7 +9,8 @@ A slotted foot that holds a medallion upright on a desk or shelf.
 | | |
 |---|---|
 | Size | 88 × 28 × 13 mm |
-| Volume | 28.9 cm³ — at most 36 g of PLA solid; much less at 15–20 % infill |
+| Volume | 28.9 cm³ |
+| Filament | ≈ 9 g, 3.2 m of 1.75 mm at 15 % infill (an estimate) |
 
 ## Parameters
 
@@ -28,10 +29,10 @@ A slotted foot that holds a medallion upright on a desk or shelf.
 
 ## Validation
 
-- **stand**: valid — 356 triangles, closed and manifold (0 open or doubled edges), 0 degenerate triangles, no self-intersection (0 overlapping layers), volume 28.88 cm³ as designed.
+- **stand**: valid — 244 triangles, closed and manifold (0 open or doubled edges), 0 degenerate triangles, no self-intersection (0 overlapping layers), volume 28.87 cm³ as designed.
 
 ## Printing
 
 - Print flat on the bed, design facing up. No supports needed.
-- Layer height 0.2 mm or finer; heights that are multiples of it come out exact.
-- Slot 4.50 × 64.0 mm, 10 mm deep. Print a test first: if the medallion is loose, lower the clearance; if it will not go in, raise it.
+- Layers of 0.2 mm: any height works.
+- Slot 4.50 × 64.0 mm, 10 mm deep. Print a test first: if the piece is loose, lower the clearance; if it will not go in, raise it.

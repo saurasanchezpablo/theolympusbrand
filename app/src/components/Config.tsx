@@ -67,6 +67,9 @@ export function Config({ draft, service, logo, issues, warnings, onChange }: Pro
             </div>
           )}
         </Field>
+        <Field label="Address" hint="Optional — where the service lives, e.g. https://jellyfin.theolympus.cloud. QR labels and nameplates point here.">
+          {(id) => <input id={id} className="input input--mono" type="url" value={spec.url ?? ''} placeholder="https://…" maxLength={120} onChange={(e) => setSpec({ url: e.target.value.trim() })} />}
+        </Field>
         <Field label="Description" hint="Optional — for the library and the preview board.">
           {(id) => <input id={id} className="input" value={spec.description ?? ''} maxLength={80} onChange={(e) => setSpec({ description: e.target.value })} />}
         </Field>

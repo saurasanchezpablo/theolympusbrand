@@ -1,0 +1,13 @@
+# Only what the site is built from goes into the image.
+*
+!package.json
+!package-lock.json
+!app
+!src
+!assets
+!catalog
+!docs
+!manufacturing
+!deploy/nginx.conf
+app/dist
+**/node_modules

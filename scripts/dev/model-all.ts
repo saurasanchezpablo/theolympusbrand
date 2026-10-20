@@ -1,18 +1,20 @@
-// Validate every product for every patron: node scripts/dev/model-all.ts
+// Validate every product for every patron, with back features: node scripts/dev/model-all.ts
 import { loadNodeFonts } from '../../src/node/fonts.ts';
-import { crest, seal } from '../../src/geometry/crest.ts';
-import { buildModel, PRODUCTS, defaults, type ProductId } from '../../src/manufacturing/products.ts';
+import { buildModel, PRODUCTS, suggestedParams, type ProductId } from '../../src/manufacturing/products.ts';
+import { markFor } from '../../src/manufacturing/files.ts';
 import { GODS, type GodId } from '../../src/geometry/pantheon.ts';
 loadNodeFonts();
 let bad = 0;
 const t0 = performance.now();
 for (const god of Object.keys(GODS) as GodId[]) {
-  const marks = { crest: crest({ detail: 'print', patron: { god } }).d, seal: seal({ patron: { god } }).d };
+  const marks = { crest: markFor('crest', { god }, god), seal: markFor('seal', { god }, god) };
   for (const id of Object.keys(PRODUCTS) as ProductId[]) {
     const kind = PRODUCTS[id].mark;
-    for (const diameter of id === 'token' ? [32, 40, 60] : [70, 100, 200]) {
-      const m = buildModel(id, { ...defaults(id), diameter, magnets: 2 }, kind ? { d: marks[kind], minDiameterMM: 0 } : undefined);
-      for (const p of m.parts) if (!p.report.ok) { bad++; console.log(god, id, diameter, p.name, `bad ${p.report.badEdges} deg ${p.report.degenerate} vol ${p.report.volume.toFixed(2)}/${p.report.expectedVolume.toFixed(2)}`); }
+    const mark = kind ? marks[kind] : undefined;
+    const base = suggestedParams(id, mark?.minDiameterMM);
+    for (const extra of [{}, { magnets: 2, keyhole: 1, base: 4.4, thickness: 5.5 }, { magnets: 3, layout: 1 }]) {
+      const m = buildModel(id, { ...base, ...extra }, { mark, name: god, caption: `The Olympus · ${god}` });
+      for (const p of m.parts) if (!p.report.ok) { bad++; console.log(god, id, JSON.stringify(extra), p.name, `bad ${p.report.badEdges} deg ${p.report.degenerate} overlaps ${p.report.overlaps} vol ${p.report.volume.toFixed(2)}/${p.report.expectedVolume.toFixed(2)}`); }
     }
   }
 }

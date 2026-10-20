@@ -6,11 +6,13 @@ import { registerFont, type FontRole } from '../../src/geometry/fonts.ts';
 import cinzelBold from '@fontsource/cinzel/files/cinzel-latin-700-normal.woff?url';
 import cinzelBlack from '@fontsource/cinzel/files/cinzel-latin-900-normal.woff?url';
 import jostSemibold from '@fontsource/jost/files/jost-latin-600-normal.woff?url';
+import jostRegular from '@fontsource/jost/files/jost-latin-400-normal.woff?url';
 
 const FILES: Record<FontRole, string> = {
   inscription: cinzelBold,
   inscriptionHeavy: cinzelBlack,
   companion: jostSemibold,
+  body: jostRegular,
 };
 
 export async function loadBrandFonts(): Promise<void> {

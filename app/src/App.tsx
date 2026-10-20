@@ -5,9 +5,19 @@ import { designFile, libraryFile, parseDesigns, type Design } from '../../src/ca
 import type { MarkKey } from '../../src/catalog/fileset.ts';
 import type { Mark } from '../../src/geometry/crest.ts';
 import { HOUSE, loadLibrary, newKey, nowIso, saveLibrary, type Saved } from './library.ts';
-import { MASTER, draftOf, letteringIssues, markOf, marksFor, newDraft, printFor, readLogo, renderableService, specIssues, type Draft } from './model.ts';
-import { PRODUCTS, defaults, suggestedParams, type ParamKey, type Params, type ProductId } from '../../src/manufacturing/products.ts';
-import { modelFiles, modelName } from '../../src/manufacturing/files.ts';
+import { MASTER, draftOf, letteringIssues, marksFor, newDraft, printFor, readLogo, renderableService, specIssues, type Draft } from './model.ts';
+import { DEFAULT_SETTINGS, defaults, type ParamKey, type Params, type PrintSettings, type ProductId } from '../../src/manufacturing/products.ts';
+import type { Subject } from '../../src/manufacturing/files.ts';
+import { DOMAIN } from '../../src/brand/identity.ts';
+import type { BuildRequest, BuildResult } from './model-worker.ts';
+import { STICKER_DEFAULTS, type Paper, type StickerSpec } from '../../src/manufacturing/stickers.ts';
+import { StickerView } from './components/StickerView.tsx';
+import { useRoute } from './site/files.ts';
+import { HomePage } from './site/HomePage.tsx';
+import { CataloguePage } from './site/CataloguePage.tsx';
+import { GuidePage } from './site/GuidePage.tsx';
+import { DownloadsPage } from './site/DownloadsPage.tsx';
+import { StickerPanel, type StickerBuild } from './components/StickerPanel.tsx';
 import { ModelView } from './components/ModelView.tsx';
 import { ModelPanel, type ModelBuild } from './components/ModelPanel.tsx';
 import { assetPack, download } from './exporters.ts';
@@ -18,6 +28,9 @@ import { ExportPanel } from './components/ExportPanel.tsx';
 import { SvgImage } from './components/ui.tsx';
 
 type Open = { kind: 'master' } | { kind: 'draft'; draft: Draft; saved: string };
+
+const SETTINGS_KEY = 'the-olympus/print-settings';
+const STICKER_KEY = 'the-olympus/sticker';
 
 /** What a save compares against: the parts of a draft that end up in the file. */
 const fingerprint = (d: Draft) => JSON.stringify([d.spec, d.logoSvg ?? null]);
@@ -36,6 +49,7 @@ function designOf(d: Draft, previous?: Design): Design {
 }
 
 export function App() {
+  const [route, navigate] = useRoute();
   const initial = useMemo(() => loadLibrary(), []);
   const [mine, setMine] = useState<Saved>(initial.designs);
   const [storageOk, setStorageOk] = useState(initial.available);
@@ -86,42 +100,108 @@ export function App() {
     return w;
   }, [service, logo, print, idClash, draft]);
 
-  /* ---------- the printable model ---------- */
-  const modelId = service?.id ?? 'master';
-  const modelTitle = service ? `The Olympus — ${service.name}` : 'The Olympus';
-  const patron = service?.patron;
-  const markKind = PRODUCTS[product].mark;
+  /* ---------- the printable model (built in a worker) ---------- */
   const showModel = canvas.view === 'model';
-  const mark = useMemo(() => (showModel && markKind ? markOf(markKind, patron, modelId) : null), [showModel, markKind, patron, modelId]);
-  const suggested = useMemo(() => {
-    const s = suggestedParams(product, mark?.minDiameterMM);
-    if (product === 'stand') {
-      // The stand fits the medallion as it is set up.
-      const med = { ...defaults('medallion'), ...overrides.medallion };
-      s.diameter = med.diameter;
-      s.slot = Math.round((med.base + med.relief) * 100) / 100;
+  const subject = useMemo<Subject>(
+    () => (service ? { id: service.id, title: `The Olympus — ${service.name}`, name: service.name, caption: service.caption, url: service.url } : { id: 'master', title: 'The Olympus', name: 'The Olympus', caption: DOMAIN, url: `https://${DOMAIN}` }),
+    [service?.id, service?.name, service?.caption, service?.url],
+  );
+  const patron = service?.patron;
+  const [settings, setSettings] = useState<PrintSettings>(() => {
+    try {
+      return { ...DEFAULT_SETTINGS, ...JSON.parse(localStorage.getItem(SETTINGS_KEY) ?? '{}') };
+    } catch {
+      return DEFAULT_SETTINGS;
     }
-    return s;
-  }, [product, mark, overrides.medallion]);
-  const values = { ...suggested, ...overrides[product] } as Record<ParamKey, number>;
-  const valuesKey = JSON.stringify(values);
+  });
+  useEffect(() => {
+    try {
+      localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+    } catch {
+      /* a convenience only */
+    }
+  }, [settings]);
+  const [suggested, setSuggested] = useState<{ product: ProductId; values: Required<Params>; markMin: number | null } | null>(null);
+  // One worker builds both models and stickers; each kind drops replies older than its latest request.
+  const worker = useRef<Worker | null>(null);
+  const latest = useRef({ model: 0, sticker: 0 });
+  const handlers = useRef<{ model?: (r: BuildResult) => void; sticker?: (r: BuildResult) => void }>({});
+  const send = (msg: BuildRequest) => {
+    if (!worker.current) {
+      worker.current = new Worker(new URL('./model-worker.ts', import.meta.url), { type: 'module' });
+      worker.current.onmessage = (e: MessageEvent<BuildResult>) => {
+        const r = e.data;
+        if (r.req === latest.current[r.kind]) handlers.current[r.kind]?.(r);
+      };
+    }
+    worker.current.postMessage(msg);
+  };
+  const requestKey = JSON.stringify([subject, patron ?? null, product, overrides[product] ?? {}, overrides.medallion ?? {}, settings]);
   useEffect(() => {
     if (!showModel) return;
     setBuilding(true);
     const t = window.setTimeout(() => {
-      try {
-        const r = modelFiles(modelId, modelTitle, product, JSON.parse(valuesKey), mark, null);
-        setBuild({ model: r.model, files: r.files, base: modelName(modelId, product) });
-        setBuildError(null);
-      } catch (e) {
-        setBuild(null);
-        setBuildError(`The model could not be built: ${(e as Error).message}`);
-      } finally {
+      const req = ++latest.current.model;
+      handlers.current.model = (r) => {
         setBuilding(false);
-      }
-    }, 120);
+        if (r.ok && r.kind === 'model') {
+          setBuild({ model: r.model, files: r.files, base: r.base });
+          setSuggested({ product: r.model.product, values: r.suggested, markMin: r.markMin });
+          setBuildError(null);
+        } else if (!r.ok) {
+          setBuild(null);
+          setBuildError(`The model could not be built: ${r.error}`);
+        }
+      };
+      const [subj, pat, prod, own, med, set] = JSON.parse(requestKey);
+      send({ kind: 'model', req, subject: subj, patron: pat ?? undefined, product: prod, overrides: own, medallion: med, settings: set });
+    }, 150);
     return () => window.clearTimeout(t);
-  }, [showModel, modelId, modelTitle, product, valuesKey, mark]);
+  }, [showModel, requestKey]);
+
+  /* ---------- the sticker (built in the same worker) ---------- */
+  const showSticker = canvas.view === 'sticker';
+  const [stickerSpec, setStickerSpec] = useState<StickerSpec>(() => {
+    try {
+      return { ...STICKER_DEFAULTS, ...JSON.parse(localStorage.getItem(STICKER_KEY) ?? '{}') };
+    } catch {
+      return STICKER_DEFAULTS;
+    }
+  });
+  const [paper, setPaper] = useState<Paper>('a4');
+  const [stickerBuild, setStickerBuild] = useState<StickerBuild | null>(null);
+  const [stickerError, setStickerError] = useState<string | null>(null);
+  const [stickerBusy, setStickerBusy] = useState(false);
+  useEffect(() => {
+    try {
+      localStorage.setItem(STICKER_KEY, JSON.stringify(stickerSpec));
+    } catch {
+      /* a convenience only */
+    }
+  }, [stickerSpec]);
+  const stickerKey = JSON.stringify([subject, patron ?? null, stickerSpec, paper]);
+  useEffect(() => {
+    if (!showSticker) return;
+    setStickerBusy(true);
+    const t = window.setTimeout(() => {
+      const req = ++latest.current.sticker;
+      handlers.current.sticker = (r) => {
+        setStickerBusy(false);
+        if (r.ok && r.kind === 'sticker') {
+          setStickerBuild({ sticker: r.sticker, files: r.files, base: r.base, perSheet: r.perSheet, previews: r.previews });
+          setStickerError(null);
+        } else if (!r.ok) {
+          setStickerBuild(null);
+          setStickerError(`The sticker could not be built: ${r.error}`);
+        }
+      };
+      const [subj, pat, spec, pap] = JSON.parse(stickerKey);
+      send({ kind: 'sticker', req, subject: subj, patron: pat ?? undefined, spec, paper: pap });
+    }, 150);
+    return () => window.clearTimeout(t);
+  }, [showSticker, stickerKey]);
+  useEffect(() => () => worker.current?.terminate(), []);
+  const values = { ...(suggested?.product === product ? suggested.values : defaults(product)), ...overrides[product] } as Record<ParamKey, number>;
 
   const current: Current = open.kind === 'master' ? { kind: 'master' } : open.draft.origin.kind === 'house' ? { kind: 'house', id: open.draft.origin.id } : open.draft.origin.kind === 'mine' ? { kind: 'mine', key: open.draft.origin.key } : { kind: 'new' };
 
@@ -259,15 +339,29 @@ export function App() {
           ? 'House catalogue · read-only until saved as yours'
           : 'Not saved yet';
 
+  const inAtelier = route.page === 'atelier';
   return (
-    <div className="app">
+    <div className={`app${inAtelier ? '' : ' app--page'}`}>
       <header className="topbar">
-        <div className="brand">
+        <a className="brand" href="#/" aria-label="The Olympus — home">
           <SvgImage className="brand__seal" svg={productionSvg(MASTER.marks().seal, { ground: 'transparent' })} alt="" />
           <span className="brand__name">The Olympus</span>
-          <span className="brand__sub">Atelier</span>
-        </div>
-        <div className="topbar__actions">
+        </a>
+        <nav className="sitenav" aria-label="Site">
+          {(
+            [
+              ['atelier', 'Atelier'],
+              ['catalogue', 'Catalogue'],
+              ['guide', 'Guide'],
+              ['downloads', 'Downloads'],
+            ] as const
+          ).map(([page, label]) => (
+            <a key={page} href={`#/${page}`} aria-current={route.page === page ? 'page' : undefined}>
+              {label}
+            </a>
+          ))}
+        </nav>
+        <div className="topbar__actions" hidden={!inAtelier}>
           <button type="button" className="btn btn--ghost" onClick={() => importRef.current?.click()}>
             <Icon name="upload" /> Import
           </button>
@@ -294,7 +388,8 @@ export function App() {
       />
 
       <Canvas
-        model={<ModelView parts={build && build.model.product === product ? build.model.parts : null} busy={building} />}
+        model={<ModelView model={build && build.model.product === product ? build.model : null} busy={building} layer={settings.layer} />}
+        sticker={<StickerView build={stickerBuild} busy={stickerBusy} />}
         state={canvas}
         onChange={setCanvas}
         marks={marks}
@@ -311,14 +406,17 @@ export function App() {
               values={values}
               build={build && build.model.product === product ? build : null}
               error={buildError}
-              markMin={mark?.minDiameterMM ?? null}
+              markMin={suggested?.product === product ? suggested.markMin : null}
+              settings={settings}
+              onSettings={setSettings}
               onProduct={setProduct}
               onParam={(k, v) => setOverrides((o) => ({ ...o, [product]: { ...o[product], [k]: v } }))}
               onReset={() => setOverrides((o) => ({ ...o, [product]: {} }))}
             />
           )}
           {draft && service ? <Config draft={draft} service={service} logo={logo} issues={issues} warnings={warnings} onChange={(d) => setOpen({ ...open, kind: 'draft', draft: d, saved: open.kind === 'draft' ? open.saved : '' })} /> : <MasterCard onNew={onNew} />}
-          {!showModel && <ExportPanel
+          {showSticker && <StickerPanel spec={stickerSpec} paper={paper} build={stickerBuild} error={stickerError} onSpec={setStickerSpec} onPaper={setPaper} />}
+          {!showModel && !showSticker && <ExportPanel
             canvas={canvas}
             marks={marks}
             id={service?.id ?? 'master'}
@@ -347,6 +445,23 @@ export function App() {
           )}
         </footer>
       </div>
+
+      {!inAtelier && (
+        <main className="site">
+          {route.page === 'home' && <HomePage />}
+          {route.page === 'catalogue' && (
+            <CataloguePage
+              mine={mine}
+              onOpen={(e) => {
+                navigate('#/atelier');
+                onOpen(e);
+              }}
+            />
+          )}
+          {route.page === 'guide' && <GuidePage doc={route.arg} />}
+          {route.page === 'downloads' && <DownloadsPage />}
+        </main>
+      )}
 
       {toast && (
         <div className="toast" role="status">

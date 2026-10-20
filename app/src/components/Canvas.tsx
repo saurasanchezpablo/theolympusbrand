@@ -6,9 +6,9 @@ import type { ReactNode } from 'react';
 import { PALETTE } from '../../../src/brand/palette.ts';
 import { Segmented, SvgImage } from './ui.tsx';
 
-export type View = 'crest' | 'emblem' | 'seal' | 'lockup-horizontal' | 'lockup-vertical' | 'sizes' | 'model';
+export type View = 'crest' | 'emblem' | 'seal' | 'lockup-horizontal' | 'lockup-vertical' | 'sizes' | 'model' | 'sticker';
 export type Edition = 'fine' | 'print';
-export type Surface = 'flat' | 'relief-white' | 'relief-black' | 'engraved';
+export type Surface = 'flat' | 'relief-white' | 'relief-black' | 'engraved' | 'graphite' | 'blueprint';
 
 export type CanvasState = { view: View; edition: Edition; surface: Surface; ground: Ground };
 
@@ -24,6 +24,8 @@ const square = (v: View) => v === 'crest' || v === 'emblem' || v === 'seal';
 type Props = {
   /** The printable model's view, shown when the view is "model". */
   model: ReactNode;
+  /** The sticker's view, shown when the view is "sticker". */
+  sticker: ReactNode;
   state: CanvasState;
   onChange: (s: CanvasState) => void;
   marks: Partial<Record<MarkKey, Mark>>;
@@ -32,7 +34,7 @@ type Props = {
   print: PrintReport | null;
 };
 
-export function Canvas({ model, state, onChange, marks, isMaster, name, print }: Props) {
+export function Canvas({ model, sticker, state, onChange, marks, isMaster, name, print }: Props) {
   const { view, edition, surface, ground } = state;
   const set = (p: Partial<CanvasState>) => onChange({ ...state, ...p });
   const key = markKeyOf(view, edition);
@@ -41,6 +43,7 @@ export function Canvas({ model, state, onChange, marks, isMaster, name, print }:
 
   let stage: ReactNode = null;
   if (view === 'model') stage = model;
+  else if (view === 'sticker') stage = sticker;
   else if (view === 'sizes') stage = <SizeSheet marks={marks} ground={ground} />;
   else if (mark) {
     // The stage is the ground; the mark sits on it exactly as the transparent file would.
@@ -48,8 +51,8 @@ export function Canvas({ model, state, onChange, marks, isMaster, name, print }:
     stage = <SvgImage className={`stage__mark${mark.width ? ' stage__mark--wide' : ''}`} svg={svg} alt={`${name} — ${view.replace('-', ' ')}`} />;
   }
 
-  const flatOnly = view === 'model';
-  const stageGround = view === 'model' ? 'model' : treated ? `t-${surface}` : ground;
+  const flatOnly = view === 'model' || view === 'sticker';
+  const stageGround = flatOnly ? 'model' : treated ? `t-${surface}` : ground;
 
   return (
     <main className="canvas" aria-label="Design canvas">
@@ -65,7 +68,8 @@ export function Canvas({ model, state, onChange, marks, isMaster, name, print }:
             { value: 'lockup-horizontal', label: 'Horizontal', disabled: isMaster, hint: isMaster ? 'Lockups carry a service name' : 'Crest with the service name beside it' },
             { value: 'lockup-vertical', label: 'Vertical', disabled: isMaster, hint: isMaster ? 'Lockups carry a service name' : 'Crest with the service name beneath it' },
             { value: 'sizes', label: 'Small sizes' },
-            { value: 'model', label: '3D print', hint: 'Printable models: medallions, tokens, stand' },
+            { value: 'sticker', label: 'Sticker', hint: 'Die-cut stickers, sheets and mockups' },
+            { value: 'model', label: '3D print', hint: 'Printable models: medallions, nameplates, lithophanes…' },
           ]}
         />
         <div className="canvas__bar-right" hidden={flatOnly}>
@@ -95,6 +99,8 @@ export function Canvas({ model, state, onChange, marks, isMaster, name, print }:
             { value: 'relief-white', label: 'White marble', disabled: !square(view) },
             { value: 'relief-black', label: 'Black marble', disabled: !square(view) },
             { value: 'engraved', label: 'Engraved', disabled: !square(view) },
+            { value: 'graphite', label: 'Graphite', disabled: !square(view) },
+            { value: 'blueprint', label: 'Blueprint', disabled: !square(view), hint: 'The construction drawing: circles and dimensions in artboard units' },
           ]}
         />
         <Segmented
@@ -115,9 +121,21 @@ export function Canvas({ model, state, onChange, marks, isMaster, name, print }:
           <>
             <strong>Printable model.</strong> Drawn from the triangles that go into the STL — not a mockup.
           </>
+        ) : view === 'sticker' ? (
+          <>
+            <strong>Sticker.</strong> Print-ready vector files with a separate cut path; the laptop and server scenes are mockups.
+          </>
         ) : treated ? (
           <>
-            <strong>Presentation mockup.</strong> Marble, relief and engraving are rendered effects for previews — the production file is the flat vector.
+            {surface === 'blueprint' ? (
+              <>
+                <strong>Construction drawing.</strong> The border’s circles and the rim, measured from the geometry, in units of the 512 artboard.
+              </>
+            ) : (
+              <>
+                <strong>Presentation mockup.</strong> Marble, graphite, relief and engraving are rendered effects for previews — the production file is the flat vector.
+              </>
+            )}
           </>
         ) : view === 'sizes' ? (
           'Seal and emblem at the pixel sizes they are made for: favicons, tabs, app icons.'

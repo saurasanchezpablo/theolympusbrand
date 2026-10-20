@@ -1,16 +1,15 @@
 // The Olympus — Desk stand
-// Desk stand — A slotted foot that holds a medallion upright on a desk or shelf.
+// Desk stand — A slotted foot that holds a medallion or lithophane upright on a desk or shelf.
 //
-// Parametric source for OpenSCAD 2021.01 or later. Open it, change the values
-// below (or use Window → Customizer), then Design → Render and File → Export
-// → STL. 
+// Parametric source for OpenSCAD 2021.01 or later. Change the values below
+// (or use Window → Customizer), then Design → Render and File → Export → STL.
 // Print flat, design up, no supports.
 
 /* [Dimensions] */
-diameter = 100;       // [40:1:300] Medallion diameter (mm)
-slot = 4.2;           // [1.6:0.1:16] Medallion thickness (mm)
-clearance = 0.3;      // [0:0.05:1] Clearance (mm)
-depth = 10;           // [4:0.5:30] Slot depth (mm)
+diameter = 100;           // [40:1:300] Medallion diameter (mm)
+slot = 4.2;               // [1.6:0.1:16] Medallion thickness (mm)
+clearance = 0.3;          // [0:0.05:1] Clearance (mm)
+depth = 10;               // [4:0.5:30] Slot depth (mm)
 
 /* [Hidden] */
 $fn = 160;

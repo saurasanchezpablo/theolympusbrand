@@ -376,6 +376,46 @@
       "sha256": "3ec50d44b1e611f9ac3eca6f5b91a89a2c86fabb4b18327290ec32fe2b37db20"
     },
     {
+      "path": "web/favicon.svg",
+      "bytes": 1687,
+      "sha256": "6eab23451ce5554ef1c845babcd0e11ad79c7def2a36966b0d50567b0c496da3"
+    },
+    {
+      "path": "web/site.webmanifest",
+      "bytes": 531,
+      "sha256": "9fc0049b82c9fc72d2c7213f9571d9c0e8ba151fd6ea4c65bd2888eb1d4bdcba"
+    },
+    {
+      "path": "web/head.html",
+      "bytes": 292,
+      "sha256": "7e9df429e913add53f8d003509269e2715ad8cf999fb949f494fbadd60f965ae"
+    },
+    {
+      "path": "web/apple-touch-icon.png",
+      "bytes": 4729,
+      "sha256": "4d557e392a46584e26cc9e7a200988f832859983ddb1c1da910e0de4e18a0883"
+    },
+    {
+      "path": "web/icon-192.png",
+      "bytes": 8136,
+      "sha256": "8eb3a60535746871d7c55fdbd1394cabd1ce96ab173931fa7d767c89790fb6c0"
+    },
+    {
+      "path": "web/icon-512.png",
+      "bytes": 22759,
+      "sha256": "dd4b29178a43a6a1d8dfed36c353626b571af3ff46f4d0738fe42e71c9018eba"
+    },
+    {
+      "path": "web/icon-maskable-512.png",
+      "bytes": 12779,
+      "sha256": "673a389a72156338355758b46f63eeceaae6b324ba53de9b10871b1e6b667c9e"
+    },
+    {
+      "path": "web/favicon.ico",
+      "bytes": 3520,
+      "sha256": "3ec50d44b1e611f9ac3eca6f5b91a89a2c86fabb4b18327290ec32fe2b37db20"
+    },
+    {
       "path": "presentation/the-olympus-crest-relief-black.png",
       "bytes": 668845,
       "sha256": "8ee96835b672089340966212d66407d7c4ce2a7d4a8c936ba2a6b1584c309c3f"
@@ -394,6 +434,16 @@
       "path": "presentation/the-olympus-crest-flat-light.png",
       "bytes": 158635,
       "sha256": "c21066b1f66c021f1cc8ed2e240501bbaa822041d084eb438ad489b7c3876561"
+    },
+    {
+      "path": "presentation/the-olympus-crest-graphite.png",
+      "bytes": 1034247,
+      "sha256": "8033e9c07e8331e54a6cdcb636fffaae6ce6edf1746b0794210a33cc8d8ea015"
+    },
+    {
+      "path": "presentation/the-olympus-crest-blueprint.png",
+      "bytes": 330267,
+      "sha256": "ab9eb8472e7454e51c4f6bb20957ebcd2197463ad8d9f3694475bc53a1fda001"
     }
   ]
 }

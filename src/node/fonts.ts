@@ -11,6 +11,7 @@ const FILES: Record<FontRole, string> = {
   inscription: '@fontsource/cinzel/files/cinzel-latin-700-normal.woff',
   inscriptionHeavy: '@fontsource/cinzel/files/cinzel-latin-900-normal.woff',
   companion: '@fontsource/jost/files/jost-latin-600-normal.woff',
+  body: '@fontsource/jost/files/jost-latin-400-normal.woff',
 };
 
 let loaded = false;

@@ -7,6 +7,7 @@ import { productionSvg, treatmentSvg, type Ground, type Treatment } from '../../
 import { svgFiles, rasterJobs, FAVICON, type MarkKey } from '../../src/catalog/fileset.ts';
 import { designFile, catalogFile, libraryFile, type Design } from '../../src/catalog/design.ts';
 import { ico } from '../../src/export/ico.ts';
+import { webIcons } from '../../src/catalog/webicons.ts';
 import { PRINTER_MM, type PrintReport } from '../../src/print/service.ts';
 import type { Mark } from '../../src/geometry/crest.ts';
 import type { Service } from '../../src/catalog/service.ts';
@@ -86,7 +87,13 @@ export async function assetPack(design: Design, service: Service, marks: Record<
     icons.push({ size, png: await svgToPng(FAVICON.svg(marks), size) });
     tick();
   }
-  files[`assets/services/${id}/favicon.ico`] = ico(icons);
+  const favicon = ico(icons);
+  files[`assets/services/${id}/favicon.ico`] = favicon;
+  // The web icon set, as the command line writes it.
+  const web = webIcons(marks.seal, { name: `${service.name} · The Olympus`, short: service.name });
+  for (const f of web.files) files[`assets/services/${id}/web/${f.path}`] = strToU8(f.data);
+  for (const r of web.rasters) files[`assets/services/${id}/web/${r.path}`] = await svgToPng(r.svg, r.width);
+  files[`assets/services/${id}/web/favicon.ico`] = favicon;
 
   const list = await Promise.all(Object.entries(files).map(async ([path, data]) => ({ path: path.slice(`assets/services/${id}/`.length), sha256: await sha256(data) })));
   const manifest = {

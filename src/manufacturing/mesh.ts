@@ -314,8 +314,10 @@ export function bounds(m: Mesh): { min: Vec3; max: Vec3 } {
  * slivers, no self-intersection (each layer's rings are disjoint: their union
  * has the area of their sum), and the volume it was designed to have.
  */
-export function validate(m: Mesh, layers: Layer[]): MeshReport {
-  const expectedVolume = stackVolume(layers);
+export function validate(m: Mesh, design: Layer[] | number): MeshReport {
+  // A stack is checked against its layers; other solids (a heightfield) against their computed volume.
+  const layers = typeof design === 'number' ? [] : design;
+  const expectedVolume = typeof design === 'number' ? design : stackVolume(layers);
   const overlaps = layers.filter((L) => {
     const a = area(L.rings);
     return Math.abs(area(union(L.rings)) - a) > 1e-4 * Math.max(1, Math.abs(a));
@@ -348,3 +350,16 @@ export function validate(m: Mesh, layers: Layer[]): MeshReport {
 
 /** The volume a stack should have: each layer's area times its height. */
 export const stackVolume = (layers: Layer[]) => layers.reduce((s, L) => s + area(L.rings) * (L.z1 - L.z0), 0);
+
+/** Surface area (mm²) — for filament estimates. */
+export function surfaceArea(m: Mesh): number {
+  const p = m.positions;
+  let a = 0;
+  for (let t = 0; t < m.triangles.length; t += 3) {
+    const [i, j, k] = [m.triangles[t] * 3, m.triangles[t + 1] * 3, m.triangles[t + 2] * 3];
+    const ux = p[j] - p[i], uy = p[j + 1] - p[i + 1], uz = p[j + 2] - p[i + 2];
+    const wx = p[k] - p[i], wy = p[k + 1] - p[i + 1], wz = p[k + 2] - p[i + 2];
+    a += Math.hypot(uy * wz - uz * wy, uz * wx - ux * wz, ux * wy - uy * wx) / 2;
+  }
+  return a;
+}

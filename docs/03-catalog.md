@@ -54,6 +54,7 @@ Options:
 | `--monogram` | Letter used for monograms and the printed logo slot |
 | `--logo` | An SVG app logo for the fine edition's logo slot |
 | `--caption` | The lockup's second line, instead of "The Olympus · *God*" |
+| `--url` | Where the service lives (`https://…`): QR labels and nameplates point here |
 | `--description` | One line for the preview board |
 | `--no-build` | Only write the catalogue entry |
 
@@ -102,6 +103,7 @@ already identifies the service.
 | `svg/…-lockup-horizontal*.svg`, `…-lockup-vertical*.svg` | Crest with service name and caption |
 | `png/` | Rasters of the above at common sizes |
 | `favicon.ico` | 16, 32 and 48 px seal |
+| `web/` | The web icon set for the service itself: `favicon.svg` (switches to light ink in dark mode), `favicon.ico`, `apple-touch-icon.png`, 192 / 512 px and maskable icons, `site.webmanifest`, and `head.html` with the tags to paste into a page |
 | `preview.png` | Everything on one board |
 | `manifest.json` | Resolved patron, print check and file checksums |
 

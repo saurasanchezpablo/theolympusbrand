@@ -19,13 +19,14 @@ logic and no account: open it from any static host, or run
 | Area | What it does |
 |---|---|
 | **Library** (left) | The master, the house catalogue (`catalog/services/`, read-only) and your designs. Search by name, god, category or description; filter by origin and category. Hover a row to duplicate it, download its design file, or delete it (your designs only). |
-| **Canvas** (centre) | Live preview. **View**: crest, emblem, seal, horizontal and vertical lockups, a sheet of small sizes (16–64 px seals, emblems, crest), and **3D print** ([printable models](05-3d-printing.md)). **Edition**: fine or print. **Surface**: flat vector, white marble, black marble, engraved. **Background**: light, dark or transparent. |
+| **Canvas** (centre) | Live preview. **View**: crest, emblem, seal, horizontal and vertical lockups, a sheet of small sizes (16–64 px seals, emblems, crest), **Sticker** ([die-cut stickers](06-stickers.md)) and **3D print** ([printable models](05-3d-printing.md)). **Edition**: fine or print. **Surface**: flat vector, white marble, black marble, engraved. **Background**: light, dark or transparent. |
 | **Configuration** (right) | Name and identifier, category, patron, logo slot, lockup caption. Below it, the exports. The bar at the bottom saves. |
 
 ## Making a design
 
 1. **New design** — or duplicate any library entry.
 2. Type the **name**. The identifier (file names) follows it until you edit it.
+   Add the service's **address** if it has one — QR labels and nameplates use it.
 3. Pick the **category**. It works as a preset: it chooses the patron god
    (Media → Apollo, Security → Athena…).
 4. Keep that **patron** or choose another god — or the **monogram**, the
@@ -48,9 +49,10 @@ shown read-only.
 | **SVG** (this view) | The production file for the current view, on any of the four grounds: transparent with dark ink, transparent with white ink, on light, on dark. |
 | **PNG** (this view) | The same, rasterised at the chosen width. |
 | **Presentation render** | With a marble or engraved surface: a 2048 px PNG of that render, named `…-mockup.png`. |
-| **Asset pack (.zip)** | Everything `npm run service -- build` makes for a service — 28 SVGs, 11 PNGs, `favicon.ico`, `manifest.json` — plus `catalog/services/<id>.json`, the logo in `catalog/logos/`, and the design file. |
+| **Asset pack (.zip)** | Everything `npm run service -- build` makes for a service — 28 SVGs, 11 PNGs, `favicon.ico`, the `web/` icon set, `manifest.json` — plus `catalog/services/<id>.json`, the logo in `catalog/logos/`, and the design file. |
 | **Design file (.json)** | The design itself, to back up, share or import elsewhere. |
-| **3D print** view | STL, 3MF and OpenSCAD source of a medallion, engraved medallion, two-colour medallion, token or desk stand, or the whole model pack. See [3D printing](05-3d-printing.md). |
+| **Sticker** view | Production PDF and SVG (Bleed, Artwork, White, CutContour layers), the cut path alone, a sheet, mockups. See [Stickers](06-stickers.md). |
+| **3D print** view | STL, 3MF and OpenSCAD source of every printable product, or the whole model pack. See [3D printing](05-3d-printing.md). |
 
 The asset pack is laid out like the repository: unzip it at the repository
 root and the new service is part of the catalogue (`npm run service -- build`

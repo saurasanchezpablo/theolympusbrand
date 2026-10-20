@@ -6,12 +6,13 @@
 //   inscription       — Cinzel Bold (700), the screen crest and lockup names
 //   inscriptionHeavy  — Cinzel Black (900), print editions
 //   companion         — Jost Semibold (600), lockup captions
+//   body              — Jost Regular (400), running text in the brand book
 // Cinzel and Jost: SIL Open Font License 1.1.
 
 import type { Font } from 'opentype.js';
 import { fmt } from './math.ts';
 
-export type FontRole = 'inscription' | 'inscriptionHeavy' | 'companion';
+export type FontRole = 'inscription' | 'inscriptionHeavy' | 'companion' | 'body';
 
 const registry: Partial<Record<FontRole, Font>> = {};
 

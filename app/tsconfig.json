@@ -13,6 +13,6 @@
     "skipLibCheck": true,
     "types": ["vite/client"]
   },
-  "include": ["src", "../src", "vite.config.ts"],
+  "include": ["src", "../src", "vite.config.ts", "files-plugin.ts"],
   "exclude": ["../src/node"]
 }

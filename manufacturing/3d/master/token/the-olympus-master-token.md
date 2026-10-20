@@ -9,8 +9,9 @@ The seal raised on a small disc with a keyring lug — a key fob, a bag tag, a c
 | | |
 |---|---|
 | Size | 59 × 67.1 × 3.4 mm |
-| Volume | 7.9 cm³ — at most 10 g of PLA solid; much less at 15–20 % infill |
-| Mark prints from | Ø 56 mm on a 0.4 mm nozzle |
+| Volume | 7.9 cm³ |
+| Filament | ≈ 5 g, 1.5 m of 1.75 mm at 15 % infill (an estimate) |
+| Design prints from | Ø 56 mm on a 0.4 mm nozzle |
 
 ## Parameters
 
@@ -26,7 +27,7 @@ The seal raised on a small disc with a keyring lug — a key fob, a bag tag, a c
 
 - `the-olympus-master-token.stl` — the solid, ready to slice
 - `the-olympus-master-token.3mf` — the same solid, in 3MF
-- `the-olympus-master-token.scad` — parametric source for OpenSCAD, reading `the-olympus-master-seal.svg`
+- `the-olympus-master-token.scad` — parametric source for OpenSCAD
 
 ## Validation
 
@@ -35,5 +36,5 @@ The seal raised on a small disc with a keyring lug — a key fob, a bag tag, a c
 ## Printing
 
 - Print flat on the bed, design facing up. No supports needed.
-- Layer height 0.2 mm or finer; heights that are multiples of it come out exact.
+- Layers of 0.2 mm: the heights below are whole numbers of layers unless noted.
 - A tough filament (PETG) wears better on a keyring than PLA.
