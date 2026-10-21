@@ -4,7 +4,7 @@ import { designFile, libraryFile, nextVersion, parseDesigns, type Design, type D
 import { readShareCode, shareCode } from '../../src/catalog/share.ts';
 import type { MarkKey } from '../../src/catalog/fileset.ts';
 import type { Mark } from '../../src/geometry/crest.ts';
-import { HOUSE, loadLibrary, newKey, nowIso, saveLibrary, type Saved } from './library.ts';
+import { HOUSE, loadLibrary, newKey, nowIso, saveLibrary, useHouse, type Saved } from './library.ts';
 import { MASTER, draftOf, letteringIssues, marksFor, newDraft, printFor, readLogo, renderableService, specIssues, type Draft } from './model.ts';
 import { DEFAULT_SETTINGS, defaults, type ParamKey, type Params, type PrintSettings, type ProductId } from '../../src/manufacturing/products.ts';
 import type { Subject } from '../../src/manufacturing/files.ts';
@@ -58,6 +58,8 @@ type Pane = 'library' | 'canvas' | 'settings';
  * visitor reads other pages, so nothing in progress is lost.
  */
 export default function Atelier({ active }: { active: boolean }) {
+  // The house's designs: the bundled catalogue, then the server's own when it has one.
+  const house = useHouse();
   const [route] = useRoute();
   const [pane, setPane] = useState<Pane>('canvas');
   const [drawer, setDrawer] = useState(false);
@@ -465,7 +467,7 @@ export default function Atelier({ active }: { active: boolean }) {
   return (
     <div className="atelier" data-pane={pane} data-drawer={drawer ? 'open' : 'closed'} hidden={!active}>
       <Library
-        house={HOUSE}
+        house={house}
         mine={mine}
         current={current}
         storageAvailable={storageOk}

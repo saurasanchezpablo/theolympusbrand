@@ -25,6 +25,8 @@ export type ServiceSpec = {
   logo?: string;
   caption?: string;
   url?: string;
+  /** Its address on the network, for the map's online check: an IPv4 or IPv6 address, or a host name. */
+  ip?: string;
   /** The application the service runs (a theme kit's id, such as "nextcloud"): its kit is made from this service. */
   app?: string;
   description?: string;
@@ -40,8 +42,11 @@ export const slugify = (name: string): string =>
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-+|-+$/g, '');
 
-const ID = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
-export const SPEC_KEYS = ['id', 'name', 'category', 'god', 'monogram', 'logo', 'caption', 'url', 'app', 'description'] as const;
+export const ID = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+export const SPEC_KEYS = ['id', 'name', 'category', 'god', 'monogram', 'logo', 'caption', 'url', 'ip', 'app', 'description'] as const;
+
+/** A host to check: an IPv4 or IPv6 address, or a host name — never anything a command could read as an option or a word. */
+export const isHost = (v: unknown): v is string => typeof v === 'string' && v.length <= 253 && (/^[A-Za-z0-9][A-Za-z0-9.-]*$/.test(v) || /^[0-9a-fA-F:]{2,39}$/.test(v));
 const KEYS = new Set<string>(SPEC_KEYS);
 
 /** Validate a parsed JSON value as a service spec; throws with every problem found. */
@@ -62,6 +67,7 @@ export function validateSpec(raw: unknown, where = 'service'): ServiceSpec {
   if (o.caption !== undefined && !text(o.caption, 48)) errors.push('"caption" must be one line of at most 48 characters, without control characters');
   // Addresses: the characters of a URL, but none that quote or substitute in a shell, a stylesheet or a page.
   if (o.url !== undefined && (typeof o.url !== 'string' || !/^https?:\/\/[A-Za-z0-9._~:/?#@!&()*+,;=%-]+$/.test(o.url) || o.url.length > 120)) errors.push('"url" must be an http(s) address of at most 120 characters, without quotes, spaces, $, <, > or backslashes');
+  if (o.ip !== undefined && !isHost(o.ip)) errors.push('"ip" must be an IPv4 or IPv6 address, or a host name');
   if (o.app !== undefined && (typeof o.app !== 'string' || !ID.test(o.app))) errors.push('"app" must be an application id in kebab-case, such as "nextcloud"');
   if (o.description !== undefined && !(o.description === '' || text(o.description, 120))) errors.push('"description" must be one line of at most 120 characters, without control characters');
   if (errors.length) throw new Error(`${where}:\n  - ${errors.join('\n  - ')}`);

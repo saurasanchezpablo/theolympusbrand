@@ -33,6 +33,32 @@ services:
     security_opt:
       - no-new-privileges:true
 
+  # The map's edit service: what is added, moved or changed on the map is
+  # written to data/ in the repository (never committed; back it up), and the
+  # builder sees it and rebuilds. Set its password once:
+  #   docker compose -f docker-compose.auto.yml run --rm -it editor node scripts/editor.ts password
+  editor:
+    image: theolympus-builder
+    container_name: olympus-editor
+    command: ["node", "scripts/editor.ts", "serve"]
+    working_dir: /repo
+    volumes:
+      - ..:/repo
+      - node_modules:/repo/node_modules
+    environment:
+      OLYMPUS_DATA: /repo/data
+      OLYMPUS_EDITOR_HOST: 0.0.0.0
+    depends_on:
+      - builder
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    # Only the right to send a ping, for the map's "online" marks.
+    cap_drop:
+      - ALL
+    cap_add:
+      - NET_RAW
+
   web:
     build:
       context: .

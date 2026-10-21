@@ -19,3 +19,9 @@ manufacturing/stickers/*
 # A service's screens are generated on demand (npm run screens -- <id>); the master's are kept.
 assets/screens/services/
 site-releases/
+
+# What is added from the map lives on the server only (OLYMPUS_DATA).
+data/
+# The map's list, picture and logos come from each server's own data (npm run map); its island is kept.
+assets/map/*
+!assets/map/terrain.bin

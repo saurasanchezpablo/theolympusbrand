@@ -4,22 +4,42 @@ import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 
 import { basename, join, resolve as resolvePath, sep } from 'node:path';
 import { validateSpec, resolve, SPEC_KEYS, type Service, type ServiceSpec } from '../catalog/service.ts';
 import { importLogo } from '../geometry/logo.ts';
+import { dataDir, dataLogo, dataServices, loadRemoved } from './data.ts';
 
 export const CATALOG_DIR = new URL('../../catalog/', import.meta.url).pathname;
 export const SERVICES_DIR = join(CATALOG_DIR, 'services');
 
 export function loadCatalog(dir = SERVICES_DIR): Service[] {
-  if (!existsSync(dir)) return [];
-  const services = readdirSync(dir)
-    .filter((f) => f.endsWith('.json'))
-    .sort()
-    .map((f) => {
-      const spec = validateSpec(JSON.parse(readFileSync(join(dir, f), 'utf8')), `catalog/services/${f}`);
-      if (`${spec.id}.json` !== f) throw new Error(`catalog/services/${f}: "id" is "${spec.id}" but the file is named ${basename(f)}`);
-      if (spec.logo && !existsSync(join(CATALOG_DIR, spec.logo))) throw new Error(`catalog/services/${f}: logo ${spec.logo} not found in catalog/`);
+  const repo = !existsSync(dir)
+    ? []
+    : readdirSync(dir)
+        .filter((f) => f.endsWith('.json'))
+        .sort()
+        .map((f) => {
+          const spec = validateSpec(JSON.parse(readFileSync(join(dir, f), 'utf8')), `catalog/services/${f}`);
+          if (`${spec.id}.json` !== f) throw new Error(`catalog/services/${f}: "id" is "${spec.id}" but the file is named ${basename(f)}`);
+          return spec;
+        });
+  // The server's own data is laid over the repository's catalogue (only over the real one, not a folder a tool names).
+  const own = dir === SERVICES_DIR ? dataServices() : [];
+  const removed = new Set(dir === SERVICES_DIR ? loadRemoved() : []);
+  const byId = new Map(repo.filter((s) => !removed.has(s.id)).map((s) => [s.id, s]));
+  for (const s of own) byId.set(s.id, s);
+  return [...byId.values()]
+    .sort((a, b) => (a.id < b.id ? -1 : 1))
+    .map((spec) => {
+      if (spec.logo && !logoFile(spec)) throw new Error(`${spec.id}: logo ${spec.logo} not found in the data folder or catalog/`);
       return resolve(spec);
     });
-  return services;
+}
+
+/** Where a service's logo is: the data folder's own first, then the repository's. */
+function logoFile(spec: Pick<ServiceSpec, 'id' | 'logo'>): string | null {
+  if (!spec.logo) return null;
+  const own = spec.logo === `logos/${spec.id}.svg` ? dataLogo(spec.id) : null;
+  if (own) return own;
+  const file = resolvePath(CATALOG_DIR, spec.logo);
+  return existsSync(file) ? file : null;
 }
 
 export function writeSpec(spec: ServiceSpec, dir = SERVICES_DIR): string {
@@ -33,9 +53,10 @@ export function writeSpec(spec: ServiceSpec, dir = SERVICES_DIR): string {
 /** The service's imported logo (path data), if it has one. */
 export function logoOf(service: Service): { d: string; warnings: string[] } | null {
   if (!service.logo) return null;
-  // Only files inside catalog/logos/, and of a size a logo has.
-  const file = resolvePath(CATALOG_DIR, service.logo);
-  if (!file.startsWith(resolvePath(CATALOG_DIR, 'logos') + sep)) throw new Error(`${service.id}: logo ${service.logo} is outside catalog/logos/`);
+  // Only files inside the data folder's logos/ or catalog/logos/, and of a size a logo has.
+  const file = logoFile(service);
+  if (!file) throw new Error(`${service.id}: logo ${service.logo} not found`);
+  if (!file.startsWith(resolvePath(CATALOG_DIR, 'logos') + sep) && !(dataDir() && file.startsWith(resolvePath(dataDir()!, 'logos') + sep))) throw new Error(`${service.id}: logo ${service.logo} is outside the logo folders`);
   const svg = readFileSync(file, 'utf8');
   if (svg.length > LOGO_MAX_BYTES) throw new Error(`${service.id}: logo ${service.logo} is larger than ${LOGO_MAX_BYTES / 1024} KB`);
   return importLogo(svg);

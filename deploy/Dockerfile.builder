@@ -4,7 +4,7 @@
 
 FROM node:24-bookworm-slim
 RUN apt-get update \
- && apt-get install -y --no-install-recommends git ca-certificates \
+ && apt-get install -y --no-install-recommends git ca-certificates iputils-ping \
  && rm -rf /var/lib/apt/lists/*
 # The dependencies and the releases live in volumes; created here so they
 # belong to the user the builder runs as (the node image's, uid 1000).

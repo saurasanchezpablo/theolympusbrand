@@ -13,6 +13,8 @@ export type Snapshot = {
   content: string;
   /** Each service's catalogue file and logo, by id. */
   services: Record<string, string>;
+  /** Where each building stands, and the machines: what only the map shows. Absent in snapshots older than the map. */
+  map?: string;
 };
 
 export type Step =
@@ -24,6 +26,7 @@ export type Step =
   | { kind: 'index' }
   | { kind: 'integrations' }
   | { kind: 'installer' }
+  | { kind: 'map' }
   | { kind: 'site' };
 
 export type Plan = { steps: Step[]; why: string[] };
@@ -64,6 +67,10 @@ export function plan(before: Snapshot | null, now: Snapshot): Plan {
   if (changed.length) steps.push({ kind: 'screens', ids: changed });
   // The one-command installer lists every service and every kit's files: made again after them.
   if (changed.length || removed.length) steps.push({ kind: 'installer' });
+  // The map lists every service, and shows the machines and where each building stands.
+  const mapChanged = before.map !== now.map;
+  if (mapChanged && !changed.length && !removed.length) why.push('the map changed');
+  if (changed.length || removed.length || mapChanged) steps.push({ kind: 'map' });
   if (before.content !== now.content) why.push('the published content changed');
   if (steps.length || before.content !== now.content) steps.push({ kind: 'site' });
   return { steps, why };
@@ -89,7 +96,26 @@ export function command(step: Step, out: string): string[] {
       return ['node', 'scripts/integrations.ts'];
     case 'installer':
       return ['node', 'scripts/installer.ts'];
+    case 'map':
+      return ['node', 'scripts/map.ts'];
     case 'site':
       return ['node_modules/.bin/vite', 'build', '--config', 'app/vite.config.ts', '--outDir', out, '--emptyOutDir'];
   }
+}
+
+/** Files a build writes from the catalogue (with the server's own data, they differ here from the repository's). */
+const GENERATED = [/^assets\/services\//, /^assets\/integrations\//, /^assets\/screens\//, /^assets\/install\.sh$/, /^assets\/map\//, /^docs\/03-catalog\.md$/, /^docs\/catalog\//, /^docs\/integrations\//, /^docs\/screens\//];
+const generated = (path: string) => GENERATED.some((r) => r.test(path));
+
+/**
+ * Before a pull: which locally changed files to put back so the pull can go
+ * on — those the pull changes as well, and only if every one of them is a
+ * file the build makes (it makes them again after). Null when a change made
+ * by hand is in the way: then nothing is touched and the pull is refused.
+ */
+export function toReset(localChanged: readonly string[], upstreamChanged: readonly string[]): string[] | null {
+  const incoming = new Set(upstreamChanged);
+  const inTheWay = localChanged.filter((f) => incoming.has(f));
+  if (inTheWay.some((f) => !generated(f))) return null;
+  return inTheWay;
 }

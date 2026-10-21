@@ -4,7 +4,7 @@ import { resolve } from '../../../src/catalog/service.ts';
 import { GODS } from '../../../src/geometry/pantheon.ts';
 import type { Design } from '../../../src/catalog/design.ts';
 import { CATEGORY_LIST, marksFor, readLogo, title } from '../model.ts';
-import { HOUSE, loadLibrary } from '../library.ts';
+import { loadLibrary, useHouse } from '../library.ts';
 import { requestOpen } from '../bus.ts';
 import { download } from '../exporters.ts';
 import { SvgImage, Segmented } from '../components/ui.tsx';
@@ -21,6 +21,7 @@ function onOpen(e: Entry) {
 export function CataloguePage() {
   // Read fresh on each visit: designs saved in the Atelier since show up here.
   const mine = useMemo<Record<string, Design>>(() => loadLibrary().designs, []);
+  const HOUSE = useHouse();
   const { index } = useIndex();
   const [category, setCategory] = useState('');
   const [scope, setScope] = useState<'all' | 'house' | 'mine'>('all');
@@ -30,7 +31,7 @@ export function CataloguePage() {
       ...(scope !== 'mine' ? HOUSE.map((design): Entry => ({ kind: 'house', id: design.spec.id, design })) : []),
       ...(scope !== 'house' ? Object.entries(mine).map(([key, design]): Entry => ({ kind: 'mine', key, design })) : []),
     ],
-    [mine, scope],
+    [mine, scope, HOUSE],
   );
   const shown = entries.filter((e) => !category || e.design.spec.category === category);
 

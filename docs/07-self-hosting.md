@@ -100,6 +100,59 @@ OLYMPUS_OUT=/srv/olympus OLYMPUS_GIT_INTERVAL=10 npm run autobuild
 and any web server can serve `/srv/olympus/current` (it follows the switch to
 each new release). `npm run autobuild -- --once` does a single pass.
 
+## The map's edit service
+
+The map (*#/map*) can be changed from the browser — a building added, moved,
+renamed, given an address — and the changes are saved on the server. That
+needs one small process beside the site: the **edit service**. It writes only
+into the server's data folder (`data/` in the repository, or
+`OLYMPUS_DATA`), which git never sees; the automatic rebuild watches that
+folder as it watches `catalog/`, so the rest of the house follows. See
+[the map](13-the-map.md).
+
+With Docker, `docker-compose.auto.yml` already runs it (the `editor`
+container). Set its password once:
+
+```sh
+docker compose -f docker-compose.auto.yml run --rm -it editor node scripts/editor.ts password
+```
+
+Without Docker, run it with systemd beside the builder:
+
+```ini
+# /etc/systemd/system/the-olympus-editor.service
+[Unit]
+Description=The Olympus — the map's edit service
+After=network-online.target
+
+[Service]
+User=olympus
+WorkingDirectory=/srv/theolympusbrand
+Environment=OLYMPUS_DATA=/srv/theolympusbrand/data
+ExecStart=/usr/bin/env node scripts/editor.ts serve
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
+```
+
+```sh
+cd /srv/theolympusbrand && sudo -u olympus npm run editor -- password
+sudo systemctl enable --now the-olympus-editor
+```
+
+and let the web server pass `/api/` to it (it listens on 127.0.0.1:8091):
+
+```nginx
+location /api/ {
+  proxy_pass http://127.0.0.1:8091;
+  proxy_set_header X-Forwarded-Proto $scheme;
+  client_max_body_size 1m;
+}
+```
+
+Without the edit service the map is still shown, read-only.
+
 ## Without Docker
 
 Copy `app/dist/` to any static host — nginx (use `deploy/nginx.conf` as a

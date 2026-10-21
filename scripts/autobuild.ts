@@ -22,10 +22,12 @@
 import { spawn, execFileSync } from 'node:child_process';
 import { existsSync, mkdirSync, readFileSync, readdirSync, renameSync, rmSync, symlinkSync, writeFileSync, watch } from 'node:fs';
 import { join, relative, resolve } from 'node:path';
-import { plan, command, type Snapshot, type Step } from './lib/rebuild-plan.ts';
-import { snapshot as snapshotOf, services as servicesOf, isGit as isGitAt } from './lib/rebuild-snapshot.ts';
+import { plan, command, toReset, type Snapshot, type Step } from './lib/rebuild-plan.ts';
+import { snapshot as snapshotOf, services as servicesOf, mapOf, isGit as isGitAt } from './lib/rebuild-snapshot.ts';
 
 const ROOT = resolve(import.meta.dirname, '..');
+// The server's own data (what the map adds) is part of what it builds; every step it runs inherits this.
+process.env.OLYMPUS_DATA ||= join(ROOT, 'data');
 const env = (k: string, d: string) => process.env[k]?.trim() || d;
 const OUT = resolve(ROOT, env('OLYMPUS_OUT', 'site-releases'));
 const GIT_MINUTES = Number(env('OLYMPUS_GIT_INTERVAL', '0'));
@@ -39,6 +41,9 @@ const STATUS = join(OUT, 'status.json');
 const isGit = isGitAt(ROOT);
 const snapshot = () => snapshotOf(ROOT);
 const services = () => servicesOf(ROOT);
+const DATA = process.env.OLYMPUS_DATA;
+/** What a change in catalog/ or in the server's data folder looks like: its services, and the map. */
+const watched = () => JSON.stringify([services(), mapOf(ROOT)]);
 const git = (...args: string[]) => execFileSync('git', args, { cwd: ROOT, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }).trim();
 
 const log = (msg: string) => console.log(`${new Date().toISOString().slice(0, 19).replace('T', ' ')}  ${msg}`);
@@ -47,7 +52,30 @@ const log = (msg: string) => console.log(`${new Date().toISOString().slice(0, 19
 /* Pulling                                                            */
 /* ---------------------------------------------------------------- */
 
-/** Fast-forward to the remote branch, if it moved. Local edits are never discarded: git refuses, and that is reported. */
+/**
+ * With the server's own data, a build makes some tracked files differently
+ * from the repository (the catalogue's index, the dashboards…). When a pull
+ * changes those same files, they are put back first — only those, and only
+ * if each is a file the build makes (toReset) — and the server's own services
+ * are marked to be built again. A file changed by hand is never touched.
+ */
+function resetGenerated(target: string): void {
+  const lines = (out: string) => out.split('\n').filter(Boolean);
+  const reset = toReset(lines(git('diff', '--name-only')), lines(git('diff', '--name-only', 'HEAD', target)));
+  if (!reset?.length) return;
+  git('checkout', '--', ...reset);
+  if (existsSync(STATE) && DATA) {
+    // The server's own services: their files were just put back to the repository's.
+    const state = JSON.parse(readFileSync(STATE, 'utf8')) as Snapshot;
+    const own = existsSync(join(DATA, 'services')) ? readdirSync(join(DATA, 'services')).filter((f) => f.endsWith('.json')).map((f) => f.slice(0, -5)) : [];
+    for (const id of own) state.services[id] = 'put back before a pull';
+    state.map = 'put back before a pull';
+    writeFileSync(STATE, JSON.stringify(state, null, 2) + '\n');
+  }
+  log(`put back ${reset.length} generated file(s) the pull changes; the server's own services are made again next`);
+}
+
+/** Fast-forward to the remote branch, if it moved. Other local edits are never discarded: git refuses, and that is reported. */
 function pull(): void {
   try {
     const branch = env('OLYMPUS_GIT_BRANCH', git('rev-parse', '--abbrev-ref', 'HEAD'));
@@ -55,6 +83,7 @@ function pull(): void {
     const here = git('rev-parse', 'HEAD');
     const there = git('rev-parse', 'FETCH_HEAD');
     if (here !== there) {
+      resetGenerated(there);
       git('merge', '--ff-only', '--quiet', 'FETCH_HEAD');
       log(`pulled ${REMOTE}/${branch}: ${here.slice(0, 7)} → ${there.slice(0, 7)}`);
     }
@@ -175,20 +204,23 @@ await rebuild('start');
 if (ONCE) process.exit(current.state === 'failed' ? 1 : 0);
 
 // A change in catalog/ is noticed at once where the system reports it, and by looking every few seconds everywhere.
-let last = JSON.stringify(services());
+let last = watched();
 let settle: NodeJS.Timeout | undefined;
 const look = () => {
-  const now = JSON.stringify(services());
+  const now = watched();
   if (now === last) return;
   last = now;
   clearTimeout(settle);
   // Wait for the edits to settle: a service and its logo are often written one after the other.
   settle = setTimeout(() => void rebuild('catalog changed'), 2000);
 };
-try {
-  watch(join(ROOT, 'catalog'), { recursive: true }, look);
-} catch {
-  /* recursive watching is not available here: looking is enough */
+for (const dir of [join(ROOT, 'catalog'), ...(DATA ? [DATA] : [])]) {
+  try {
+    mkdirSync(dir, { recursive: true });
+    watch(dir, { recursive: true }, look);
+  } catch {
+    /* recursive watching is not available here: looking is enough */
+  }
 }
 setInterval(look, POLL);
 if (isGit && GIT_MINUTES > 0)

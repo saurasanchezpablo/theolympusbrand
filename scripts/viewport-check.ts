@@ -38,6 +38,7 @@ const ROUTES = [
   { name: 'catalogue', hash: '#/catalogue', ready: '.card' },
   { name: 'guide', hash: '#/guide', ready: '.guide__doc h1, .doc h1, article h1' },
   { name: 'downloads', hash: '#/downloads', ready: '.dl' },
+  { name: 'map', hash: '#/map', ready: '[data-map="ready"], [data-map="still"]' },
 ];
 
 const chrome = [process.env.CHROME_PATH, '/usr/bin/google-chrome', '/usr/bin/chromium', '/usr/bin/chromium-browser'].find((p) => p && existsSync(p));

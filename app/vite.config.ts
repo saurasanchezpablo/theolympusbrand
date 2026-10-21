@@ -1,4 +1,4 @@
-import { defineConfig, type Plugin } from 'vite';
+import { defineConfig, type Plugin, type ProxyOptions } from 'vite';
 import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
 import { join } from 'node:path';
@@ -27,6 +27,18 @@ const contentPolicy = (): Plugin => ({
   ],
 });
 
+/** /api/ goes to the map's edit service when one runs; without it, the same plain answer the house's nginx gives. */
+const editorProxy: ProxyOptions = {
+  target: process.env.OLYMPUS_EDITOR_URL || 'http://127.0.0.1:8091',
+  changeOrigin: false,
+  configure: (proxy) =>
+    proxy.on('error', (_err, _req, res) => {
+      if (!('writeHead' in res) || res.headersSent) return;
+      res.writeHead(200, { 'content-type': 'application/json', 'cache-control': 'no-store' });
+      res.end('{"editor":false}');
+    }),
+};
+
 export default defineConfig({
   root: import.meta.dirname,
   base: './',
@@ -34,5 +46,7 @@ export default defineConfig({
   // `@/…` is app/src — the alias shadcn/ui and Aceternity components are written against.
   resolve: { alias: { '@': join(import.meta.dirname, 'src') } },
   build: { outDir: 'dist', emptyOutDir: true, chunkSizeWarningLimit: 1500 },
-  server: { fs: { allow: ['..'] } },
+  // The map's edit service, when one runs beside the dev server or the preview (npm run editor -- serve).
+  server: { fs: { allow: ['..'] }, proxy: { '/api': editorProxy } },
+  preview: { proxy: { '/api': editorProxy } },
 });

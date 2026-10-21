@@ -35,15 +35,15 @@ export function formatSize(bytes: number): string {
 }
 
 /* ---------------------------------------------------------------- */
-/* Routes: #/, #/atelier, #/catalogue, #/guide/<doc>, #/downloads     */
+/* Routes: #/, #/atelier, #/catalogue, #/map, #/guide/<doc>, #/downloads */
 /* ---------------------------------------------------------------- */
 
-export type Route = { page: 'home' | 'atelier' | 'catalogue' | 'guide' | 'downloads'; arg?: string };
+export type Route = { page: 'home' | 'atelier' | 'catalogue' | 'map' | 'guide' | 'downloads'; arg?: string };
 
 export function parseRoute(hash: string): Route {
   const [page, ...rest] = hash.replace(/^#\/?/, '').split('/');
   const arg = rest.join('/') || undefined;
-  if (page === 'atelier' || page === 'catalogue' || page === 'guide' || page === 'downloads') return { page, arg };
+  if (page === 'atelier' || page === 'catalogue' || page === 'map' || page === 'guide' || page === 'downloads') return { page, arg };
   return { page: 'home' };
 }
 

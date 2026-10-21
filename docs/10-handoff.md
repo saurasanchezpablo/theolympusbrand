@@ -16,6 +16,8 @@ still unproven or undecided. State as of 20 October 2026.
 | **Stickers** — six colourways, sheets | `manufacturing/stickers/` | `npm run sticker -- master`, `-- sheet` |
 | **Integrations** — Homepage, Dashy, Homer, bookmarks; Nextcloud, Jellyfin, Proxmox VE, Grafana, Uptime Kuma | `assets/integrations/` | `npm run integrations` |
 | **Screens** — 20 wallpapers, GRUB, Plymouth, message of the day, console login, SSH banner | `assets/screens/` | `npm run screens` |
+| **The map** — the island (kept), the list of buildings and its picture (made on each server), 77 kinds of building | `src/map/` → `assets/map/` | `npm run map` |
+| **The map's edit service** — saves the map's changes into the server's data folder | `scripts/editor.ts`, `data/` (never committed) | runs beside the site: `npm run editor -- serve` |
 
 `npm run build` rebuilds everything kept in the repository except the models
 and stickers. Every file is generated from the code in `src/`: the same
@@ -46,8 +48,13 @@ npm run model -- vaultwarden                    # its printable models, when wan
 npm run screens -- vaultwarden                  # its wallpapers and terminal crest, when wanted
 ```
 
-**Change a service** — edit `catalog/services/<id>.json` (or open it in the
-Atelier and export), then `npm run build`.
+On the server, the simplest way is the map: **Map → Edit → Add**, choose a
+building, set it down, fill in its card. It is saved in the server's data
+folder and the house rebuilds itself for it (see [the map](13-the-map.md)).
+
+**Change a service** — on the map (its card, **Change its card**), or edit
+`catalog/services/<id>.json` (or open it in the Atelier and export), then
+`npm run build`.
 
 **Check before committing** — `npm test` (about a minute) and
 `npm run typecheck`. Every push runs the full checks on GitHub (below).
@@ -87,6 +94,13 @@ it is documented too.
   between providers — confirm with yours.
 - **The deployed site** has been built and served in CI, not yet on the
   server.
+- **The map's edit service in Docker** — the `editor` container, its ping
+  from inside the container and nginx's `/api/` route have not been run here
+  (no Docker on this machine); the service itself is tested on its own and
+  through the site in the browser checks.
+- **The map's speed on a real GPU** — measured here only in software
+  rendering (triangles and draw calls within budget); how smooth it pans on
+  your laptop is still to be seen.
 
 ## Decisions still open
 
@@ -112,6 +126,7 @@ scripts/        the command lines (build-master, service, model, sticker,
                 integrations, screens, brandbook, app-check)
 app/            the website and the Atelier (React, Vite)
 catalog/        the services, one JSON file each, and their logos
+data/           on the server only: what the map added or changed (never committed)
 assets/         generated: master, services, integrations, screens
 manufacturing/  generated: 3D models and stickers
 docs/           this guide and the brand book

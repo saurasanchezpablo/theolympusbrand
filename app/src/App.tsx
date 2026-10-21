@@ -8,6 +8,7 @@ import { Icon } from './components/Icon.tsx';
 const loadBrandFonts = () => import('./fonts.ts').then((m) => m.loadBrandFonts());
 const Atelier = lazy(() => Promise.all([import('./Atelier.tsx'), loadBrandFonts()]).then(([m]) => m));
 const CataloguePage = lazy(() => Promise.all([import('./site/CataloguePage.tsx'), loadBrandFonts()]).then(([m]) => ({ default: m.CataloguePage })));
+const MapPage = lazy(() => import('./site/map/MapPage.tsx').then((m) => ({ default: m.MapPage })));
 const GuidePage = lazy(() => import('./site/GuidePage.tsx').then((m) => ({ default: m.GuidePage })));
 const DownloadsPage = lazy(() => import('./site/DownloadsPage.tsx').then((m) => ({ default: m.DownloadsPage })));
 
@@ -20,6 +21,7 @@ if (/^#\/(atelier|catalogue)/.test(location.hash)) {
 const PAGES = [
   ['atelier', 'Atelier'],
   ['catalogue', 'Catalogue'],
+  ['map', 'Map'],
   ['guide', 'Guide'],
   ['downloads', 'Downloads'],
 ] as const;
@@ -109,10 +111,11 @@ export function App() {
       )}
 
       {!inAtelier && (
-        <main className="site" id="site-main" tabIndex={-1}>
+        <main className={`site${route.page === 'map' ? ' site--map' : ''}`} id="site-main" tabIndex={-1}>
           <Suspense fallback={<Loading what={route.page === 'home' ? 'the page' : `the ${route.page}`} />}>
             {route.page === 'home' && <HomePage />}
             {route.page === 'catalogue' && <CataloguePage />}
+            {route.page === 'map' && <MapPage />}
             {route.page === 'guide' && <GuidePage doc={route.arg} />}
             {route.page === 'downloads' && <DownloadsPage />}
           </Suspense>

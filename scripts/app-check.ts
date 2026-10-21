@@ -6,8 +6,8 @@
 //
 // Uses an installed Chrome/Chromium (CHROME_PATH, or the usual locations).
 
-import { spawn } from 'node:child_process';
-import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
+import { execFileSync, spawn } from 'node:child_process';
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import assert from 'node:assert/strict';
@@ -41,20 +41,30 @@ const chrome = [process.env.CHROME_PATH, '/usr/bin/google-chrome', '/usr/bin/chr
 if (!chrome) throw new Error('No Chrome or Chromium found — set CHROME_PATH.');
 if (!REMOTE && !existsSync(join(ROOT, 'app', 'dist', 'index.html'))) throw new Error('Build the app first: npm run app:build');
 
-const server = REMOTE ? null : spawn(join(ROOT, 'node_modules/.bin/vite'), ['preview', '--config', 'app/vite.config.ts', '--host', '127.0.0.1', '--port', String(PORT), '--strictPort'], { cwd: ROOT, stdio: 'ignore' });
-const stop = () => server?.kill();
+// The map's edit service, on a data folder of its own, behind the preview's /api/.
+const EDITOR_PORT = 4180;
+const EDITOR_DATA = mkdtempSync(join(tmpdir(), 'olympus-check-data-'));
+const EDITOR_PASSWORD = 'olympus-check-password';
+const editorEnv = { ...process.env, OLYMPUS_DATA: EDITOR_DATA, OLYMPUS_EDITOR_PORT: String(EDITOR_PORT) };
+if (!REMOTE) execFileSync('node', ['-e', `import('./scripts/lib/editor/auth.ts').then((m) => m.setPassword(${JSON.stringify(EDITOR_PASSWORD)}))`], { cwd: ROOT, env: editorEnv });
+let editor = REMOTE ? null : spawn('node', ['scripts/editor.ts', 'serve'], { cwd: ROOT, env: editorEnv, stdio: 'ignore' });
+const server = REMOTE ? null : spawn(join(ROOT, 'node_modules/.bin/vite'), ['preview', '--config', 'app/vite.config.ts', '--host', '127.0.0.1', '--port', String(PORT), '--strictPort'], { cwd: ROOT, stdio: 'ignore', env: { ...process.env, OLYMPUS_EDITOR_URL: `http://127.0.0.1:${EDITOR_PORT}` } });
+const stop = () => {
+  server?.kill();
+  editor?.kill();
+};
 process.on('exit', stop);
 
 async function waitForServer() {
-  for (let i = 0; i < 100; i++) {
+  for (let i = 0; i < 200; i++) {
     try {
-      if ((await fetch(URL_)).ok) return;
+      if ((await fetch(URL_)).ok && (REMOTE || (await fetch(`http://127.0.0.1:${EDITOR_PORT}/api/session`)).ok)) return;
     } catch {
       /* not up yet */
     }
     await new Promise((r) => setTimeout(r, 100));
   }
-  throw new Error('The preview server did not start.');
+  throw new Error('The preview server or the edit service did not start.');
 }
 
 const steps: string[] = [];
@@ -368,6 +378,144 @@ try {
   assert.ok(entries.includes('catalog/services/jellyfin.json'), entries.slice(0, 5).join(', '));
   await shot(page, '15-downloads');
   step('downloads: folders zip in the browser with the repository’s files');
+
+  // An application's chapter: its kit's files shown, copied (also where the clipboard is refused), zipped.
+  await page.goto(`${URL_}#/guide/integrations/vaultwarden`);
+  const kit = page.locator('.kit-files');
+  await kit.waitFor();
+  const kitFile = (f: string) => readFileSync(join(ROOT, 'assets/integrations/themes/vaultwarden', f), 'utf8');
+  const scss = kit.locator('.kit-files__item', { hasText: 'user.vaultwarden.scss.hbs' });
+  await scss.getByRole('button', { name: 'Show' }).click();
+  assert.equal((await scss.locator('.kit-files__text').textContent())?.trim(), kitFile('user.vaultwarden.scss.hbs').trim(), 'shown as the kit has it');
+  await page.context().grantPermissions(['clipboard-read', 'clipboard-write'], { origin: new URL(URL_).origin });
+  await scss.getByRole('button', { name: 'Copy' }).click();
+  await scss.getByRole('button', { name: 'Copied' }).waitFor();
+  assert.equal(await page.evaluate(() => navigator.clipboard.readText()), kitFile('user.vaultwarden.scss.hbs'));
+  // As on a plain-HTTP page, where the browser keeps the clipboard to itself: the page copies a selection instead.
+  await page.evaluate(() => {
+    navigator.clipboard.writeText = () => Promise.reject(new Error('not on this page'));
+  });
+  const script = kit.locator('.kit-files__item', { hasText: 'apply.sh' });
+  await script.getByRole('button', { name: 'Copy' }).click();
+  await script.getByRole('button', { name: 'Copied' }).waitFor();
+  assert.equal(await page.evaluate(() => navigator.clipboard.readText()), kitFile('apply.sh'));
+  const kitZip = await downloadOf(page, () => kit.getByRole('button', { name: /Download the folder/ }).click());
+  assert.ok(Object.keys(unzipSync(new Uint8Array(kitZip.data))).includes('vaultwarden/apply.sh'));
+  assert.match((await kit.locator('.dl__command code').textContent()) ?? '', /install\.sh \| OLYMPUS_SITE=\S+ sh -s -- --only kit:vaultwarden$/);
+  step('guide: a kit’s files shown, copied (with and without the clipboard), zipped; its one command');
+
+  if (!REMOTE) {
+    // The map, in a browser of its own: the edit service answers here, so a refused password would be expected noise elsewhere.
+    const mapCtx = await browser.newContext({ viewport: { width: 1440, height: 900 } });
+    const mp = await mapCtx.newPage();
+    const mapErrors: string[] = [];
+    mp.on('console', (m) => m.type() === 'error' && mapErrors.push(m.text()));
+    mp.on('pageerror', (e) => mapErrors.push(e.message));
+    mp.on('response', (r) => r.status() >= 400 && mapErrors.push(`${r.status()} ${r.url()}`));
+    mp.on('dialog', (d) => void d.accept());
+    await mp.goto(`${URL_}#/map`);
+    await mp.locator('[data-map="ready"]').waitFor({ timeout: 180_000 });
+    await mp.getByRole('button', { name: 'List' }).click();
+    const listed = await mp.locator('.map-list li').count();
+    assert.equal(listed, loadCatalog().length, 'every service has a building');
+    await mp.locator('.map-list li button', { hasText: 'Jellyfin' }).click();
+    await mp.locator('.map-card h2', { hasText: 'Jellyfin' }).waitFor();
+    assert.match((await mp.locator('.map-card').textContent()) ?? '', /https:\/\/jellyfin\.theolympus\.cloud/);
+    const stats = await mp.evaluate(() => (window as unknown as { olympusMapStats: () => { triangles: number; calls: number } }).olympusMapStats());
+    assert.ok(stats.triangles < 2_500_000 && stats.calls < 250, `budget: ${JSON.stringify(stats)}`);
+    await shot(mp, '17-map');
+    step(`map: the island draws (${Math.round(stats.triangles / 1000)}k triangles, ${stats.calls} draw calls), every service has a building, a card opens with its address`);
+
+    // Text from the data folder is shown as text.
+    const api = `http://127.0.0.1:${EDITOR_PORT}/api`;
+    const signIn = await fetch(`${api}/login`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ password: EDITOR_PASSWORD }) });
+    const cookie = (signIn.headers.get('set-cookie') ?? '').split(';')[0];
+    const { csrf } = (await signIn.json()) as { csrf: string };
+    const put = await fetch(`${api}/services/odd`, { method: 'PUT', headers: { 'content-type': 'application/json', cookie, 'x-olympus-csrf': csrf }, body: JSON.stringify({ spec: { id: 'odd', name: '<b>x</b>', category: 'other', ip: '127.0.0.1' } }) });
+    assert.equal(put.status, 200);
+    await mp.reload();
+    await mp.locator('[data-map="ready"]').waitFor({ timeout: 180_000 });
+    await mp.getByRole('button', { name: 'List' }).click();
+    await mp.locator('.map-list li button', { hasText: '<b>x</b>' }).click();
+    await mp.locator('.map-card h2').waitFor();
+    assert.equal(await mp.locator('.map-card h2').textContent(), '<b>x</b>');
+    assert.equal(await mp.locator('.map-card h2 b').count(), 0, 'no markup from the data');
+    await mp.locator('.map-card', { hasText: 'Online' }).waitFor({ timeout: 20_000 });
+    step('map: names from the server are shown as text; an address on the map is pinged (online)');
+
+    // Editing: sign in, add a lighthouse, a refused spot says why, save, turn, delete. From the whole island's view.
+    await mp.reload();
+    await mp.locator('[data-map="ready"]').waitFor({ timeout: 180_000 });
+    await mp.getByRole('button', { name: 'Edit' }).click();
+    await mp.getByLabel('The house’s password').fill(EDITOR_PASSWORD);
+    await mp.getByRole('button', { name: 'Sign in' }).click();
+    await mp.getByRole('button', { name: 'Add' }).click();
+    await mp.getByRole('button', { name: 'Lighthouse' }).click();
+    const box = (await mp.locator('.map__canvas').boundingBox())!;
+    await mp.mouse.move(box.x + box.width * 0.04, box.y + box.height * 0.95, { steps: 3 });
+    await mp.locator('.map-placing__why', { hasText: /In the sea|Off the island/ }).waitFor();
+    let placed = false;
+    for (const [fx, fy] of [[0.35, 0.75], [0.3, 0.6], [0.6, 0.75], [0.25, 0.5], [0.7, 0.6], [0.45, 0.8]]) {
+      await mp.mouse.move(box.x + box.width * fx, box.y + box.height * fy, { steps: 3 });
+      await mp.waitForTimeout(400);
+      if (await mp.locator('.map-placing__why').count()) continue;
+      await mp.mouse.down();
+      await mp.mouse.up();
+      placed = true;
+      break;
+    }
+    assert.ok(placed, 'somewhere on the island takes a lighthouse');
+    await mp.getByLabel('Name').fill('Uptime watch');
+    await mp.getByLabel('Kind of service').selectOption('monitoring');
+    await mp.getByRole('button', { name: 'Save' }).click();
+    await mp.locator('.map-card h2', { hasText: 'Uptime watch' }).waitFor({ timeout: 20_000 });
+    assert.ok(existsSync(join(EDITOR_DATA, 'services/uptime-watch.json')), 'saved in the data folder');
+    assert.equal(JSON.parse(readFileSync(join(EDITOR_DATA, 'places.json'), 'utf8'))['uptime-watch'].building, 'lighthouse');
+    assert.ok(!existsSync(join(ROOT, 'catalog/services/uptime-watch.json')), 'not in the repository');
+    const before = JSON.parse(readFileSync(join(EDITOR_DATA, 'places.json'), 'utf8'))['uptime-watch'].rotation;
+    await mp.getByRole('button', { name: 'Turn it left' }).click();
+    await mp.waitForFunction(() => !document.querySelector('.map-card__actions button:disabled'));
+    assert.notEqual(JSON.parse(readFileSync(join(EDITOR_DATA, 'places.json'), 'utf8'))['uptime-watch'].rotation, before, 'turned');
+    await mp.getByRole('button', { name: 'Delete' }).click();
+    await mp.locator('.map-card h2', { hasText: 'Uptime watch' }).waitFor({ state: 'detached' });
+    assert.ok(!existsSync(join(EDITOR_DATA, 'services/uptime-watch.json')), 'deleted');
+    await mp.getByRole('button', { name: 'Undo' }).click();
+    await mp.waitForFunction(() => !document.querySelector('.map-edit button:disabled'));
+    assert.ok(existsSync(join(EDITOR_DATA, 'services/uptime-watch.json')), 'undo brings it back');
+    await shot(mp, '18-map-editing');
+    step('map: editing — sign in, add a lighthouse where it may stand (the sea refused, with the reason), save to the data folder, turn, delete, undo');
+
+    // Without the edit service, the map still shows, and saving says why.
+    editor?.kill();
+    editor = null;
+    await new Promise((r) => setTimeout(r, 500));
+    await mp.reload();
+    await mp.locator('[data-map="ready"]').waitFor({ timeout: 180_000 });
+    assert.ok(await mp.getByRole('button', { name: 'Edit' }).isDisabled());
+    await mp.getByText('Saving needs the map’s edit service').waitFor();
+    step('map: without the edit service, the map shows read-only and says why');
+    assert.deepEqual(mapErrors, [], `map console errors:\n${mapErrors.join('\n')}`);
+    await mapCtx.close();
+
+    // Phones get the picture and the list; reduced motion holds the clouds still.
+    const phone = await browser.newContext({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
+    const pp = await phone.newPage();
+    await pp.goto(`${URL_}#/map`);
+    await pp.locator('[data-map="still"]').waitFor();
+    await pp.getByRole('button', { name: 'List' }).click();
+    assert.ok((await pp.locator('.map-list li').count()) >= loadCatalog().length);
+    await phone.close();
+    const calm = await browser.newContext({ viewport: { width: 1280, height: 800 }, reducedMotion: 'reduce' });
+    const cp = await calm.newPage();
+    await cp.goto(`${URL_}#/map`);
+    await cp.locator('[data-map="ready"]').waitFor({ timeout: 180_000 });
+    await cp.waitForTimeout(1500);
+    const a = await cp.locator('.map__canvas').screenshot();
+    await cp.waitForTimeout(1200);
+    assert.ok(a.equals(await cp.locator('.map__canvas').screenshot()), 'nothing drifts under reduced motion');
+    await calm.close();
+    step('map: phones get the picture of the island and the list; under reduced motion nothing moves');
+  }
 
   // The medallion: drawn live from its STL; it moves, unless the visitor asks for reduced motion.
   const frames = async (p: Page) => {

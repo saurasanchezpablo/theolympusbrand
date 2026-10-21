@@ -2,6 +2,7 @@
 // and the designs saved in this browser (localStorage, with JSON export/import
 // so nothing is ever trapped here).
 
+import { useEffect, useState } from 'react';
 import { validateSpec, type ServiceSpec } from '../../src/catalog/service.ts';
 import type { Design } from '../../src/catalog/design.ts';
 
@@ -19,6 +20,49 @@ export const HOUSE: Design[] = Object.entries(specFiles)
     return { spec, logoSvg, version: 1, created: '', updated: '' };
   })
   .sort((a, b) => a.spec.name.localeCompare(b.spec.name));
+
+/* ---------------------------------------------------------------- */
+/* The server's own catalogue, when the map's edit service runs: the  */
+/* services added on the map join the house here too.                 */
+/* ---------------------------------------------------------------- */
+
+const houseListeners = new Set<() => void>();
+let serverHouse: Promise<void> | null = null;
+
+function loadServerHouse(): Promise<void> {
+  serverHouse ??= fetch('api/catalog', { cache: 'no-store', signal: AbortSignal.timeout(4000) })
+    .then((r) => (r.ok && (r.headers.get('content-type') ?? '').includes('json') ? r.json() : null))
+    .then((c: { services?: unknown[]; logos?: Record<string, string> } | null) => {
+      if (!c?.services) return;
+      const designs: Design[] = [];
+      for (const raw of c.services) {
+        try {
+          const spec = validateSpec(raw, 'the server');
+          designs.push({ spec, logoSvg: spec.logo ? c.logos?.[spec.id] : undefined, version: 1, created: '', updated: '' });
+        } catch {
+          /* one damaged entry does not hide the rest */
+        }
+      }
+      HOUSE.splice(0, HOUSE.length, ...designs.sort((a, b) => a.spec.name.localeCompare(b.spec.name)));
+      for (const f of houseListeners) f();
+    })
+    .catch(() => undefined);
+  return serverHouse;
+}
+
+/** The house catalogue, refreshed from the server when it has one. */
+export function useHouse(): Design[] {
+  const [house, setHouse] = useState<Design[]>(() => [...HOUSE]);
+  useEffect(() => {
+    const f = () => setHouse([...HOUSE]);
+    houseListeners.add(f);
+    void loadServerHouse().then(f);
+    return () => {
+      houseListeners.delete(f);
+    };
+  }, []);
+  return house;
+}
 
 /* ---------------------------------------------------------------- */
 /* My designs — this browser only                                     */
