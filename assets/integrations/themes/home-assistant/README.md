@@ -33,18 +33,20 @@ Made from Home Assistant’s seal. The files are in `themes/home-assistant/` of 
    sh apply.sh /path/to/homeassistant/config
    ```
 
-2. If the script says Home Assistant does not read the themes folder yet, add these two lines to `configuration.yaml` and restart Home Assistant once.
+2. Home Assistant OS has no shell of its own for scripts: copy `the-olympus.yaml` into `/config/themes/` and the two images into `/config/www/the-olympus/` with the *File editor* or *Samba* add-on (this chapter’s files can be shown and copied below), then go on with the next step.
+
+3. If the script says Home Assistant does not read the themes folder yet, add these two lines to `configuration.yaml` and restart Home Assistant once.
 
    ```sh
    frontend:
      themes: !include_dir_merge_named themes
    ```
 
-3. Reload the themes: **Developer tools → Actions → Frontend: Reload themes**.
+4. Reload the themes: **Developer tools → Actions → Frontend: Reload themes**.
 
-4. On your **profile** page, choose **The Olympus** as the theme. Each user chooses for themselves; *Mode* there picks light or dark.
+5. On your **profile** page, choose **The Olympus** as the theme. Each user chooses for themselves; *Mode* there picks light or dark.
 
-5. Optional: on a dashboard, **Edit → Add card → Manual**, and paste `picture-card.yaml`.
+6. Optional: on a dashboard, **Edit → Add card → Manual**, and paste `picture-card.yaml`.
 
 ## Check that it worked
 

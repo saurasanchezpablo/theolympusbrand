@@ -12,7 +12,7 @@
 
 import { PALETTE } from '../../brand/palette.ts';
 import { bannerMark, coinSvg, markSvg } from '../marks.ts';
-import { cssSvg } from './shared.ts';
+import { containerOf, cssSvg, folderOf, PODMAN } from './shared.ts';
 import type { ThemeKit } from './types.ts';
 import { commentText } from '../../catalog/text.ts';
 
@@ -118,15 +118,16 @@ export function vaultwardenScript(): string {
 # The Olympus — Vaultwarden: installs the stylesheet in the data folder.
 #
 #   Docker:     VAULTWARDEN_CONTAINER=vaultwarden sh apply.sh
-#   A folder:   sh apply.sh /path/to/vaultwarden/data
+#   A folder:   sh apply.sh /path/to/vaultwarden/data   (or VAULTWARDEN_DATA=/path/…)
 #   Undo:       add --restore to either
 #
 # Vaultwarden reads it when it starts: the Docker form restarts the container.
 set -eu
 DIR=$(cd "$(dirname "$0")" && pwd)
 FILE=templates/scss/user.vaultwarden.scss.hbs
+${PODMAN}
 restore=0
-data=
+data=\${VAULTWARDEN_DATA:-}
 for a in "$@"; do
   case "$a" in
     --restore) restore=1 ;;
@@ -161,7 +162,14 @@ export const vaultwarden: ThemeKit = {
   label: 'Vaultwarden',
   match: { ids: ['vaultwarden', 'bitwarden', 'passwords'] },
   how: '`apply.sh` installs `user.vaultwarden.scss.hbs` in the data folder: greys for the web vault, the house’s logo',
-  installer: { summary: 'greys for the web vault, and the house’s logo', detect: 'c=$( (docker ps --format \'{{.Names}} {{.Image}}\' 2>/dev/null || sudo -n docker ps --format \'{{.Names}} {{.Image}}\' 2>/dev/null) | awk \'tolower($2) ~ /vaultwarden/ { print $1; exit }\'); [ -n "$c" ] && echo "$c"', ask: { env: 'VAULTWARDEN_CONTAINER', prompt: 'Vaultwarden’s Docker container' }, root: true },
+  installer: {
+    summary: 'greys for the web vault, and the house’s logo',
+    places: [
+      { label: 'In a Docker or Podman container', env: 'VAULTWARDEN_CONTAINER', prompt: 'Vaultwarden’s container', detect: containerOf('vaultwarden') },
+      { label: 'In a folder on this machine', env: 'VAULTWARDEN_DATA', prompt: 'Vaultwarden’s data folder (where db.sqlite3 is)', detect: folderOf(['/var/lib/vaultwarden', '/opt/vaultwarden/data', '/srv/vaultwarden/data', '/vw-data', '/opt/vaultwarden', '/srv/vaultwarden'], '[ -f "$d/db.sqlite3" ] || [ -f "$d/rsa_key.pem" ] || [ -f "$d/config.json" ]') },
+    ],
+    root: true,
+  },
   guide: (t) => ({
     title: 'Vaultwarden',
     intro: `Vaultwarden reads a stylesheet of your own from its data folder and adds it to the web vault's. The kit's turns every blue of the vault grey, in the light and the dark theme, and puts ${t.name}'s banner and seal where the vault's logo was.`,

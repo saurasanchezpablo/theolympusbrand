@@ -10,6 +10,8 @@
 #   --only a,b,…      just these (ids from --list)
 #   --restore         undo instead of install (with --yes or --only, or from the menu)
 #   --as <id>         which identity the screens show: master, or a service's id
+#   --set NAME=VALUE  where an application is, instead of what was found (the
+#                     names are in --list: NEXTCLOUD_CONTAINER=…, OCC=…, HA_CONFIG=…)
 #   --site <address>  instead of OLYMPUS_SITE
 #
 # Every file is fetched from the site and checked against the SHA-256 written
@@ -23,6 +25,7 @@ YES=0
 LIST=0
 ONLY=
 AS=
+SETS=
 while [ $# -gt 0 ]; do
   case "$1" in
     --site) SITE=${2:?--site needs an address}; shift ;;
@@ -31,7 +34,14 @@ while [ $# -gt 0 ]; do
     --only) ONLY=$(printf '%s' "${2:?--only needs ids}" | tr ',' ' '); shift ;;
     --restore) MODE=restore ;;
     --as) AS=${2:?--as needs an identity}; shift ;;
-    -h|--help) sed -n '2,20p' "$0" 2>/dev/null || true; exit 0 ;;
+    --set)
+      case "${2:-}" in
+        [A-Z]*=*) SETS="$SETS$2
+" ;;
+        *) echo "--set needs NAME=VALUE" >&2; exit 2 ;;
+      esac
+      shift ;;
+    -h|--help) sed -n '2,24p' "$0" 2>/dev/null || true; exit 0 ;;
     *) echo "unknown option: $1 (see --help)" >&2; exit 2 ;;
   esac
   shift
@@ -72,76 +82,18 @@ usr:kitty|Your terminal|kitty colours
 usr:alacritty|Your terminal|Alacritty colours
 usr:omarchy|Your terminal|Omarchy theme
 usr:wezterm|Your terminal|WezTerm colour scheme
-kit:home-assistant|Applications on this machine|Home Assistant — the theme, light and dark, and the dashboard images
-kit:nextcloud|Applications on this machine|Nextcloud — name, colours, logos and background, through occ
-kit:proxmox|Applications on this machine|Proxmox VE — the whole web interface in greys, the logo and the favicon
-kit:vaultwarden|Applications on this machine|Vaultwarden — greys for the web vault, and the house’s logo
+kit:home-assistant|Applications|Home Assistant — the theme, light and dark, and the dashboard images
+kit:nextcloud|Applications|Nextcloud — name, colours, logos and background, through occ
+kit:proxmox|Applications|Proxmox VE — the whole web interface in greys, the logo and the icon
+kit:vaultwarden|Applications|Vaultwarden — greys for the web vault, and the house’s logo
 doc:grafana|Applications set up by hand|Grafana — save its files and guide to ./the-olympus-grafana/
 doc:jellyfin|Applications set up by hand|Jellyfin — save its files and guide to ./the-olympus-jellyfin/
 doc:navidrome|Applications set up by hand|Navidrome — save its files and guide to ./the-olympus-navidrome/
 doc:uptime-kuma|Applications set up by hand|Uptime Kuma — save its files and guide to ./the-olympus-uptime-kuma/'
 GROUPS='The machine
 Your terminal
-Applications on this machine
+Applications
 Applications set up by hand'
-
-fits() {
-  case "$1" in
-    sys:grub) [ -f /etc/default/grub ] ;;
-    sys:limine) ( for c in ${LIMINE_CONF:-} /boot/limine.conf /boot/limine/limine.conf /boot/EFI/limine/limine.conf /efi/limine.conf /efi/EFI/limine/limine.conf /boot/efi/limine.conf /boot/efi/EFI/limine/limine.conf /boot/EFI/BOOT/limine.conf; do [ -f "$c" ] && exit 0; done; exit 1 ) ;;
-    sys:plymouth) command -v plymouth-set-default-theme >/dev/null 2>&1 ;;
-    sys:terminal) [ -f /etc/issue ] ;;
-    sys:wallpapers) [ -d /usr/share/xsessions ] || [ -d /usr/share/wayland-sessions ] ;;
-    usr:bash) command -v bash >/dev/null 2>&1 ;;
-    usr:fish) command -v fish >/dev/null 2>&1 ;;
-    usr:fastfetch) command -v fastfetch >/dev/null 2>&1 ;;
-    usr:tmux) command -v tmux >/dev/null 2>&1 ;;
-    usr:gnome-terminal) command -v gnome-terminal >/dev/null 2>&1 && command -v dconf >/dev/null 2>&1 ;;
-    usr:ptyxis) command -v ptyxis >/dev/null 2>&1 || [ -d "$HOME/.var/app/app.devsuite.Ptyxis" ] ;;
-    usr:kitty) command -v kitty >/dev/null 2>&1 ;;
-    usr:alacritty) command -v alacritty >/dev/null 2>&1 ;;
-    usr:omarchy) command -v omarchy-theme-set >/dev/null 2>&1 ;;
-    usr:wezterm) command -v wezterm >/dev/null 2>&1 ;;
-    kit:home-assistant) (c=$( (docker ps --format '{{.Names}} {{.Image}}' 2>/dev/null || sudo -n docker ps --format '{{.Names}} {{.Image}}' 2>/dev/null) | awk 'tolower($2) ~ /home-?assistant/ { print $1; exit }'); [ -n "$c" ] && echo "$c") >/dev/null 2>&1 ;;
-    kit:nextcloud) (c=$( (docker ps --format '{{.Names}} {{.Image}}' 2>/dev/null || sudo -n docker ps --format '{{.Names}} {{.Image}}' 2>/dev/null) | awk 'tolower($2) ~ /nextcloud/ { print $1; exit }'); [ -n "$c" ] && echo "$c") >/dev/null 2>&1 ;;
-    kit:proxmox) (command -v pveversion >/dev/null 2>&1) >/dev/null 2>&1 ;;
-    kit:vaultwarden) (c=$( (docker ps --format '{{.Names}} {{.Image}}' 2>/dev/null || sudo -n docker ps --format '{{.Names}} {{.Image}}' 2>/dev/null) | awk 'tolower($2) ~ /vaultwarden/ { print $1; exit }'); [ -n "$c" ] && echo "$c") >/dev/null 2>&1 ;;
-    doc:grafana) true ;;
-    doc:jellyfin) true ;;
-    doc:navidrome) true ;;
-    doc:uptime-kuma) true ;;
-    *) return 1 ;;
-  esac
-}
-
-installed() {
-  case "$1" in
-    sys:grub) [ -f /etc/default/grub.the-olympus.orig ] ;;
-    sys:limine) ( for c in ${LIMINE_CONF:-} /boot/limine.conf /boot/limine/limine.conf /boot/EFI/limine/limine.conf /efi/limine.conf /efi/EFI/limine/limine.conf /boot/efi/limine.conf /boot/efi/EFI/limine/limine.conf /boot/EFI/BOOT/limine.conf; do grep -qsF "# The Olympus — begin" "$c" && exit 0; done; exit 1 ) ;;
-    sys:plymouth) [ -d /usr/share/plymouth/themes/the-olympus ] ;;
-    sys:terminal) [ -f /etc/update-motd.d/20-the-olympus ] || [ -f /etc/motd.d/the-olympus ] || [ -f /etc/issue.the-olympus.orig ] ;;
-    sys:wallpapers) [ -d /usr/share/backgrounds/the-olympus ] ;;
-    usr:bash) grep -qsF '# The Olympus prompt' "$HOME/.bashrc" ;;
-    usr:fish) [ -f "${XDG_CONFIG_HOME:-$HOME/.config}"/fish/conf.d/the-olympus.fish ] ;;
-    usr:fastfetch) [ -f "${XDG_CONFIG_HOME:-$HOME/.config}"/fastfetch/the-olympus.jsonc ] ;;
-    usr:tmux) [ -f "${XDG_CONFIG_HOME:-$HOME/.config}"/tmux/the-olympus.conf ] ;;
-    usr:gnome-terminal) dconf read /org/gnome/terminal/legacy/profiles:/list 2>/dev/null | grep -q 7b0f3f3e-0d5e-4c1e-9a52-01ad0e7f6c11 ;;
-    usr:ptyxis) [ -f "${XDG_DATA_HOME:-$HOME/.local/share}"/org.gnome.Ptyxis/palettes/the-olympus.palette ] || [ -f "$HOME/.var/app/app.devsuite.Ptyxis/data/org.gnome.Ptyxis/palettes/the-olympus.palette" ] ;;
-    usr:kitty) [ -f "${XDG_CONFIG_HOME:-$HOME/.config}"/kitty/the-olympus.conf ] ;;
-    usr:alacritty) [ -f "${XDG_CONFIG_HOME:-$HOME/.config}"/alacritty/the-olympus.toml ] ;;
-    usr:omarchy) [ -d "${XDG_CONFIG_HOME:-$HOME/.config}"/omarchy/themes/the-olympus ] ;;
-    usr:wezterm) [ -f "${XDG_CONFIG_HOME:-$HOME/.config}"/wezterm/colors/the-olympus.toml ] ;;
-    kit:home-assistant) false ;;
-    kit:nextcloud) false ;;
-    kit:proxmox) false ;;
-    kit:vaultwarden) false ;;
-    doc:grafana) false ;;
-    doc:jellyfin) false ;;
-    doc:navidrome) false ;;
-    doc:uptime-kuma) false ;;
-    *) return 1 ;;
-  esac
-}
 
 unfit() {
   case "$1" in
@@ -172,29 +124,87 @@ unfit() {
   esac
 }
 
-# The value a kit's question starts from: what was found on this machine.
-found() {
+# How to look at the machine (see look below).
+PROBE_SYS='containers() {
+  { docker ps --format '\''{{.Names}} {{.Image}}'\''; podman ps --format '\''{{.Names}} {{.Image}}'\''; } 2>/dev/null | grep . || sudo -n docker ps --format '\''{{.Names}} {{.Image}}'\'' 2>/dev/null
+}
+if ( [ -f /etc/default/grub ] ) >/dev/null 2>&1; then echo '\''fit sys:grub'\''; fi
+if ( [ -f /etc/default/grub.the-olympus.orig ] ) >/dev/null 2>&1; then echo '\''inst sys:grub'\''; fi
+if ( ( for c in ${LIMINE_CONF:-} /boot/limine.conf /boot/limine/limine.conf /boot/EFI/limine/limine.conf /efi/limine.conf /efi/EFI/limine/limine.conf /boot/efi/limine.conf /boot/efi/EFI/limine/limine.conf /boot/EFI/BOOT/limine.conf; do [ -f "$c" ] && exit 0; done; [ -n "$(find /boot /efi /boot/efi -maxdepth 4 -name limine.conf -type f 2>/dev/null | head -n 1)" ] && exit 0; [ "$(id -u)" != 0 ] || exit 1; [ -f /var/lib/the-olympus/limine ] || command -v limine >/dev/null 2>&1 || [ -d /usr/share/limine ] || [ -f /etc/default/limine ] || command -v limine-entry-tool >/dev/null 2>&1 || command -v limine-update >/dev/null 2>&1 ) ) >/dev/null 2>&1; then echo '\''fit sys:limine'\''; fi
+if ( ( [ -f /var/lib/the-olympus/limine ] && exit 0; for c in ${LIMINE_CONF:-} /boot/limine.conf /boot/limine/limine.conf /boot/EFI/limine/limine.conf /efi/limine.conf /efi/EFI/limine/limine.conf /boot/efi/limine.conf /boot/efi/EFI/limine/limine.conf /boot/EFI/BOOT/limine.conf; do grep -qsF "# The Olympus — begin" "$c" && exit 0; done; exit 1 ) ) >/dev/null 2>&1; then echo '\''inst sys:limine'\''; fi
+if ( command -v plymouth-set-default-theme >/dev/null 2>&1 ) >/dev/null 2>&1; then echo '\''fit sys:plymouth'\''; fi
+if ( [ -d /usr/share/plymouth/themes/the-olympus ] ) >/dev/null 2>&1; then echo '\''inst sys:plymouth'\''; fi
+if ( [ -f /etc/issue ] ) >/dev/null 2>&1; then echo '\''fit sys:terminal'\''; fi
+if ( [ -f /etc/update-motd.d/20-the-olympus ] || [ -f /etc/motd.d/the-olympus ] || [ -f /etc/issue.the-olympus.orig ] ) >/dev/null 2>&1; then echo '\''inst sys:terminal'\''; fi
+if ( [ -d /usr/share/xsessions ] || [ -d /usr/share/wayland-sessions ] ) >/dev/null 2>&1; then echo '\''fit sys:wallpapers'\''; fi
+if ( [ -d /usr/share/backgrounds/the-olympus ] ) >/dev/null 2>&1; then echo '\''inst sys:wallpapers'\''; fi
+if ( true ) >/dev/null 2>&1; then echo '\''fit kit:home-assistant'\''; fi
+if ( false ) >/dev/null 2>&1; then echo '\''inst kit:home-assistant'\''; fi
+if ( true ) >/dev/null 2>&1; then echo '\''fit kit:nextcloud'\''; fi
+if ( false ) >/dev/null 2>&1; then echo '\''inst kit:nextcloud'\''; fi
+if ( command -v pveversion >/dev/null 2>&1 ) >/dev/null 2>&1; then echo '\''fit kit:proxmox'\''; fi
+if ( grep -qsF /pve2/css/the-olympus.css /usr/share/pve-manager/index.html.tpl || [ -f /usr/local/share/the-olympus/proxmox/settings ] ) >/dev/null 2>&1; then echo '\''inst kit:proxmox'\''; fi
+if ( true ) >/dev/null 2>&1; then echo '\''fit kit:vaultwarden'\''; fi
+if ( false ) >/dev/null 2>&1; then echo '\''inst kit:vaultwarden'\''; fi
+if ( true ) >/dev/null 2>&1; then echo '\''fit doc:grafana'\''; fi
+if ( false ) >/dev/null 2>&1; then echo '\''inst doc:grafana'\''; fi
+if ( true ) >/dev/null 2>&1; then echo '\''fit doc:jellyfin'\''; fi
+if ( false ) >/dev/null 2>&1; then echo '\''inst doc:jellyfin'\''; fi
+if ( true ) >/dev/null 2>&1; then echo '\''fit doc:navidrome'\''; fi
+if ( false ) >/dev/null 2>&1; then echo '\''inst doc:navidrome'\''; fi
+if ( true ) >/dev/null 2>&1; then echo '\''fit doc:uptime-kuma'\''; fi
+if ( false ) >/dev/null 2>&1; then echo '\''inst doc:uptime-kuma'\''; fi
+v=$( ( containers | awk '\''tolower($2) ~ /home-?assistant/ && tolower($2) !~ /addon|supervisor|observer|-dns|-audio|-cli|-multicast/ { print $1; exit }'\'' ) 2>/dev/null | head -n 1 ); [ -z "$v" ] || printf '\''at %s %s %s\n'\'' '\''kit:home-assistant'\'' '\''HA_CONTAINER'\'' "$v"
+v=$( ( for d in /config /homeassistant /var/lib/hass /home/homeassistant/.homeassistant /srv/homeassistant /srv/homeassistant/config /opt/homeassistant/config /usr/share/hassio/homeassistant; do if [ -f "$d/configuration.yaml" ]; then echo "$d"; exit 0; fi; done ) 2>/dev/null | head -n 1 ); [ -z "$v" ] || printf '\''at %s %s %s\n'\'' '\''kit:home-assistant'\'' '\''HA_CONFIG'\'' "$v"
+v=$( ( c=$(containers | awk '\''tolower($2) ~ /aio-nextcloud/ { print $1; exit }'\''); [ -n "$c" ] || c=$(containers | awk '\''tolower($2) ~ /nextcloud/ && tolower($2) !~ /all-in-one|aio-/ { print $1; exit }'\''); echo "$c" ) 2>/dev/null | head -n 1 ); [ -z "$v" ] || printf '\''at %s %s %s\n'\'' '\''kit:nextcloud'\'' '\''NEXTCLOUD_CONTAINER'\'' "$v"
+v=$( ( if command -v nextcloud.occ >/dev/null 2>&1; then echo nextcloud.occ; exit 0; fi
+if [ -f /usr/share/webapps/nextcloud/occ ] && command -v occ >/dev/null 2>&1; then echo occ; exit 0; fi
+for f in /var/www/nextcloud/occ /var/www/html/nextcloud/occ /var/www/html/occ /srv/www/nextcloud/occ /srv/http/nextcloud/occ /usr/local/www/nextcloud/occ; do
+  [ -f "$f" ] || continue
+  u=$(stat -c %U "${f%/occ}/config/config.php" 2>/dev/null || stat -c %U "$f" 2>/dev/null || echo www-data)
+  if command -v sudo >/dev/null 2>&1; then echo "sudo -u $u php $f"; else echo "runuser -u $u -- php $f"; fi; exit 0
+done ) 2>/dev/null | head -n 1 ); [ -z "$v" ] || printf '\''at %s %s %s\n'\'' '\''kit:nextcloud'\'' '\''OCC'\'' "$v"
+v=$( ( containers | awk '\''tolower($2) ~ /vaultwarden/ { print $1; exit }'\'' ) 2>/dev/null | head -n 1 ); [ -z "$v" ] || printf '\''at %s %s %s\n'\'' '\''kit:vaultwarden'\'' '\''VAULTWARDEN_CONTAINER'\'' "$v"
+v=$( ( for d in /var/lib/vaultwarden /opt/vaultwarden/data /srv/vaultwarden/data /vw-data /opt/vaultwarden /srv/vaultwarden; do if [ -f "$d/db.sqlite3" ] || [ -f "$d/rsa_key.pem" ] || [ -f "$d/config.json" ]; then echo "$d"; exit 0; fi; done ) 2>/dev/null | head -n 1 ); [ -z "$v" ] || printf '\''at %s %s %s\n'\'' '\''kit:vaultwarden'\'' '\''VAULTWARDEN_DATA'\'' "$v"'
+PROBE_USR='if ( command -v bash >/dev/null 2>&1 ) >/dev/null 2>&1; then echo '\''fit usr:bash'\''; fi
+if ( grep -qsF '\''# The Olympus prompt'\'' "$HOME/.bashrc" ) >/dev/null 2>&1; then echo '\''inst usr:bash'\''; fi
+if ( command -v fish >/dev/null 2>&1 ) >/dev/null 2>&1; then echo '\''fit usr:fish'\''; fi
+if ( [ -f "${XDG_CONFIG_HOME:-$HOME/.config}"/fish/conf.d/the-olympus.fish ] ) >/dev/null 2>&1; then echo '\''inst usr:fish'\''; fi
+if ( command -v fastfetch >/dev/null 2>&1 ) >/dev/null 2>&1; then echo '\''fit usr:fastfetch'\''; fi
+if ( [ -f "${XDG_CONFIG_HOME:-$HOME/.config}"/fastfetch/the-olympus.jsonc ] ) >/dev/null 2>&1; then echo '\''inst usr:fastfetch'\''; fi
+if ( command -v tmux >/dev/null 2>&1 ) >/dev/null 2>&1; then echo '\''fit usr:tmux'\''; fi
+if ( [ -f "${XDG_CONFIG_HOME:-$HOME/.config}"/tmux/the-olympus.conf ] ) >/dev/null 2>&1; then echo '\''inst usr:tmux'\''; fi
+if ( command -v gnome-terminal >/dev/null 2>&1 && command -v dconf >/dev/null 2>&1 ) >/dev/null 2>&1; then echo '\''fit usr:gnome-terminal'\''; fi
+if ( dconf read /org/gnome/terminal/legacy/profiles:/list 2>/dev/null | grep -q 7b0f3f3e-0d5e-4c1e-9a52-01ad0e7f6c11 ) >/dev/null 2>&1; then echo '\''inst usr:gnome-terminal'\''; fi
+if ( command -v ptyxis >/dev/null 2>&1 || [ -d "$HOME/.var/app/app.devsuite.Ptyxis" ] ) >/dev/null 2>&1; then echo '\''fit usr:ptyxis'\''; fi
+if ( [ -f "${XDG_DATA_HOME:-$HOME/.local/share}"/org.gnome.Ptyxis/palettes/the-olympus.palette ] || [ -f "$HOME/.var/app/app.devsuite.Ptyxis/data/org.gnome.Ptyxis/palettes/the-olympus.palette" ] ) >/dev/null 2>&1; then echo '\''inst usr:ptyxis'\''; fi
+if ( command -v kitty >/dev/null 2>&1 ) >/dev/null 2>&1; then echo '\''fit usr:kitty'\''; fi
+if ( [ -f "${XDG_CONFIG_HOME:-$HOME/.config}"/kitty/the-olympus.conf ] ) >/dev/null 2>&1; then echo '\''inst usr:kitty'\''; fi
+if ( command -v alacritty >/dev/null 2>&1 ) >/dev/null 2>&1; then echo '\''fit usr:alacritty'\''; fi
+if ( [ -f "${XDG_CONFIG_HOME:-$HOME/.config}"/alacritty/the-olympus.toml ] ) >/dev/null 2>&1; then echo '\''inst usr:alacritty'\''; fi
+if ( command -v omarchy-theme-set >/dev/null 2>&1 ) >/dev/null 2>&1; then echo '\''fit usr:omarchy'\''; fi
+if ( [ -d "${XDG_CONFIG_HOME:-$HOME/.config}"/omarchy/themes/the-olympus ] ) >/dev/null 2>&1; then echo '\''inst usr:omarchy'\''; fi
+if ( command -v wezterm >/dev/null 2>&1 ) >/dev/null 2>&1; then echo '\''fit usr:wezterm'\''; fi
+if ( [ -f "${XDG_CONFIG_HOME:-$HOME/.config}"/wezterm/colors/the-olympus.toml ] ) >/dev/null 2>&1; then echo '\''inst usr:wezterm'\''; fi'
+
+# Where an application can be: <VARIABLE>|<how the menu says it>|<the question>, a line each.
+places() {
   case "$1" in
-    kit:home-assistant) ( c=$( (docker ps --format '{{.Names}} {{.Image}}' 2>/dev/null || sudo -n docker ps --format '{{.Names}} {{.Image}}' 2>/dev/null) | awk 'tolower($2) ~ /home-?assistant/ { print $1; exit }'); [ -n "$c" ] && echo "$c" ) 2>/dev/null | head -n 1 ;;
-    kit:nextcloud) ( c=$( (docker ps --format '{{.Names}} {{.Image}}' 2>/dev/null || sudo -n docker ps --format '{{.Names}} {{.Image}}' 2>/dev/null) | awk 'tolower($2) ~ /nextcloud/ { print $1; exit }'); [ -n "$c" ] && echo "$c" ) 2>/dev/null | head -n 1 ;;
-    kit:proxmox) ( command -v pveversion >/dev/null 2>&1 ) 2>/dev/null | head -n 1 ;;
-    kit:vaultwarden) ( c=$( (docker ps --format '{{.Names}} {{.Image}}' 2>/dev/null || sudo -n docker ps --format '{{.Names}} {{.Image}}' 2>/dev/null) | awk 'tolower($2) ~ /vaultwarden/ { print $1; exit }'); [ -n "$c" ] && echo "$c" ) 2>/dev/null | head -n 1 ;;
+    kit:home-assistant) printf '%s\n' 'HA_CONTAINER|In a Docker or Podman container|Home Assistant’s container
+HA_CONFIG|In a folder on this machine|Home Assistant’s config folder (where configuration.yaml is)' ;;
+    kit:nextcloud) printf '%s\n' 'NEXTCLOUD_CONTAINER|In a Docker or Podman container|Nextcloud’s container
+OCC|Installed on this machine (occ)|The occ command, as the web server’s user' ;;
+    kit:vaultwarden) printf '%s\n' 'VAULTWARDEN_CONTAINER|In a Docker or Podman container|Vaultwarden’s container
+VAULTWARDEN_DATA|In a folder on this machine|Vaultwarden’s data folder (where db.sqlite3 is)' ;;
     *) true ;;
   esac
 }
-ask_env() {
+kit_name() {
   case "$1" in
-    kit:home-assistant) echo HA_CONTAINER ;;
-    kit:nextcloud) echo NEXTCLOUD_CONTAINER ;;
-    kit:vaultwarden) echo VAULTWARDEN_CONTAINER ;;
-    *) true ;;
-  esac
-}
-ask_prompt() {
-  case "$1" in
-    kit:home-assistant) echo 'Home Assistant’s Docker container' ;;
-    kit:nextcloud) echo 'Nextcloud’s Docker container' ;;
-    kit:vaultwarden) echo 'Vaultwarden’s Docker container' ;;
+    kit:home-assistant) echo 'Home Assistant' ;;
+    kit:nextcloud) echo 'Nextcloud' ;;
+    kit:proxmox) echo 'Proxmox VE' ;;
+    kit:vaultwarden) echo 'Vaultwarden' ;;
     *) true ;;
   esac
 }
@@ -207,6 +217,15 @@ kit_args() {
     *) true ;;
   esac
 }
+kit_root() {
+  case "$1" in
+    kit:home-assistant) return 0 ;;
+    kit:nextcloud) return 0 ;;
+    kit:proxmox) return 0 ;;
+    kit:vaultwarden) return 0 ;;
+    *) return 1 ;;
+  esac
+}
 
 # Every file of every kit, and its SHA-256: <folder> <path> <sum>.
 KITS='grafana README.md aecb7d42b81b6e44810bfe122838d45e8a02c0e70d9bf9d0b769ee17ce2e07ab
@@ -214,8 +233,8 @@ grafana apple-touch-icon.png d2e76ebee81c5a44139e0f392183b7b88e179fb183973592fd0
 grafana docker-compose.override.yml b527ed6e165540fb4b9183660379a6e356232ffd01d292515cb539140429f4be
 grafana fav32.png 90012fce4405b9c0d0cca7a7fa7b38f28f2820397a5f781a7c10edbc65cf9906
 grafana grafana_icon.svg 9b349ca9cf892a17c88c393a79f931af70d9121b50ee309c9954204ec2beaeef
-home-assistant README.md 0e3791a48b4c189c557ceabbdf6bd13a8b0fd8aca809aeca23dcbd74d537cde4
-home-assistant apply.sh c0626a2ffdf2b3f3e7c06fbc568a4ac3bb3a571bd4a66e337a75ad7bff58ed01
+home-assistant README.md 926174dc5272b68cd64f2e2e3fc4bd1f835389f316ac41e671ab8910572833b1
+home-assistant apply.sh 7c8ac991ea9d2808eb8fabd26ee54b07f7a4fa9440e262fa6ef0ec672ac0b429
 home-assistant picture-card.yaml 611df18fc5bca5eeecec36533b734b5d12cd5e9a96f8a006f0d8c2415bf984b5
 home-assistant the-olympus.yaml d200a64a898e14225e5291638b5542eed493d5829a961deeab8bf69b1751b36b
 home-assistant www/banner.svg bc484c6ba301a297a578a5f6bb0c4089af14228627fb466fe44e27e758d073ff
@@ -229,25 +248,29 @@ navidrome docker-compose.override.yml ef24d5832c463814c5b481a28a318e261591e2def0
 navidrome navidrome.css 1f14e78838b4851badb149d675d2b561e2fdb488e52e54e546ea429c2390ccc7
 navidrome navidrome.toml 485062527b370a05277971940d89e67ad436ce4fcef0462880a1ed00520de3c3
 navidrome nginx.conf 090182ce5bfd2eb8156675d942e7db38221ad1b8bd2edf0251193eb769aef58c
-nextcloud README.md ab8c843e26cf3d1b1eafb5a4756e3566a38c691682c948aff0d81abc46773ba5
-nextcloud apply.sh 23a9f8d98c6fd167734644178d3e4e53642943c361cb296138481761ca59ed61
+nextcloud README.md 9625d3d0774e3cb8d58b36855036da65090f4d125a8ea8e1d7cf79be4b76a253
+nextcloud apply.sh 5e1f9d87bc3f1d3b6c34dde0bb66728ba8613148e1aabb71c4fa473fbc12ca83
 nextcloud background.png 19be095e307a0cfff99ee0f9d0182a481f0600f48dd0e77184a827ca5b1f8e15
 nextcloud custom.css 1efcec837cfc1ee1630104949e3659bf6b70f341a3cfd20187ece44c08f5debc
 nextcloud favicon.png e4c5469c3d0da20ae3df859e29f05143e79be4e15c632c0548ee35c87a6a32f5
 nextcloud logo.svg 5bc6f0060adcb6d850981d2bcbfa6a2cd182d0f6a4cd7db4a2b73af92ca07783
 nextcloud logoheader.svg 3d7840c1b2eb718036fd5fea4f9d7890a3ffc2523a879a6f84e21851490927b3
-proxmox README.md 1976f688c7873eeb44c20a3dba2ae6542dc3270209a22145513ff994657cc130
-proxmox apply.sh 660a608abbf6edd89061eb84ed24c91599c25b923b2e51f6e1e0a2683c1037ae
+proxmox README.md b84298cddadcd6a4b66551c65741949c7ae82c168055f916f32abf0aedb33abd
+proxmox apply.sh e1abffc3bd379b5ade9ffc8035202ef51776f3aa4aafda7719b71bb394b31298
 proxmox favicon.ico d9804011a89a75292ca3c114a730ac06b8aa3ac4a98e53b2d5650be571f7f2c8
-proxmox logo-dark-theme.png 4171af235b1223c974d22b88d2b03ded748683a332ed9b6355a9188eaed8bdbd
-proxmox logo-light-theme.png fd1ba7c28f144d15c2980906c5ca5979b37dfb4f78fc5492a2d479d793923e95
+proxmox layer.css 804c45eb88477ee11fb441f3f39da139e957c4f7c0288b013d9415208f331e53
+proxmox logo-128.png 38a9823c702dc6f563b001df87e7ad155b28dc990eb1a0cfefb7dff6243b06db
+proxmox logo-dark-theme.png bf0101cb2ae77cce759b877e89c321d79e80c128f4238f0c05b3087b14c7572b
+proxmox logo-dark-theme.svg bd0dff1b4ef03c89771495068775b1718ef5da464650f78f9eb9db82b3ef0556
+proxmox logo-light-theme.png 054de4ebf75990024a2e33dbc84f41c207c9fffb5e080402a1a56f6032845e32
+proxmox logo-light-theme.svg 617d195bb13c31dff16b6f74bc476978d48b36c3255795098d864eedeb750f97
 uptime-kuma README.md 6cd31192b0dc7b8f89f331d1c5055944656176a62058fb6e6fab2a5d3460c759
 uptime-kuma logo.png 460aab318e6a5b1f2eaaef77166d375335e9ef23f6622d43671ab8de6f9c2969
 uptime-kuma status-page.css 9f0f0a788acf891d9aef0159b6b300f3fba022d6ddd679e3a287fff79158d155
 vaultwarden README.md 3f217f38c46102e02104012366b65a3273fd60ddb9821123d1c7ac213bd2820b
-vaultwarden apply.sh 12b7c44a5bca742c77b6669d64d0ac51bc791720d1cf42a0694260632714825c
+vaultwarden apply.sh 17f23e0ccecddb0edd5fda14222958cb9e4867624ae22381b69377305d1b16f7
 vaultwarden user.vaultwarden.scss.hbs 8a12ee15f660c26029a79baa21b720c8385ccdcf392dfaec11506a33d2d1e933'
-SYS_SUM=2589bf1a4f65a83ec9ce00e90c97493542fcf4ca7ad25f4cbde26d324c58652e
+SYS_SUM=a3c8dd480b8319df778bbecfffdcc5555359f4ae4579ff3daa6fd07df736c5e6
 USR_SUM=be9d75794313f979ee8fb8410006c8c864141463ff28685ef04917ee29bb732b
 IDENTITIES='master|The Olympus
 backup|Backup
@@ -345,7 +368,10 @@ choose() {
         if ! has "$FIT" "$id" && [ "$MODE" = install ]; then mark='   '; text="$D$label — $(unfit "$id")$O"
         elif has "$on" "$id"; then mark='[x]'; text=$label
         else mark='[ ]'; text=$label; fi
-        if has "$INST" "$id"; then text="$text $D(installed)$O"; fi
+        if has "$INST" "$id"; then text="$text $D(installed)$O"
+        elif [ -n "$(places "$id")" ] && [ "$MODE" = install ]; then
+          if w=$(where "$id"); then text="$text $D— found: ${w#* }$O"; else text="$text $D— not found here: you will say where$O"; fi
+        fi
         if [ "$i" = "$c" ]; then printf '  %s❯ %s%s %s\n' "$R" "$mark" "$O" "$text"; else printf '    %s %s\n' "$mark" "$text"; fi
         i=$((i + 1))
       done
@@ -380,19 +406,40 @@ ask() {
 
 ALL=$(printf '%s\n' "$ITEMS" | cut -d'|' -f1)
 
-# What this machine can take, and what is installed: looked at once (some looks ask Docker).
-FIT=' '
-INST=' '
-for id in $ALL; do
-  if fits "$id" >/dev/null 2>&1; then FIT="$FIT$id "; fi
-  if installed "$id" >/dev/null 2>&1; then INST="$INST$id "; fi
-done
+# What this machine can take, what is in place, and where its applications are: looked at
+# once, as root when that needs no password (the boot partition and Docker are root's),
+# your terminal's parts as you.
+look() {
+  if [ -z "$SUDO" ]; then sh -c "$PROBE_SYS"
+  elif sudo -n true 2>/dev/null; then sudo -n sh -c "$PROBE_SYS"
+  else sh -c "$PROBE_SYS"; fi
+  sh -c "$PROBE_USR"
+}
+seen() {
+  SEEN=$(look)
+  FIT=" $(printf '%s\n' "$SEEN" | awk '$1 == "fit" { printf "%s ", $2 }')"
+  INST=" $(printf '%s\n' "$SEEN" | awk '$1 == "inst" { printf "%s ", $2 }')"
+}
+seen
+# where <id> [<VARIABLE>] — "<VARIABLE> <where>" of what was found for a kit (the first of its places, or that one).
+where() { printf '%s\n' "$SEEN" | awk -v id="$1" -v v="${2:-}" '$1 == "at" && $2 == id && (v == "" || $3 == v) { sub(/^at [^ ]+ /, ""); print; f = 1; exit } END { exit !f }'; }
+# given <VARIABLE> — what --set or the environment says.
+given() {
+  g=$(printf '%s' "$SETS" | grep "^$1=" | tail -n 1 | cut -d= -f2-)
+  [ -n "$g" ] || eval "g=\${$1:-}"
+  printf '%s' "$g"
+}
 
 if [ "$LIST" = 1 ]; then
   for id in $ALL; do
-    if has "$INST" "$id"; then s=installed; elif has "$FIT" "$id"; then s='can be installed'; else s="skipped: $(unfit "$id")"; fi
+    if has "$INST" "$id"; then s=installed; elif ! has "$FIT" "$id"; then s="skipped: $(unfit "$id")"
+    elif [ -n "$(places "$id")" ]; then
+      if w=$(where "$id"); then s="can be installed — found: ${w#* } (${w%% *})"
+      else s="can be installed — not found here: say where with $(places "$id" | cut -d'|' -f1 | sed 's/^/--set /; s/$/=…/' | paste -sd' ' - | sed 's/ --set/ or --set/g')"; fi
+    else s='can be installed'; fi
     printf '%-24s %s — %s\n' "$id" "$(printf '%s\n' "$ITEMS" | grep "^$id|" | cut -d'|' -f3-)" "$s"
   done
+  [ -z "$SUDO" ] || sudo -n true 2>/dev/null || echo "(looked as you: with sudo it can also look into the boot partition and Docker)"
   exit 0
 fi
 
@@ -410,7 +457,7 @@ if [ "$INTERACTIVE" = 1 ]; then
   m=$(pick 'What would you like to do?' "$(printf 'Install the house on this machine\nUndo what the house installed\nQuit')") || exit 0
   case "$m" in 1) MODE=install ;; 2) MODE=restore ;; *) exit 0 ;; esac
   if [ "$MODE" = install ]; then
-    begin=; for id in $ALL; do case "$id" in doc:*) ;; *) if has "$FIT" "$id" && ! has "$INST" "$id"; then begin="$begin $id"; fi ;; esac; done
+    begin=; for id in $ALL; do case "$id" in doc:*) ;; *) if has "$FIT" "$id" && ! has "$INST" "$id" && { [ -z "$(places "$id")" ] || where "$id" >/dev/null; }; then begin="$begin $id"; fi ;; esac; done
     CHOSEN=$(choose 'Choose what to install — the parts this machine cannot take are dimmed.' "$ALL" "$begin") || exit 0
   else
     begin=; for id in $ALL; do if has "$INST" "$id"; then begin="$begin $id"; fi; done
@@ -423,7 +470,7 @@ else
   for id in $ALL; do
     case "$id" in doc:*) continue ;; esac
     if [ "$MODE" = restore ]; then if has "$INST" "$id"; then CHOSEN="$CHOSEN $id"; fi
-    elif has "$FIT" "$id"; then CHOSEN="$CHOSEN $id"; fi
+    elif has "$FIT" "$id" && { [ -z "$(places "$id")" ] || where "$id" >/dev/null; }; then CHOSEN="$CHOSEN $id"; fi
   done
 fi
 [ -n "$(echo $CHOSEN)" ] || { [ "$INTERACTIVE" = 1 ] && tui_close; echo "Nothing chosen."; exit 0; }
@@ -441,20 +488,53 @@ fi
 printf '%s\n' "$IDENTITIES" | cut -d'|' -f1 | grep -qx "$AS" || { echo "unknown identity: $AS" >&2; exit 2; }
 if [ "$AS" = master ]; then BASE="$SITE/files/assets/screens/"; else BASE="$SITE/files/assets/screens/services/$AS/"; fi
 
-# The answers each chosen kit needs.
+# Root, once, before anything is asked: with it the applications are looked for again
+# (Docker and their folders are often root's alone), so what is asked starts from what is there.
+needs_root=0
+for id in $CHOSEN; do case "$id" in sys:*) needs_root=1 ;; kit:*) if kit_root "$id"; then needs_root=1; fi ;; esac; done
+if [ -n "$SUDO" ] && [ "$needs_root" = 1 ] && ! sudo -n true 2>/dev/null && [ "$INTERACTIVE" = 1 ]; then
+  tui_close
+  printf '\n  Some of this is done as root: sudo asks for your password once.\n\n'
+  sudo -v || exit 1
+  tui_open
+fi
+case " $CHOSEN " in *" kit:"*) if [ -n "$SUDO" ] && sudo -n true 2>/dev/null; then seen; fi ;; esac
+
+# Where each chosen application is: what --set or the environment says, else what was found
+# (asked to confirm, in the menu), else asked.
 ANSWERS=
+SKIP=' '
 for id in $CHOSEN; do
-  env=$(ask_env "$id")
-  [ -n "$env" ] || continue
-  default=$(found "$id")
-  if [ "$INTERACTIVE" = 1 ]; then value=$(ask "$(ask_prompt "$id")" "$default"); else value=$default; fi
-  [ -n "$value" ] || { echo "$id: no answer for $(ask_prompt "$id")" >&2; exit 2; }
-  ANSWERS="$ANSWERS$id=$value
+  pl=$(places "$id")
+  [ -n "$pl" ] || continue
+  var=; value=
+  for v in $(printf '%s\n' "$pl" | cut -d'|' -f1); do
+    g=$(given "$v"); if [ -n "$g" ]; then var=$v; value=$g; break; fi
+  done
+  if [ -z "$var" ] && [ "$INTERACTIVE" = 1 ]; then
+    name=$(kit_name "$id")
+    opts=$(printf '%s\n' "$pl" | while IFS='|' read -r v label prompt; do
+      if w=$(where "$id" "$v"); then printf '%s — found: %s\n' "$label" "${w#* }"; else printf '%s\n' "$label"; fi
+    done; printf 'Skip %s\n' "$name")
+    i=$(pick "Where is $name?" "$opts") || exit 0
+    if [ "$i" -gt "$(count "$pl")" ]; then SKIP="$SKIP$id "; continue; fi
+    line=$(nth "$pl" "$i"); var=${line%%|*}; prompt=${line##*|}
+    w=$(where "$id" "$var") || w=
+    value=$(ask "$prompt" "${w#* }")
+  elif [ -z "$var" ]; then
+    if w=$(where "$id"); then var=${w%% *}; value=${w#* }; fi
+  fi
+  if [ -z "$value" ]; then
+    echo "$id: $(kit_name "$id") was not found here — say where with $(printf '%s\n' "$pl" | cut -d'|' -f1 | sed 's/^/--set /; s/$/=…/' | paste -sd' ' - | sed 's/ --set/ or --set/g')" >&2
+    [ "$INTERACTIVE" = 0 ] || tui_close
+    exit 2
+  fi
+  ANSWERS="$ANSWERS$id $var=$value
 "
 done
 [ "$INTERACTIVE" = 0 ] || tui_close
 
-answer() { printf '%s' "$ANSWERS" | grep "^$1=" | head -n 1 | cut -d= -f2-; }
+answer() { printf '%s' "$ANSWERS" | grep "^$1 " | head -n 1 | cut -d' ' -f2-; }
 fetch() { # fetch <url> <file> [<sha256>]
   get "$1" "$2" || { echo "could not fetch $1" >&2; exit 1; }
   if [ -n "${3:-}" ] && [ "$(sum "$2")" != "$3" ]; then echo "$1 does not match its checksum: not using it" >&2; exit 1; fi
@@ -496,14 +576,16 @@ kit_files() {
 for id in $CHOSEN; do
   case "$id" in
     kit:*)
+      has "$SKIP" "$id" && continue
       dir=${id#kit:}; into="$TMP/kit-$dir"
       kit_files "$dir" "$into"
-      env=$(ask_env "$id"); set --
-      [ -z "$env" ] || set -- "$env=$(answer "$id")"
+      set --
+      a=$(answer "$id"); [ -z "$a" ] || set -- "$a"
       if [ "$MODE" = restore ]; then args=--restore; else args=$(kit_args "$id"); fi
-      echo "· $dir"
+      if kit_root "$id"; then as=$SUDO; else as=; fi
+      echo "· $dir${a:+ ($a)}"
       # shellcheck disable=SC2086
-      if $SUDO env "$@" sh "$into/apply.sh" $args; then DONE="$DONE $dir"; else FAILED="$FAILED $dir"; fi ;;
+      if $as env "$@" sh "$into/apply.sh" $args; then DONE="$DONE $dir"; else FAILED="$FAILED $dir"; fi ;;
     doc:*)
       dir=${id#doc:}; into="./the-olympus-$dir"
       [ ! -e "$into" ] || { echo "$into already exists: not overwriting it" >&2; FAILED="$FAILED $dir"; continue; }

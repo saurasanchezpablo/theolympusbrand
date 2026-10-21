@@ -320,7 +320,7 @@ test('Limine: the theme in a marked block, the same options set aside and given 
     chmodSync(join(bin, 'limine'), 0o755);
     const defaults = join(dir, 'defaults');
     writeFileSync(join(kit, 'install.sh'), readFileSync(join(KIT, 'boot/limine/install.sh'), 'utf8').replace('[ "$(id -u)" = 0 ]', 'true').replace('DEFAULTS=/etc/default/limine', `DEFAULTS=${defaults}`));
-    const env = { ...process.env, PATH: `${bin}:${process.env.PATH}`, LIMINE_CONF: conf };
+    const env = { ...process.env, PATH: `${bin}:${process.env.PATH}`, LIMINE_CONF: conf, OLYMPUS_STATE: join(dir, 'state') };
     const run = (...a: string[]) => execFileSync('sh', [join(kit, 'install.sh'), ...a], { env, encoding: 'utf8' });
 
     run();
@@ -334,9 +334,11 @@ test('Limine: the theme in a marked block, the same options set aside and given 
     assert.ok(themed.endsWith(original.slice(original.indexOf('\n/+CachyOS'))), 'the entries untouched');
     for (const [, palette] of themed.matchAll(/^term_palette(?:_bright)?: (.+)$/gm)) for (const c of palette.split(';')) assert.ok(c.slice(0, 2) === c.slice(2, 4) && c.slice(2, 4) === c.slice(4, 6), c);
     assert.ok(existsSync(join(boot, 'the-olympus.png')));
+    assert.equal(readFileSync(join(dir, 'state/limine'), 'utf8'), `${conf}\n`, 'a mark anyone can read says where it is in place');
 
     run('--restore');
     assert.equal(readFileSync(conf, 'utf8'), original, 'exactly as it was');
+    assert.ok(!existsSync(join(dir, 'state/limine')), 'and the mark is gone');
     assert.ok(!existsSync(join(boot, 'the-olympus.png')) && !existsSync(`${conf}.the-olympus.orig`));
 
     // Before Limine 12, the menu's colours are palette indexes.

@@ -1,42 +1,75 @@
 #!/bin/sh
 # The Olympus — Proxmox VE: the web interface in the house's greys, the logo
-# in the header and the favicon. Run as root on each node.
+# in the header and the icon of the browser tab. Run as root on each node.
 #
-#   sh apply.sh              the theme, the logo and the favicon, kept after updates
-#   sh apply.sh --logo-only  only the logo and the favicon (for Proxmox's light theme)
+#   sh apply.sh              the theme, the logo and the icon, kept after updates
+#   sh apply.sh --logo-only  only the logo and the icon (for Proxmox's light theme)
 #   sh apply.sh --no-persist do not re-apply after updates (no APT hook)
+#   sh apply.sh --check      what is in place, and what the node serves
 #   sh apply.sh --restore    Proxmox's own look back, and the hook removed
 set -eu
 DIR=$(cd "$(dirname "$0")" && pwd)
 IMG=/usr/share/pve-manager/images
 CSS=/usr/share/pve-manager/css
 TPL=/usr/share/pve-manager/index.html.tpl
-DARK=/usr/share/javascript/proxmox-widget-toolkit/themes/theme-proxmox-dark.css
+PWT=/usr/share/javascript/proxmox-widget-toolkit
+DARK=$PWT/themes/theme-proxmox-dark.css
 KEEP=/usr/local/share/the-olympus/proxmox
 HOOK=/etc/apt/apt.conf.d/99-the-olympus-logo
-LINK='<link rel="stylesheet" type="text/css" href="/pve2/css/the-olympus.css" />'
+HREF=/pve2/css/the-olympus.css
 theme=1
-logo=logo-dark-theme.png
+tone=dark
 persist=1
 restore=0
 reapply=0
+check=0
 for a in "$@"; do
   case "$a" in
-    --logo-only) theme=0; logo=logo-light-theme.png ;;
-    --dark) logo=logo-dark-theme.png ;;
+    --logo-only) theme=0; tone=light ;;
+    --dark) tone=dark ;;
     --persist) persist=1 ;;
     --no-persist) persist=0 ;;
     --restore) restore=1 ;;
     --reapply) reapply=1 ;;
+    --check) check=1 ;;
     *) echo "unknown option: $a" >&2; exit 2 ;;
   esac
 done
+
+# Where each image goes, and from which of the kit's files: Proxmox VE 8 shows the PNG logo,
+# 9 the SVG one (from the widget toolkit); the browser tab shows logo-128.png.
+targets() {
+  echo "$IMG/proxmox_logo.png logo-$tone-theme.png"
+  echo "$PWT/images/proxmox_logo.svg logo-$tone-theme.svg"
+  echo "$IMG/logo-128.png logo-128.png"
+  echo "$IMG/favicon.ico favicon.ico"
+}
+KIT_FILES="logo-dark-theme.png logo-light-theme.png logo-dark-theme.svg logo-light-theme.svg logo-128.png favicon.ico layer.css"
+
+if [ "$check" = 1 ]; then
+  echo "Proxmox VE: $(pveversion 2>/dev/null || echo 'pveversion not found — is this a node?')"
+  if grep -qF "$HREF" "$TPL" 2>/dev/null; then echo "✓ the page template links the theme: $(grep -oF "$HREF" "$TPL" | head -n 1)…"; else echo "✕ the page template does not link the theme ($TPL)"; fi
+  if [ -s "$CSS/the-olympus.css" ]; then echo "✓ the theme is made: $CSS/the-olympus.css ($(wc -c < "$CSS/the-olympus.css") bytes)"; else echo "✕ no theme file at $CSS/the-olympus.css"; fi
+  targets | while read -r target file; do
+    if [ -f "$KEEP/$file" ] && cmp -s "$target" "$KEEP/$file"; then echo "✓ $target is the house's"
+    elif [ -f "$target" ]; then echo "✕ $target is still Proxmox's"
+    else echo "· $target does not exist in this release"; fi
+  done
+  if [ -f "$HOOK" ]; then echo "✓ re-applied after updates ($HOOK)"; else echo "· not re-applied after updates (no $HOOK)"; fi
+  if command -v curl >/dev/null 2>&1; then
+    code=$(curl -ks -o /dev/null -w '%{http_code}' "https://127.0.0.1:8006$HREF" || true)
+    if [ "$code" = 200 ]; then echo "✓ the node serves the theme (https://127.0.0.1:8006$HREF)"; else echo "✕ the node answers $code for $HREF — is pveproxy running? (systemctl status pveproxy)"; fi
+  fi
+  echo "In the browser: reload with Ctrl+Shift+R."
+  exit 0
+fi
+
 [ "$(id -u)" = 0 ] || { echo "run as root" >&2; exit 1; }
 [ -d "$IMG" ] || { echo "$IMG not found: is this a Proxmox VE node?" >&2; exit 1; }
 
 unlink_theme() {
-  if [ -f "$TPL" ] && grep -qF '/pve2/css/the-olympus.css' "$TPL"; then
-    grep -vF '/pve2/css/the-olympus.css' "$TPL" > "$TPL.the-olympus.tmp"
+  if [ -f "$TPL" ] && grep -qF "$HREF" "$TPL"; then
+    grep -vF "$HREF" "$TPL" > "$TPL.the-olympus.tmp"
     cat "$TPL.the-olympus.tmp" > "$TPL"
     rm -f "$TPL.the-olympus.tmp"
   fi
@@ -44,8 +77,8 @@ unlink_theme() {
 }
 
 if [ "$restore" = 1 ]; then
-  for f in proxmox_logo.png favicon.ico; do
-    if [ -f "$IMG/$f.orig" ]; then mv "$IMG/$f.orig" "$IMG/$f"; fi
+  for f in "$IMG/proxmox_logo.png" "$PWT/images/proxmox_logo.svg" "$IMG/logo-128.png" "$IMG/favicon.ico"; do
+    if [ -f "$f.orig" ]; then mv "$f.orig" "$f"; fi
   done
   unlink_theme
   rm -f "$HOOK"
@@ -62,20 +95,19 @@ if [ "$reapply" = 1 ]; then
   DIR=$KEEP
 else
   mkdir -p "$KEEP"
-  for f in logo-light-theme.png logo-dark-theme.png favicon.ico; do install -m 644 "$DIR/$f" "$KEEP/$f"; done
+  for f in $KIT_FILES; do install -m 644 "$DIR/$f" "$KEEP/$f"; done
   [ "$DIR/apply.sh" -ef "$KEEP/apply.sh" ] || install -m 755 "$DIR/apply.sh" "$KEEP/apply.sh"
-  printf 'theme=%s\nlogo=%s\n' "$theme" "$logo" > "$KEEP/settings"
+  printf 'theme=%s\ntone=%s\n' "$theme" "$tone" > "$KEEP/settings"
 fi
 
-# The logo and the favicon; Proxmox's own are kept beside them.
-install -m 644 "$DIR/$logo" "$KEEP/proxmox_logo.png"
-for f in proxmox_logo.png favicon.ico; do
-  [ -f "$IMG/$f" ] || continue
+# The logo and the icon; Proxmox's own are kept beside them (.orig).
+targets | while read -r target file; do
+  [ -f "$target" ] || continue
   # Proxmox's file — the first time, or a newer one an update put back — is what --restore returns to.
   ours=0
-  for k in logo-dark-theme.png logo-light-theme.png favicon.ico; do cmp -s "$IMG/$f" "$KEEP/$k" && ours=1; done
-  [ "$ours" = 1 ] || cp -p "$IMG/$f" "$IMG/$f.orig"
-  install -m 644 "$KEEP/$f" "$IMG/$f"
+  for k in $KIT_FILES; do cmp -s "$target" "$KEEP/$k" && ours=1; done
+  [ "$ours" = 1 ] || cp -p "$target" "$target.orig"
+  install -m 644 "$KEEP/$file" "$target"
 done
 
 # The theme: Proxmox's dark theme, with every blue and blue-grey turned to the grey of the same lightness.
@@ -109,12 +141,17 @@ if [ "$theme" = 1 ]; then
       ~ge;
       s{rgb(a?)\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)}{ "rgb$1(" . join(", ", tone($2, $3, $4)) }ge;
     ' "$DARK"
+    cat "$KEEP/layer.css"
   } > "$CSS/the-olympus.css.tmp"
   mv "$CSS/the-olympus.css.tmp" "$CSS/the-olympus.css"
   chmod 644 "$CSS/the-olympus.css"
-  if ! grep -qF '/pve2/css/the-olympus.css' "$TPL"; then
-    grep -qi '</head>' "$TPL" || { echo "$TPL has no </head>: not changed" >&2; exit 1; }
-    perl -0pi -e 's{</head>}{    '"$LINK"'\n  </head>}i' "$TPL"
+  # Linked after Proxmox's own stylesheets, with its size and time in the address: a browser never keeps an old one.
+  grep -qi '</head>' "$TPL" || { echo "$TPL has no </head>: not changed" >&2; exit 1; }
+  v=$(cksum < "$CSS/the-olympus.css" | cut -d' ' -f1)
+  link="<link rel=\"stylesheet\" type=\"text/css\" href=\"$HREF?v=$v\" />"
+  if ! grep -qF "$HREF?v=$v\"" "$TPL"; then
+    if grep -qF "$HREF" "$TPL"; then grep -vF "$HREF" "$TPL" > "$TPL.the-olympus.tmp"; cat "$TPL.the-olympus.tmp" > "$TPL"; rm -f "$TPL.the-olympus.tmp"; fi
+    LINK=$link perl -0pi -e 's{([ \t]*)</head>}{$1  $ENV{LINK}\n$1</head>}i' "$TPL"
   fi
 else
   unlink_theme
@@ -128,4 +165,4 @@ EOF
 elif [ "$persist" = 0 ]; then
   rm -f "$HOOK"
 fi
-[ "$reapply" = 1 ] || echo "The Olympus is applied. Reload the web interface (Ctrl+Shift+R)."
+[ "$reapply" = 1 ] || echo "The Olympus is applied. Reload the web interface (Ctrl+Shift+R); sh apply.sh --check says what is in place."

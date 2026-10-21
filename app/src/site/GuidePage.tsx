@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { guideMarked, safeUrl } from './markdown.ts';
 import { fileUrl, useIndex } from './files.ts';
+import { KitFiles } from './KitFiles.tsx';
 
 /** A chapter's title from its first heading, without the number and the house's name. */
 const clean = (t: string) => t.replace(/^\d+\s*—\s*/, '').replace(/^The Olympus\s*—\s*/, '');
@@ -117,7 +118,11 @@ export function GuidePage({ doc }: { doc?: string }) {
       {indexError || error ? (
         <p className="notes notes--error">{indexError ?? error}</p>
       ) : html ? (
-        <article className="doc" ref={body} dangerouslySetInnerHTML={{ __html: html }} />
+        <div className="guide__main">
+          <article className="doc" ref={body} dangerouslySetInnerHTML={{ __html: html }} />
+          {/* An application's chapter: its kit's files, to copy by hand. */}
+          {index && current?.id.startsWith('integrations/') && <KitFiles key={current.id} index={index} dir={current.id.slice('integrations/'.length)} />}
+        </div>
       ) : (
         <p className="doc doc--loading" role="status">
           Opening the chapter…

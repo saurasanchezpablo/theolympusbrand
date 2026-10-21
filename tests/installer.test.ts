@@ -25,6 +25,8 @@ function machine() {
     writeFileSync(join(dir, 'bin', name), `#!/bin/sh\n${body}\n`);
     chmodSync(join(dir, 'bin', name), 0o755);
   };
+  // sudo that asks for nothing and runs the command as the same user: what is "root" here is the test's own user.
+  stub('sudo', 'while [ $# -gt 0 ]; do case "$1" in -n) shift ;; -v) exit 0 ;; *) break ;; esac; done\n[ $# -gt 0 ] || exit 0\nexec "$@"');
   // Without a terminal (setsid: no controlling terminal), as a script or a CI machine runs it.
   const run = (args: string[], file = LAUNCHER) => spawnSync('setsid', ['sh', file, ...args], { env, cwd: join(dir, 'work'), encoding: 'utf8' });
   return { dir, env, stub, run, done: () => rmSync(dir, { recursive: true, force: true }) };
@@ -38,6 +40,7 @@ test('the launcher is a POSIX script that lists everything the house can install
     assert.equal(list.status, 0, list.stderr);
     for (const id of ['sys:grub', 'sys:limine', 'sys:terminal', 'usr:bash', 'usr:omarchy', 'kit:proxmox', 'kit:nextcloud', 'kit:home-assistant', 'kit:vaultwarden', 'doc:jellyfin']) assert.match(list.stdout, new RegExp(`^${id} `, 'm'), id);
     assert.match(list.stdout, /^kit:proxmox .*skipped: Proxmox VE is not on this machine$/m);
+    assert.match(list.stdout, /^kit:nextcloud .*not found here: say where with --set NEXTCLOUD_CONTAINER=… or --set OCC=…$/m, 'an application not found can still be chosen, saying where');
     // Without a terminal and without options, there is nothing to show the menu on.
     assert.equal(m.run([]).status, 2);
     assert.match(m.run(['--only', 'sys:nonsense']).stderr, /unknown item/);
@@ -96,15 +99,49 @@ test('an application found on the machine: Vaultwarden in Docker, its kit applie
   try {
     const log = join(m.dir, 'docker.log');
     m.stub('docker', `if [ "$1" = ps ]; then echo "vault vaultwarden/server:1.37"; exit 0; fi\necho "$@" >> ${log}`);
-    // As root would: no sudo in the way of the stand-in docker.
-    const asRoot = join(m.dir, 'root.sh');
-    writeFileSync(asRoot, script.replace('if [ "$(id -u)" = 0 ]; then SUDO=; else SUDO=sudo; fi', 'SUDO='));
-    assert.match(m.run(['--list'], asRoot).stdout, /^kit:vaultwarden .*can be installed$/m);
-    const out = m.run(['--only', 'kit:vaultwarden'], asRoot);
+    assert.match(m.run(['--list']).stdout, /^kit:vaultwarden .*can be installed — found: vault \(VAULTWARDEN_CONTAINER\)$/m);
+    const out = m.run(['--only', 'kit:vaultwarden']);
     assert.equal(out.status, 0, out.stderr);
     const calls = readFileSync(log, 'utf8');
     assert.match(calls, /cp .*user\.vaultwarden\.scss\.hbs vault:\/data\/templates\/scss\/user\.vaultwarden\.scss\.hbs/, 'into the container it found');
     assert.match(calls, /restart vault/);
+  } finally {
+    m.done();
+  }
+});
+
+test('where an application is: All-in-One’s own container found, or said by hand when it is not found', () => {
+  const m = machine();
+  try {
+    // All-in-One: the mastercontainer has no occ; its Nextcloud container does.
+    m.stub('docker', 'if [ "$1" = ps ]; then printf "%s\\n" "nextcloud-aio-mastercontainer nextcloud/all-in-one:latest" "nextcloud-aio-nextcloud ghcr.io/nextcloud-releases/aio-nextcloud:31" "nextcloud-aio-database ghcr.io/nextcloud-releases/aio-postgresql:31"; fi');
+    assert.match(m.run(['--list']).stdout, /^kit:nextcloud .*found: nextcloud-aio-nextcloud \(NEXTCLOUD_CONTAINER\)$/m);
+    rmSync(join(m.dir, 'bin/docker'));
+
+    // Not found: said by hand, here an occ on this machine.
+    const none = m.run(['--only', 'kit:nextcloud']);
+    assert.equal(none.status, 2);
+    assert.match(none.stderr, /Nextcloud was not found here — say where with --set NEXTCLOUD_CONTAINER=… or --set OCC=…/);
+    const log = join(m.dir, 'occ.log');
+    m.stub('occ', `printf '%s|' "$@" >> ${log}; echo >> ${log}`);
+    const out = m.run(['--only', 'kit:nextcloud', '--set', `OCC=${join(m.dir, 'bin/occ')}`]);
+    assert.equal(out.status, 0, out.stderr);
+    assert.match(out.stdout, /· nextcloud \(OCC=/);
+    assert.match(readFileSync(log, 'utf8'), /^theming:config\|name\|/m, 'the kit ran through the occ it was given');
+    // The environment says it as well as --set does.
+    const viaEnv = spawnSync('setsid', ['sh', LAUNCHER, '--only', 'kit:nextcloud'], { env: { ...m.env, OCC: join(m.dir, 'bin/occ') }, cwd: join(m.dir, 'work'), encoding: 'utf8' });
+    assert.equal(viaEnv.status, 0, viaEnv.stderr);
+    assert.match(m.run(['--only', 'kit:nextcloud', '--set', 'nonsense']).stderr, /--set needs NAME=VALUE/);
+  } finally {
+    m.done();
+  }
+});
+
+test('the boot menu seen without root: Limine by the signs it leaves', () => {
+  const m = machine();
+  try {
+    m.stub('limine', 'echo "Limine 12.0.0"');
+    assert.match(m.run(['--list']).stdout, /^sys:limine .*can be installed$/m, 'the limine command is there: a person without root cannot see the boot partition');
   } finally {
     m.done();
   }
@@ -147,6 +184,15 @@ sys.stdout.write(out.decode('utf8', 'replace'))
     assert.match(undone, /Undone: tmux/);
     assert.ok(!existsSync(join(m.dir, 'home/.config/tmux/the-olympus.conf')));
     assert.ok(!/\x1b\[3\dm|\x1b\[4\dm|\x1b\[38;5|\x1b\[38;2/.test(installed), 'the menu uses no colour: bold, dim and reverse only');
+
+    // An application not found here: chosen anyway, then where it is — the second way (occ), typed.
+    const log = join(m.dir, 'occ.log');
+    m.stub('occ', `printf '%s|' "$@" >> ${log}; echo >> ${log}`);
+    const kitNextcloud = script.match(/^ITEMS='([\s\S]*?)'$/m)![1].split('\n').findIndex((l) => l.startsWith('kit:nextcloud|'));
+    const placed = keys('enter', 'n', ...Array(kitNextcloud).fill('down'), 'space', 'enter', 'down', 'enter', join(m.dir, 'bin/occ'), 'enter');
+    assert.match(placed, /Where is Nextcloud\?/);
+    assert.match(placed, /Done: nextcloud/);
+    assert.match(readFileSync(log, 'utf8'), /^theming:config\|name\|/m);
   } finally {
     m.done();
   }

@@ -114,8 +114,12 @@ sudo sh install.sh            # sets the theme in limine.conf
 sudo sh install.sh --restore  # takes it out again
 ```
 
-The script finds `limine.conf` (or takes `LIMINE_CONF=…`) and puts the
-options in a marked block at its top. If the file already sets one of them —
+The script finds `limine.conf` — in the usual places on `/boot`, `/efi` or
+`/boot/efi`, else anywhere on them (Arch keeps it beside its own EFI file, in
+`EFI/arch-limine/`) — or takes `LIMINE_CONF=…`, and puts the options in a
+marked block at its top. It leaves a mark anyone can read,
+`/var/lib/the-olympus/limine`, so the one command can tell it is in place
+without root. If the file already sets one of them —
 a wallpaper, a palette — that line is set aside as a comment and given back on
 `--restore`; the kernel entries are never touched, so CachyOS's
 `limine-entry-tool` and Omarchy's snapshot entries carry on as before. The

@@ -4,7 +4,7 @@
 import { PALETTE } from '../../brand/palette.ts';
 import { DOMAIN } from '../../brand/identity.ts';
 import { coinSvg, markSvg } from '../marks.ts';
-import { sq } from './shared.ts';
+import { containerOf, PODMAN, sq } from './shared.ts';
 import type { ThemeKit } from './types.ts';
 
 const P = PALETTE;
@@ -16,6 +16,18 @@ export const LOGIN_BACKGROUND = { width: 2560, height: 1440 } as const;
  * the ground — there the accent becomes marble. Status and favourite colours
  * keep their meaning.
  */
+const OCC_DETECT = [
+  'if command -v nextcloud.occ >/dev/null 2>&1; then echo nextcloud.occ; exit 0; fi',
+  // Arch's package has an occ command that runs as the right user.
+  'if [ -f /usr/share/webapps/nextcloud/occ ] && command -v occ >/dev/null 2>&1; then echo occ; exit 0; fi',
+  'for f in /var/www/nextcloud/occ /var/www/html/nextcloud/occ /var/www/html/occ /srv/www/nextcloud/occ /srv/http/nextcloud/occ /usr/local/www/nextcloud/occ; do',
+  '  [ -f "$f" ] || continue',
+  // occ runs as the owner of config.php.
+  '  u=$(stat -c %U "${f%/occ}/config/config.php" 2>/dev/null || stat -c %U "$f" 2>/dev/null || echo www-data)',
+  '  if command -v sudo >/dev/null 2>&1; then echo "sudo -u $u php $f"; else echo "runuser -u $u -- php $f"; fi; exit 0',
+  'done',
+].join('\n');
+
 export function nextcloudCss(): string {
   const dark = `  --color-primary: ${P.marble};
   --color-primary-hover: ${P.paper};
@@ -49,7 +61,9 @@ export function nextcloudScript({ name, url }: { name: string; url: string }): s
 # The Olympus — Nextcloud theming (the Theming app; Nextcloud 28 or later).
 #
 #   Docker:     NEXTCLOUD_CONTAINER=nextcloud sh apply.sh
+#               (All-in-One: NEXTCLOUD_CONTAINER=nextcloud-aio-nextcloud; Podman works the same)
 #   Bare metal: OCC="sudo -u www-data php /var/www/nextcloud/occ" sh apply.sh
+#   Snap:       OCC=nextcloud.occ sh apply.sh
 #
 #   --with-css  also install and enable the Custom CSS app, for the dark themes' accent
 #   --restore   Nextcloud's own name, colours, images and stylesheet back
@@ -66,9 +80,17 @@ for a in "$@"; do
   esac
 done
 
+${PODMAN}
 if [ -n "\${NEXTCLOUD_CONTAINER:-}" ]; then
   SRC=
-  occ() { docker exec -u www-data "$NEXTCLOUD_CONTAINER" php occ "$@"; }
+  C=$NEXTCLOUD_CONTAINER
+  # The official image and All-in-One keep occ in /var/www/html, run as www-data; linuxserver's has its own occ command.
+  if docker exec "$C" test -f /var/www/html/occ 2>/dev/null; then occ() { docker exec -u www-data "$C" php /var/www/html/occ "$@"; }
+  elif docker exec "$C" sh -c 'command -v occ' >/dev/null 2>&1; then occ() { docker exec "$C" occ "$@"; }
+  else
+    echo "$C has no occ: is it Nextcloud's own container? (with All-in-One it is nextcloud-aio-nextcloud, not the mastercontainer)" >&2
+    exit 1
+  fi
 else
   SRC=$DIR
   occ() { \${OCC:-php occ} "$@"; }
@@ -119,7 +141,16 @@ export const nextcloud: ThemeKit = {
   label: 'Nextcloud',
   match: { ids: ['nextcloud'], category: 'cloud' },
   how: '`apply.sh` sets the Theming app with `occ`, and the dark themes’ accent through the Custom CSS app (`--with-css`)',
-  installer: { summary: 'name, colours, logos and background, through occ', detect: 'c=$( (docker ps --format \'{{.Names}} {{.Image}}\' 2>/dev/null || sudo -n docker ps --format \'{{.Names}} {{.Image}}\' 2>/dev/null) | awk \'tolower($2) ~ /nextcloud/ { print $1; exit }\'); [ -n "$c" ] && echo "$c"', ask: { env: 'NEXTCLOUD_CONTAINER', prompt: 'Nextcloud’s Docker container' }, args: '--with-css', root: true },
+  installer: {
+    summary: 'name, colours, logos and background, through occ',
+    places: [
+      // All-in-One's own Nextcloud first: its mastercontainer has no occ.
+      { label: 'In a Docker or Podman container', env: 'NEXTCLOUD_CONTAINER', prompt: 'Nextcloud’s container', detect: `c=$(${containerOf('aio-nextcloud')}); [ -n "$c" ] || c=$(${containerOf('nextcloud', 'all-in-one|aio-')}); echo "$c"` },
+      { label: 'Installed on this machine (occ)', env: 'OCC', prompt: 'The occ command, as the web server’s user', detect: OCC_DETECT },
+    ],
+    args: '--with-css',
+    root: true,
+  },
   guide: (t) => ({
     title: 'Nextcloud',
     intro: `Nextcloud's Theming app takes a name, colours and images; the kit's script sets them all with \`occ\`, and adds a small stylesheet so that the accent stays visible in the dark themes. Every user sees the house's look, whatever theme they pick.`,
@@ -134,7 +165,7 @@ export const nextcloud: ThemeKit = {
     requires: ['Nextcloud 28 or later (older releases get the colour through its older setting).', 'A shell on the server: `docker exec` into the container, or `occ` as the web server’s user.', 'For `--with-css`: the server can reach the App Store, or the *Custom CSS* app is already installed.'],
     steps: [
       { text: 'Copy this folder to the server.' },
-      { text: 'Run the script — with Docker naming the container, otherwise telling it how to call `occ`. Add `--with-css` for the dark themes’ accent.', code: 'NEXTCLOUD_CONTAINER=nextcloud sh apply.sh --with-css\n# or\nOCC="sudo -u www-data php /var/www/nextcloud/occ" sh apply.sh --with-css' },
+      { text: 'Run the script — in Docker or Podman naming the container (with All-in-One, `nextcloud-aio-nextcloud`; the official and linuxserver images are both understood), otherwise telling it how to call `occ`. Add `--with-css` for the dark themes’ accent.', code: 'NEXTCLOUD_CONTAINER=nextcloud sh apply.sh --with-css\n# All-in-One\nNEXTCLOUD_CONTAINER=nextcloud-aio-nextcloud sh apply.sh --with-css\n# installed on the machine, or as a snap\nOCC="sudo -u www-data php /var/www/nextcloud/occ" sh apply.sh --with-css\nOCC=nextcloud.occ sh apply.sh --with-css' },
       { text: 'Reload Nextcloud (Ctrl+Shift+R).' },
     ],
     check: ['Signed out, the sign-in page shows the emblem on black marble and *theolympus.cloud*.', 'Signed in, the header shows the seal; buttons are charcoal (light theme) or marble (dark theme).'],

@@ -2,7 +2,9 @@
 # The Olympus — Nextcloud theming (the Theming app; Nextcloud 28 or later).
 #
 #   Docker:     NEXTCLOUD_CONTAINER=nextcloud sh apply.sh
+#               (All-in-One: NEXTCLOUD_CONTAINER=nextcloud-aio-nextcloud; Podman works the same)
 #   Bare metal: OCC="sudo -u www-data php /var/www/nextcloud/occ" sh apply.sh
+#   Snap:       OCC=nextcloud.occ sh apply.sh
 #
 #   --with-css  also install and enable the Custom CSS app, for the dark themes' accent
 #   --restore   Nextcloud's own name, colours, images and stylesheet back
@@ -19,9 +21,17 @@ for a in "$@"; do
   esac
 done
 
+if ! command -v docker >/dev/null 2>&1 && command -v podman >/dev/null 2>&1; then docker() { podman "$@"; }; fi
 if [ -n "${NEXTCLOUD_CONTAINER:-}" ]; then
   SRC=
-  occ() { docker exec -u www-data "$NEXTCLOUD_CONTAINER" php occ "$@"; }
+  C=$NEXTCLOUD_CONTAINER
+  # The official image and All-in-One keep occ in /var/www/html, run as www-data; linuxserver's has its own occ command.
+  if docker exec "$C" test -f /var/www/html/occ 2>/dev/null; then occ() { docker exec -u www-data "$C" php /var/www/html/occ "$@"; }
+  elif docker exec "$C" sh -c 'command -v occ' >/dev/null 2>&1; then occ() { docker exec "$C" occ "$@"; }
+  else
+    echo "$C has no occ: is it Nextcloud's own container? (with All-in-One it is nextcloud-aio-nextcloud, not the mastercontainer)" >&2
+    exit 1
+  fi
 else
   SRC=$DIR
   occ() { ${OCC:-php occ} "$@"; }

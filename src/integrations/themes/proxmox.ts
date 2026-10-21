@@ -11,46 +11,117 @@ import type { ThemeKit } from './types.ts';
 
 const P = PALETTE;
 
+/** The banner in a wider box, left-aligned: Proxmox VE 8 stretches its logo to 172 × 30. */
+const boxed = (svg: string, width: number, height: number) =>
+  svg.replace(/^<svg([^>]*?) viewBox="0 0 ([\d.]+) ([\d.]+)" width="[^"]*" height="[^"]*"/, (_, a: string, _w: string, h: string) => `<svg${a} viewBox="0 0 ${Math.round((+h * width) / height)} ${h}" width="${width}" height="${height}"`);
+const sized = (svg: string, width: number, height: number) => svg.replace(/^<svg([^>]*?) width="[^"]*" height="[^"]*"/, `<svg$1 width="${width}" height="${height}"`);
+
+/**
+ * What the kit adds on top of the greyed dark theme, so that the interface is
+ * the house's and not only Proxmox's without its blue: an obsidian ground,
+ * marble for the main buttons and the open tab, a marble rule beside what is
+ * selected, titles in marble. Proxmox's icons stay as they are (they are drawn
+ * light, for a dark ground), and so do its status colours.
+ */
+export function proxmoxLayer(): string {
+  const lift = '#4A4A4A'; // the selected row: a step lighter than Proxmox's own grounds
+  return `
+/* The Olympus — on top of the dark theme */
+.x-body, .x-border-layout-ct.x-body { background-color: ${P.obsidian}; }
+img[src*="proxmox_logo"] { filter: none !important; } /* the dark theme inverts Proxmox's dark logo; the house's is drawn light */
+#versioninfo, #versioninfo * { color: ${P.silver}; letter-spacing: 0.04em; }
+.x-panel-header-title-default, .x-window-header-title-default, .x-panel-header-text-default { color: ${P.marble} !important; letter-spacing: 0.03em; }
+.x-grid-item-selected .x-grid-cell, .x-grid-item-selected.x-grid-item-over .x-grid-cell { background-color: ${lift} !important; color: ${P.paper} !important; }
+.x-grid-item-selected .x-grid-cell:first-child { box-shadow: inset 3px 0 0 ${P.marble}; }
+.x-treelist-item-selected > .x-treelist-row, .x-treelist-item-selected.x-treelist-item-over > .x-treelist-row { background-color: ${lift} !important; box-shadow: inset 3px 0 0 ${P.marble}; }
+.x-treelist-item-selected > .x-treelist-row .x-treelist-item-text, .x-treelist-item-selected > .x-treelist-row .x-treelist-item-icon { color: ${P.paper} !important; }
+.x-treelist-item-selected .lxc::after, .x-treelist-item-selected .qemu::after { background-color: ${lift} !important; text-shadow: -1px 0 1px ${lift} !important; }
+.x-tab-default.x-tab-active, .x-tab-default.x-tab-active.x-tab-over, .x-keyboard-mode .x-tab-default.x-tab-focus.x-tab-active { background-color: ${P.marble} !important; border-color: ${P.marble} !important; }
+.x-tab-default.x-tab-active .x-tab-inner-default, .x-tab-default.x-tab-active .x-tab-icon-el-default { color: ${P.obsidian} !important; }
+.x-tab-default.x-tab-over:not(.x-tab-active) { background-color: ${P.graphite} !important; border-color: ${P.graphite} !important; }
+.x-btn-default-small:not(.x-btn-disabled) { background-color: ${P.marble} !important; border-color: ${P.marble} !important; }
+.x-btn-default-small:not(.x-btn-disabled) .x-btn-inner-default-small, .x-btn-default-small:not(.x-btn-disabled) .x-btn-icon-el-default-small, .x-btn-default-small:not(.x-btn-disabled) .x-btn-arrow-right:after { color: ${P.obsidian} !important; }
+.x-btn-default-small.x-btn-over:not(.x-btn-disabled), .x-keyboard-mode .x-btn-default-small.x-btn-focus:not(.x-btn-disabled) { background-color: ${P.paper} !important; border-color: ${P.paper} !important; }
+.x-btn-default-small.x-btn-disabled { background-color: ${P.graphite} !important; border-color: ${P.graphite} !important; }
+.x-btn-default-small.x-btn-pressed:not(.x-btn-disabled), .x-btn-default-toolbar-small.x-btn-pressed, .x-btn-default-toolbar-small.x-btn-menu-active { background-color: ${P.silver} !important; border-color: ${P.silver} !important; }
+.x-menu-header { background-color: ${P.graphite} !important; }
+.x-progress-default .x-progress-bar-default { background-color: ${P.silver} !important; }
+`;
+}
+
 export function proxmoxScript(): string {
   return `#!/bin/sh
 # The Olympus — Proxmox VE: the web interface in the house's greys, the logo
-# in the header and the favicon. Run as root on each node.
+# in the header and the icon of the browser tab. Run as root on each node.
 #
-#   sh apply.sh              the theme, the logo and the favicon, kept after updates
-#   sh apply.sh --logo-only  only the logo and the favicon (for Proxmox's light theme)
+#   sh apply.sh              the theme, the logo and the icon, kept after updates
+#   sh apply.sh --logo-only  only the logo and the icon (for Proxmox's light theme)
 #   sh apply.sh --no-persist do not re-apply after updates (no APT hook)
+#   sh apply.sh --check      what is in place, and what the node serves
 #   sh apply.sh --restore    Proxmox's own look back, and the hook removed
 set -eu
 DIR=$(cd "$(dirname "$0")" && pwd)
 IMG=/usr/share/pve-manager/images
 CSS=/usr/share/pve-manager/css
 TPL=/usr/share/pve-manager/index.html.tpl
-DARK=/usr/share/javascript/proxmox-widget-toolkit/themes/theme-proxmox-dark.css
+PWT=/usr/share/javascript/proxmox-widget-toolkit
+DARK=$PWT/themes/theme-proxmox-dark.css
 KEEP=/usr/local/share/the-olympus/proxmox
 HOOK=/etc/apt/apt.conf.d/99-the-olympus-logo
-LINK='<link rel="stylesheet" type="text/css" href="/pve2/css/the-olympus.css" />'
+HREF=/pve2/css/the-olympus.css
 theme=1
-logo=logo-dark-theme.png
+tone=dark
 persist=1
 restore=0
 reapply=0
+check=0
 for a in "$@"; do
   case "$a" in
-    --logo-only) theme=0; logo=logo-light-theme.png ;;
-    --dark) logo=logo-dark-theme.png ;;
+    --logo-only) theme=0; tone=light ;;
+    --dark) tone=dark ;;
     --persist) persist=1 ;;
     --no-persist) persist=0 ;;
     --restore) restore=1 ;;
     --reapply) reapply=1 ;;
+    --check) check=1 ;;
     *) echo "unknown option: $a" >&2; exit 2 ;;
   esac
 done
+
+# Where each image goes, and from which of the kit's files: Proxmox VE 8 shows the PNG logo,
+# 9 the SVG one (from the widget toolkit); the browser tab shows logo-128.png.
+targets() {
+  echo "$IMG/proxmox_logo.png logo-$tone-theme.png"
+  echo "$PWT/images/proxmox_logo.svg logo-$tone-theme.svg"
+  echo "$IMG/logo-128.png logo-128.png"
+  echo "$IMG/favicon.ico favicon.ico"
+}
+KIT_FILES="logo-dark-theme.png logo-light-theme.png logo-dark-theme.svg logo-light-theme.svg logo-128.png favicon.ico layer.css"
+
+if [ "$check" = 1 ]; then
+  echo "Proxmox VE: $(pveversion 2>/dev/null || echo 'pveversion not found — is this a node?')"
+  if grep -qF "$HREF" "$TPL" 2>/dev/null; then echo "✓ the page template links the theme: $(grep -oF "$HREF" "$TPL" | head -n 1)…"; else echo "✕ the page template does not link the theme ($TPL)"; fi
+  if [ -s "$CSS/the-olympus.css" ]; then echo "✓ the theme is made: $CSS/the-olympus.css ($(wc -c < "$CSS/the-olympus.css") bytes)"; else echo "✕ no theme file at $CSS/the-olympus.css"; fi
+  targets | while read -r target file; do
+    if [ -f "$KEEP/$file" ] && cmp -s "$target" "$KEEP/$file"; then echo "✓ $target is the house's"
+    elif [ -f "$target" ]; then echo "✕ $target is still Proxmox's"
+    else echo "· $target does not exist in this release"; fi
+  done
+  if [ -f "$HOOK" ]; then echo "✓ re-applied after updates ($HOOK)"; else echo "· not re-applied after updates (no $HOOK)"; fi
+  if command -v curl >/dev/null 2>&1; then
+    code=$(curl -ks -o /dev/null -w '%{http_code}' "https://127.0.0.1:8006$HREF" || true)
+    if [ "$code" = 200 ]; then echo "✓ the node serves the theme (https://127.0.0.1:8006$HREF)"; else echo "✕ the node answers $code for $HREF — is pveproxy running? (systemctl status pveproxy)"; fi
+  fi
+  echo "In the browser: reload with Ctrl+Shift+R."
+  exit 0
+fi
+
 [ "$(id -u)" = 0 ] || { echo "run as root" >&2; exit 1; }
 [ -d "$IMG" ] || { echo "$IMG not found: is this a Proxmox VE node?" >&2; exit 1; }
 
 unlink_theme() {
-  if [ -f "$TPL" ] && grep -qF '/pve2/css/the-olympus.css' "$TPL"; then
-    grep -vF '/pve2/css/the-olympus.css' "$TPL" > "$TPL.the-olympus.tmp"
+  if [ -f "$TPL" ] && grep -qF "$HREF" "$TPL"; then
+    grep -vF "$HREF" "$TPL" > "$TPL.the-olympus.tmp"
     cat "$TPL.the-olympus.tmp" > "$TPL"
     rm -f "$TPL.the-olympus.tmp"
   fi
@@ -58,8 +129,8 @@ unlink_theme() {
 }
 
 if [ "$restore" = 1 ]; then
-  for f in proxmox_logo.png favicon.ico; do
-    if [ -f "$IMG/$f.orig" ]; then mv "$IMG/$f.orig" "$IMG/$f"; fi
+  for f in "$IMG/proxmox_logo.png" "$PWT/images/proxmox_logo.svg" "$IMG/logo-128.png" "$IMG/favicon.ico"; do
+    if [ -f "$f.orig" ]; then mv "$f.orig" "$f"; fi
   done
   unlink_theme
   rm -f "$HOOK"
@@ -76,20 +147,19 @@ if [ "$reapply" = 1 ]; then
   DIR=$KEEP
 else
   mkdir -p "$KEEP"
-  for f in logo-light-theme.png logo-dark-theme.png favicon.ico; do install -m 644 "$DIR/$f" "$KEEP/$f"; done
+  for f in $KIT_FILES; do install -m 644 "$DIR/$f" "$KEEP/$f"; done
   [ "$DIR/apply.sh" -ef "$KEEP/apply.sh" ] || install -m 755 "$DIR/apply.sh" "$KEEP/apply.sh"
-  printf 'theme=%s\\nlogo=%s\\n' "$theme" "$logo" > "$KEEP/settings"
+  printf 'theme=%s\\ntone=%s\\n' "$theme" "$tone" > "$KEEP/settings"
 fi
 
-# The logo and the favicon; Proxmox's own are kept beside them.
-install -m 644 "$DIR/$logo" "$KEEP/proxmox_logo.png"
-for f in proxmox_logo.png favicon.ico; do
-  [ -f "$IMG/$f" ] || continue
+# The logo and the icon; Proxmox's own are kept beside them (.orig).
+targets | while read -r target file; do
+  [ -f "$target" ] || continue
   # Proxmox's file — the first time, or a newer one an update put back — is what --restore returns to.
   ours=0
-  for k in logo-dark-theme.png logo-light-theme.png favicon.ico; do cmp -s "$IMG/$f" "$KEEP/$k" && ours=1; done
-  [ "$ours" = 1 ] || cp -p "$IMG/$f" "$IMG/$f.orig"
-  install -m 644 "$KEEP/$f" "$IMG/$f"
+  for k in $KIT_FILES; do cmp -s "$target" "$KEEP/$k" && ours=1; done
+  [ "$ours" = 1 ] || cp -p "$target" "$target.orig"
+  install -m 644 "$KEEP/$file" "$target"
 done
 
 # The theme: Proxmox's dark theme, with every blue and blue-grey turned to the grey of the same lightness.
@@ -123,12 +193,17 @@ if [ "$theme" = 1 ]; then
       ~ge;
       s{rgb(a?)\\(\\s*(\\d+)\\s*,\\s*(\\d+)\\s*,\\s*(\\d+)}{ "rgb$1(" . join(", ", tone($2, $3, $4)) }ge;
     ' "$DARK"
+    cat "$KEEP/layer.css"
   } > "$CSS/the-olympus.css.tmp"
   mv "$CSS/the-olympus.css.tmp" "$CSS/the-olympus.css"
   chmod 644 "$CSS/the-olympus.css"
-  if ! grep -qF '/pve2/css/the-olympus.css' "$TPL"; then
-    grep -qi '</head>' "$TPL" || { echo "$TPL has no </head>: not changed" >&2; exit 1; }
-    perl -0pi -e 's{</head>}{    '"$LINK"'\\n  </head>}i' "$TPL"
+  # Linked after Proxmox's own stylesheets, with its size and time in the address: a browser never keeps an old one.
+  grep -qi '</head>' "$TPL" || { echo "$TPL has no </head>: not changed" >&2; exit 1; }
+  v=$(cksum < "$CSS/the-olympus.css" | cut -d' ' -f1)
+  link="<link rel=\\"stylesheet\\" type=\\"text/css\\" href=\\"$HREF?v=$v\\" />"
+  if ! grep -qF "$HREF?v=$v\\"" "$TPL"; then
+    if grep -qF "$HREF" "$TPL"; then grep -vF "$HREF" "$TPL" > "$TPL.the-olympus.tmp"; cat "$TPL.the-olympus.tmp" > "$TPL"; rm -f "$TPL.the-olympus.tmp"; fi
+    LINK=$link perl -0pi -e 's{([ \\t]*)</head>}{$1  $ENV{LINK}\\n$1</head>}i' "$TPL"
   fi
 else
   unlink_theme
@@ -142,7 +217,7 @@ EOF
 elif [ "$persist" = 0 ]; then
   rm -f "$HOOK"
 fi
-[ "$reapply" = 1 ] || echo "The Olympus is applied. Reload the web interface (Ctrl+Shift+R)."
+[ "$reapply" = 1 ] || echo "The Olympus is applied. Reload the web interface (Ctrl+Shift+R); sh apply.sh --check says what is in place."
 `;
 }
 
@@ -151,15 +226,21 @@ export const proxmox: ThemeKit = {
   label: 'Proxmox VE',
   match: { ids: ['proxmox', 'pve'], category: 'virtualization' },
   how: '`apply.sh` turns the web interface grey, installs the logo and favicon, and keeps them after updates (`--restore` undoes)',
-  installer: { summary: 'the whole web interface in greys, the logo and the favicon', detect: 'command -v pveversion >/dev/null 2>&1', root: true },
+  installer: {
+    summary: 'the whole web interface in greys, the logo and the icon',
+    requires: 'command -v pveversion >/dev/null 2>&1',
+    installed: 'grep -qsF /pve2/css/the-olympus.css /usr/share/pve-manager/index.html.tpl || [ -f /usr/local/share/the-olympus/proxmox/settings ]',
+    root: true,
+  },
   guide: (t) => ({
     title: 'Proxmox VE',
-    intro: `The whole Proxmox VE web interface in the house's greys, with ${t.name}'s seal and name in the header and as the favicon. The theme is made on the node itself from the dark theme Proxmox ships: every blue and blue-grey becomes the grey of the same lightness, while the colours that report something — a running guest, a warning, an error — keep their meaning. Because it is made from the installed release, it matches whatever version the node runs, and it is made again after every update.`,
+    intro: `The whole Proxmox VE web interface in the house's greys, with ${t.name}'s seal and name in the header and on the browser tab. The theme is made on the node itself from the dark theme Proxmox ships — every blue and blue-grey becomes the grey of the same lightness, while the colours that report something (a running guest, a warning, an error) keep their meaning — and the house's own layer goes on top: an obsidian ground, marble buttons and tabs, and a marble rule beside what is selected. Because it is made from the installed release, it matches whatever version the node runs, and it is made again after every update.`,
     changes: [
-      'Every panel, tree, grid, toolbar, menu and window: Proxmox’s dark theme, in greys.',
+      'Every panel, tree, grid, toolbar, menu and window: Proxmox’s dark theme, in greys, on an obsidian ground.',
+      'The main buttons and the open tab: marble, with dark lettering; what is selected in the trees and lists: a lighter stone with a marble rule.',
       'The sign-in window, in the same greys.',
-      `The header logo: ${t.name}'s seal and name, 30 px tall.`,
-      'The favicon: the seal on its own disc.',
+      `The header logo: ${t.name}'s seal and name (Proxmox VE 8 and 9 each have their own file; both are replaced).`,
+      'The icon of the browser tab: the seal on its own disc.',
     ],
     limits: [
       'The console (noVNC, xterm.js) has no theme setting; its colours stay. The crest *at login* in a shell is the screens kit’s *terminal* part.',
@@ -174,16 +255,20 @@ export const proxmox: ThemeKit = {
       { text: 'Reload the web interface with Ctrl+Shift+R (the browser keeps the old stylesheet otherwise).' },
       { text: 'Repeat on every node of a cluster: each serves its own interface.' },
     ],
-    check: ['The interface is grey from the sign-in window on; the header shows the seal and the name.', 'A running guest’s icon is still green; a stopped one grey.', '`ls /etc/apt/apt.conf.d/99-the-olympus-logo` shows the hook is in place.'],
+    check: ['`sh /usr/local/share/the-olympus/proxmox/apply.sh --check` lists what is in place and whether the node serves the theme.', 'The interface is grey from the sign-in window on, the main buttons marble; the header shows the seal and the name.', 'If nothing changed, reload with Ctrl+Shift+R: the browser may still hold the page from before.', 'A running guest’s icon is still green; a stopped one grey.', '`ls /etc/apt/apt.conf.d/99-the-olympus-logo` shows the hook is in place.'],
     undo: [{ text: 'Put Proxmox’s look back and remove the hook.', code: 'sh /usr/local/share/the-olympus/proxmox/apply.sh --restore' }],
     updates: 'An update of `pve-manager` puts Proxmox’s page template and logo back; the APT hook runs right after and makes the theme again from the new release’s dark theme. Install with `--no-persist` if you would rather re-run the script yourself. Only the logo and favicon, on Proxmox’s light theme: `sh apply.sh --logo-only`.',
     files: [
-      ['apply.sh', 'Makes and installs the theme, the logo and the favicon; `--restore` undoes'],
-      ['logo-dark-theme.png', 'The header logo for the grey (dark) interface'],
-      ['logo-light-theme.png', 'The header logo for Proxmox’s light theme (`--logo-only`)'],
+      ['apply.sh', 'Makes and installs the theme, the logo and the icon; `--check` says what is in place; `--restore` undoes'],
+      ['layer.css', 'What the house adds on top of the greyed dark theme: grounds, marble buttons, tabs and selection'],
+      ['logo-dark-theme.png', 'The header logo for the grey (dark) interface — Proxmox VE 8'],
+      ['logo-dark-theme.svg', 'The same, for Proxmox VE 9'],
+      ['logo-light-theme.png', 'The header logo for Proxmox’s light theme (`--logo-only`) — Proxmox VE 8'],
+      ['logo-light-theme.svg', 'The same, for Proxmox VE 9'],
+      ['logo-128.png', 'The icon of the browser tab'],
       ['favicon.ico', 'The favicon: 16, 32 and 48 px'],
     ],
-    tested: 'Written for Proxmox VE 8 and 9. The test suite runs the script against a stand-in node — the theme made from a sample of the dark theme (blues to grey, status colours kept), the template linked once however often it runs, the hook re-applying, and `--restore` putting everything back; it has not been run on a live node here.',
+    tested: 'Written for Proxmox VE 8 and 9. The test suite runs the script against a stand-in node — the theme made from a sample of the dark theme (blues to grey, status colours kept), the template linked once however often it runs, the hook re-applying, and `--restore` putting everything back. The result was looked at in Proxmox VE 9.2’s own web interface, served from its packages with a stand-in for the API; it has not been run on a live node here.',
   }),
   files: async (t) => {
     const banner = bannerMark(t.marks.seal, t.name);
@@ -192,8 +277,13 @@ export const proxmox: ThemeKit = {
     const coin = coinSvg(t.marks.seal, 'dark');
     return [
       ['apply.sh', proxmoxScript()],
-      ['logo-light-theme.png', await t.png(markSvg(banner, P.charcoal), width)],
-      ['logo-dark-theme.png', await t.png(markSvg(banner, P.marble), width)],
+      ['layer.css', proxmoxLayer()],
+      ['logo-light-theme.png', await t.png(boxed(markSvg(banner, P.charcoal), 172, height), 172)],
+      ['logo-dark-theme.png', await t.png(boxed(markSvg(banner, P.marble), 172, height), 172)],
+      // Proxmox VE 9 shows the SVG at the size it states: the header's.
+      ['logo-light-theme.svg', sized(markSvg(banner, P.charcoal), width, height)],
+      ['logo-dark-theme.svg', sized(markSvg(banner, P.marble), width, height)],
+      ['logo-128.png', await t.png(coin, 128)],
       ['favicon.ico', ico(await Promise.all([16, 32, 48].map(async (size) => ({ size, png: await t.png(coin, size) }))))],
     ];
   },

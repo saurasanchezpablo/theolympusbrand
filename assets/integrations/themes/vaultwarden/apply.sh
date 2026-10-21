@@ -2,15 +2,16 @@
 # The Olympus — Vaultwarden: installs the stylesheet in the data folder.
 #
 #   Docker:     VAULTWARDEN_CONTAINER=vaultwarden sh apply.sh
-#   A folder:   sh apply.sh /path/to/vaultwarden/data
+#   A folder:   sh apply.sh /path/to/vaultwarden/data   (or VAULTWARDEN_DATA=/path/…)
 #   Undo:       add --restore to either
 #
 # Vaultwarden reads it when it starts: the Docker form restarts the container.
 set -eu
 DIR=$(cd "$(dirname "$0")" && pwd)
 FILE=templates/scss/user.vaultwarden.scss.hbs
+if ! command -v docker >/dev/null 2>&1 && command -v podman >/dev/null 2>&1; then docker() { podman "$@"; }; fi
 restore=0
-data=
+data=${VAULTWARDEN_DATA:-}
 for a in "$@"; do
   case "$a" in
     --restore) restore=1 ;;

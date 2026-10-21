@@ -2,12 +2,13 @@
 # The Olympus — Home Assistant: installs the theme and the dashboard images.
 #
 #   Docker:      HA_CONTAINER=homeassistant sh apply.sh
-#   A folder:    sh apply.sh /path/to/homeassistant/config
+#   A folder:    sh apply.sh /path/to/homeassistant/config   (or HA_CONFIG=/path/…)
 #   Undo:        add --restore to either
 set -eu
 DIR=$(cd "$(dirname "$0")" && pwd)
+if ! command -v docker >/dev/null 2>&1 && command -v podman >/dev/null 2>&1; then docker() { podman "$@"; }; fi
 restore=0
-config=
+config=${HA_CONFIG:-}
 for a in "$@"; do
   case "$a" in
     --restore) restore=1 ;;

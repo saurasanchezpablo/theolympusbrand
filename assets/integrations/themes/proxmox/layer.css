@@ -1,0 +1,21 @@
+
+/* The Olympus — on top of the dark theme */
+.x-body, .x-border-layout-ct.x-body { background-color: #0E0E0E; }
+img[src*="proxmox_logo"] { filter: none !important; } /* the dark theme inverts Proxmox's dark logo; the house's is drawn light */
+#versioninfo, #versioninfo * { color: #9A9A9A; letter-spacing: 0.04em; }
+.x-panel-header-title-default, .x-window-header-title-default, .x-panel-header-text-default { color: #EDEDED !important; letter-spacing: 0.03em; }
+.x-grid-item-selected .x-grid-cell, .x-grid-item-selected.x-grid-item-over .x-grid-cell { background-color: #4A4A4A !important; color: #FAFAFA !important; }
+.x-grid-item-selected .x-grid-cell:first-child { box-shadow: inset 3px 0 0 #EDEDED; }
+.x-treelist-item-selected > .x-treelist-row, .x-treelist-item-selected.x-treelist-item-over > .x-treelist-row { background-color: #4A4A4A !important; box-shadow: inset 3px 0 0 #EDEDED; }
+.x-treelist-item-selected > .x-treelist-row .x-treelist-item-text, .x-treelist-item-selected > .x-treelist-row .x-treelist-item-icon { color: #FAFAFA !important; }
+.x-treelist-item-selected .lxc::after, .x-treelist-item-selected .qemu::after { background-color: #4A4A4A !important; text-shadow: -1px 0 1px #4A4A4A !important; }
+.x-tab-default.x-tab-active, .x-tab-default.x-tab-active.x-tab-over, .x-keyboard-mode .x-tab-default.x-tab-focus.x-tab-active { background-color: #EDEDED !important; border-color: #EDEDED !important; }
+.x-tab-default.x-tab-active .x-tab-inner-default, .x-tab-default.x-tab-active .x-tab-icon-el-default { color: #0E0E0E !important; }
+.x-tab-default.x-tab-over:not(.x-tab-active) { background-color: #3A3A3A !important; border-color: #3A3A3A !important; }
+.x-btn-default-small:not(.x-btn-disabled) { background-color: #EDEDED !important; border-color: #EDEDED !important; }
+.x-btn-default-small:not(.x-btn-disabled) .x-btn-inner-default-small, .x-btn-default-small:not(.x-btn-disabled) .x-btn-icon-el-default-small, .x-btn-default-small:not(.x-btn-disabled) .x-btn-arrow-right:after { color: #0E0E0E !important; }
+.x-btn-default-small.x-btn-over:not(.x-btn-disabled), .x-keyboard-mode .x-btn-default-small.x-btn-focus:not(.x-btn-disabled) { background-color: #FAFAFA !important; border-color: #FAFAFA !important; }
+.x-btn-default-small.x-btn-disabled { background-color: #3A3A3A !important; border-color: #3A3A3A !important; }
+.x-btn-default-small.x-btn-pressed:not(.x-btn-disabled), .x-btn-default-toolbar-small.x-btn-pressed, .x-btn-default-toolbar-small.x-btn-menu-active { background-color: #9A9A9A !important; border-color: #9A9A9A !important; }
+.x-menu-header { background-color: #3A3A3A !important; }
+.x-progress-default .x-progress-bar-default { background-color: #9A9A9A !important; }

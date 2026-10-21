@@ -18,7 +18,7 @@ import { bannerMark, coinSvg } from '../src/integrations/kit.ts';
 import { THEME_KITS, themeAssignments, unknownApps } from '../src/integrations/themes/index.ts';
 import { jellyfinCss } from '../src/integrations/themes/jellyfin.ts';
 import { nextcloudScript } from '../src/integrations/themes/nextcloud.ts';
-import { proxmoxScript } from '../src/integrations/themes/proxmox.ts';
+import { proxmoxLayer, proxmoxScript } from '../src/integrations/themes/proxmox.ts';
 import { DOMAIN } from '../src/brand/identity.ts';
 
 const ROOT = new URL('..', import.meta.url).pathname;
@@ -150,20 +150,23 @@ test('the Proxmox script: a grey theme made from the dark one, the logo, a hook 
     // A stand-in node, and the script pointed at it and allowed to run unprivileged.
     const sys = join(dir, 'sys');
     const kit = join(dir, 'kit');
-    for (const d of ['images', 'css', 'themes', 'apt']) execFileSync('mkdir', ['-p', `${sys}/${d}`]);
+    for (const d of ['images', 'css', 'pwt/themes', 'pwt/images', 'apt']) execFileSync('mkdir', ['-p', `${sys}/${d}`]);
     execFileSync('mkdir', ['-p', kit]);
     writeFileSync(`${sys}/images/proxmox_logo.png`, 'original logo');
+    writeFileSync(`${sys}/pwt/images/proxmox_logo.svg`, 'original svg logo');
+    writeFileSync(`${sys}/images/logo-128.png`, 'original tab icon');
     writeFileSync(`${sys}/images/favicon.ico`, 'original icon');
     const template = '<html>\n  <head>\n    <title>[% nodename %] - Proxmox Virtual Environment</title>\n  </head>\n  <body></body>\n</html>\n';
     writeFileSync(`${sys}/index.html.tpl`, template);
     // A sample of Proxmox's dark theme: blue accents, blue-grey grounds, status colours.
-    writeFileSync(`${sys}/themes/theme-proxmox-dark.css`, '.x-btn { background-color: #3892d4; }\n.x-panel { background: #262b31; color: #f5f5f5 }\n.running { color: #21bf4b; }\n.error { color: #c60f0f !important; }\n.warn { color: #ff9b00; }\n.sel { background: rgba(56, 146, 212, 0.4); }\n#ace { color: #fff; }\n');
-    for (const f of ['logo-light-theme.png', 'logo-dark-theme.png', 'favicon.ico']) writeFileSync(join(kit, f), `olympus ${f}`);
+    writeFileSync(`${sys}/pwt/themes/theme-proxmox-dark.css`, '.x-btn { background-color: #3892d4; }\n.x-panel { background: #262b31; color: #f5f5f5 }\n.running { color: #21bf4b; }\n.error { color: #c60f0f !important; }\n.warn { color: #ff9b00; }\n.sel { background: rgba(56, 146, 212, 0.4); }\n#ace { color: #fff; }\n');
+    for (const f of ['logo-light-theme.png', 'logo-dark-theme.png', 'logo-light-theme.svg', 'logo-dark-theme.svg', 'logo-128.png', 'favicon.ico']) writeFileSync(join(kit, f), `olympus ${f}`);
+    writeFileSync(join(kit, 'layer.css'), proxmoxLayer());
     const script = proxmoxScript()
       .replace('IMG=/usr/share/pve-manager/images', `IMG=${sys}/images`)
       .replace('CSS=/usr/share/pve-manager/css', `CSS=${sys}/css`)
       .replace('TPL=/usr/share/pve-manager/index.html.tpl', `TPL=${sys}/index.html.tpl`)
-      .replace('DARK=/usr/share/javascript/proxmox-widget-toolkit/themes/theme-proxmox-dark.css', `DARK=${sys}/themes/theme-proxmox-dark.css`)
+      .replace('PWT=/usr/share/javascript/proxmox-widget-toolkit', `PWT=${sys}/pwt`)
       .replace('KEEP=/usr/local/share/the-olympus/proxmox', `KEEP=${sys}/keep`)
       .replace('HOOK=/etc/apt/apt.conf.d/99-the-olympus-logo', `HOOK=${sys}/apt/99-the-olympus-logo`)
       .replace('[ "$(id -u)" = 0 ]', 'true');
@@ -182,10 +185,15 @@ test('the Proxmox script: a grey theme made from the dark one, the logo, a hook 
     assert.match(css, /rgba\(132, 132, 132, 0\.4\)/);
     assert.match(css, /#ace \{ color: #ffffff; \}/, 'an id selector is not mistaken for a colour');
     for (const [, hex] of css.matchAll(/#([0-9a-f]{6})\b/g)) if (!['21bf4b', 'c60f0f', 'ff9b00'].includes(hex)) assert.ok(hex.slice(0, 2) === hex.slice(2, 4) && hex.slice(2, 4) === hex.slice(4, 6), `#${hex} is grey`);
+    assert.match(css, /\.x-btn-default-small:not\(\.x-btn-disabled\) \{ background-color: #EDEDED/, 'the house\'s layer goes on top');
     assert.equal(read('index.html.tpl').split('/pve2/css/the-olympus.css').length, 2, 'the template links the theme once');
+    assert.match(read('index.html.tpl'), /the-olympus\.css\?v=\d+" \/>\n  <\/head>/, 'linked by its checksum, so no browser keeps an old one');
     assert.ok(read('index.html.tpl').indexOf('the-olympus.css') < read('index.html.tpl').indexOf('</head>'));
     assert.equal(read('images/proxmox_logo.png'), 'olympus logo-dark-theme.png');
+    assert.equal(read('pwt/images/proxmox_logo.svg'), 'olympus logo-dark-theme.svg', 'Proxmox VE 9’s header logo');
+    assert.equal(read('images/logo-128.png'), 'olympus logo-128.png', 'the browser tab’s icon');
     assert.equal(read('images/proxmox_logo.png.orig'), 'original logo');
+    assert.match(run('--check'), /✓ .*proxmox_logo\.svg is the house's/);
     const hook = read('apt/99-the-olympus-logo');
     assert.ok(hook.includes(`sh ${sys}/keep/apply.sh --reapply`), 'the hook runs the kept copy');
 
@@ -209,6 +217,8 @@ test('the Proxmox script: a grey theme made from the dark one, the logo, a hook 
     run('--restore');
     assert.equal(read('index.html.tpl'), template, 'the template exactly as it was');
     assert.equal(read('images/proxmox_logo.png'), 'updated logo');
+    assert.equal(read('pwt/images/proxmox_logo.svg'), 'original svg logo');
+    assert.equal(read('images/logo-128.png'), 'original tab icon');
     assert.equal(read('images/favicon.ico'), 'original icon');
     assert.ok(!existsSync(`${sys}/images/proxmox_logo.png.orig`) && !existsSync(`${sys}/apt/99-the-olympus-logo`) && !existsSync(`${sys}/keep`));
     assert.throws(() => execFileSync('sh', [join(kit, 'apply.sh'), '--bogus'], { stdio: 'ignore' }));

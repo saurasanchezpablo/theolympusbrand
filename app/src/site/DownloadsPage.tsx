@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { download } from '../exporters.ts';
 import { fileUrl, filesUnder, formatSize, useIndex, type FileIndex } from './files.ts';
 import { zipFolder } from './zip.ts';
+import { Command, siteAddress } from './Command.tsx';
 
 /** Sub-folders one level below a published folder, with their sizes. */
 function folders(index: FileIndex, dir: string) {
@@ -52,34 +53,6 @@ function BuildStatus() {
   );
 }
 
-/** A command to copy: selectable by hand, with a Copy button where the browser allows it. */
-function Command({ label, command }: { label: string; command: string }) {
-  const [copied, setCopied] = useState(false);
-  // The clipboard is only offered to secure pages; elsewhere the command is selected by hand.
-  const canCopy = typeof navigator.clipboard?.writeText === 'function' && window.isSecureContext;
-  return (
-    <div className="dl__command">
-      <code tabIndex={0} role="region" aria-label={label}>
-        {command}
-      </code>
-      {canCopy && (
-        <button
-          type="button"
-          className="btn btn--ghost btn--sm"
-          onClick={() =>
-            navigator.clipboard.writeText(command).then(() => {
-              setCopied(true);
-              window.setTimeout(() => setCopied(false), 1600);
-            })
-          }
-        >
-          {copied ? 'Copied' : 'Copy'}
-        </button>
-      )}
-    </div>
-  );
-}
-
 /** An installer's two commands: straight through, or saved and checked against its checksum before it runs. */
 function Installer({ label, folder, sha256, sudo }: { label: string; folder: string; sha256?: string; sudo: boolean }) {
   const from = new URL(fileUrl(folder), location.href).href;
@@ -104,7 +77,7 @@ function Installer({ label, folder, sha256, sudo }: { label: string; folder: str
 function Launcher({ index }: { index: FileIndex }) {
   const entry = index.files.find((f) => f.path === 'assets/install.sh');
   if (!entry) return null;
-  const site = location.href.replace(/[#?].*$/, '').replace(/\/(index\.html)?$/, '');
+  const site = siteAddress();
   return (
     <section className="dl dl--launcher" aria-labelledby="launcher-title">
       <h2 id="launcher-title">One command for a machine</h2>

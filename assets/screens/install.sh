@@ -23,7 +23,7 @@ OPTIONS=--ascii
 fits() {
   case "$1" in
     grub) [ -f /etc/default/grub ] ;;
-    limine) ( for c in ${LIMINE_CONF:-} /boot/limine.conf /boot/limine/limine.conf /boot/EFI/limine/limine.conf /efi/limine.conf /efi/EFI/limine/limine.conf /boot/efi/limine.conf /boot/efi/EFI/limine/limine.conf /boot/EFI/BOOT/limine.conf; do [ -f "$c" ] && exit 0; done; exit 1 ) ;;
+    limine) ( for c in ${LIMINE_CONF:-} /boot/limine.conf /boot/limine/limine.conf /boot/EFI/limine/limine.conf /efi/limine.conf /efi/EFI/limine/limine.conf /boot/efi/limine.conf /boot/efi/EFI/limine/limine.conf /boot/EFI/BOOT/limine.conf; do [ -f "$c" ] && exit 0; done; [ -n "$(find /boot /efi /boot/efi -maxdepth 4 -name limine.conf -type f 2>/dev/null | head -n 1)" ] && exit 0; [ "$(id -u)" != 0 ] || exit 1; [ -f /var/lib/the-olympus/limine ] || command -v limine >/dev/null 2>&1 || [ -d /usr/share/limine ] || [ -f /etc/default/limine ] || command -v limine-entry-tool >/dev/null 2>&1 || command -v limine-update >/dev/null 2>&1 ) ;;
     plymouth) command -v plymouth-set-default-theme >/dev/null 2>&1 ;;
     terminal) [ -f /etc/issue ] ;;
     wallpapers) [ -d /usr/share/xsessions ] || [ -d /usr/share/wayland-sessions ] ;;
@@ -32,7 +32,7 @@ fits() {
 installed() {
   case "$1" in
     grub) [ -f /etc/default/grub.the-olympus.orig ] ;;
-    limine) ( for c in ${LIMINE_CONF:-} /boot/limine.conf /boot/limine/limine.conf /boot/EFI/limine/limine.conf /efi/limine.conf /efi/EFI/limine/limine.conf /boot/efi/limine.conf /boot/efi/EFI/limine/limine.conf /boot/EFI/BOOT/limine.conf; do grep -qsF "# The Olympus — begin" "$c" && exit 0; done; exit 1 ) ;;
+    limine) ( [ -f /var/lib/the-olympus/limine ] && exit 0; for c in ${LIMINE_CONF:-} /boot/limine.conf /boot/limine/limine.conf /boot/EFI/limine/limine.conf /efi/limine.conf /efi/EFI/limine/limine.conf /boot/efi/limine.conf /boot/efi/EFI/limine/limine.conf /boot/EFI/BOOT/limine.conf; do grep -qsF "# The Olympus — begin" "$c" && exit 0; done; exit 1 ) ;;
     plymouth) [ -d /usr/share/plymouth/themes/the-olympus ] ;;
     terminal) [ -f /etc/update-motd.d/20-the-olympus ] || [ -f /etc/motd.d/the-olympus ] || [ -f /etc/issue.the-olympus.orig ] ;;
     wallpapers) [ -d /usr/share/backgrounds/the-olympus ] ;;
@@ -74,7 +74,7 @@ accepts() {
 
 MANIFEST='grub boot/grub/background.png 070b5b2c7cd66b08e9e5d201c9da4ac340da738d6f0eb009681b6bf8f7a725cf
 grub boot/grub/install.sh 65604bbd0f8e94b25511d99cfc1c07a0b5ac300e1b0529e940a4a39cd1358d61
-limine boot/limine/install.sh b9af25546247d9ce76a9cbba858db9279cbf976988b182d605af856e08a0ae82
+limine boot/limine/install.sh 9c58510db1b14099bebdd38e2b29f39a4a3cde028421a94974cfcb698765485e
 limine boot/limine/wallpaper.png 070b5b2c7cd66b08e9e5d201c9da4ac340da738d6f0eb009681b6bf8f7a725cf
 plymouth boot/plymouth/install.sh 438862aee04027ce1dd3e6b04cd7a6ebec85f5ba946f76cc463ace9bc4b41414
 plymouth boot/plymouth/the-olympus/background.png 5bcc9c08ed6f171c52b883f712f8c39ccbca86643f58a1f6b0865351c1343ebe

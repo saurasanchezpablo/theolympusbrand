@@ -15,10 +15,13 @@ END='# The Olympus — end'
 ASIDE='#the-olympus# '
 [ "$(id -u)" = 0 ] || { echo "run as root" >&2; exit 1; }
 
+MARK=${OLYMPUS_STATE:-/var/lib/the-olympus}/limine
+
 CONF=
-for c in ${LIMINE_CONF:-} /boot/limine.conf /boot/limine/limine.conf /boot/EFI/limine/limine.conf /efi/limine.conf /efi/EFI/limine/limine.conf /boot/efi/limine.conf /boot/efi/EFI/limine/limine.conf /boot/EFI/BOOT/limine.conf; do
+for c in ${LIMINE_CONF:-} $(cat "$MARK" 2>/dev/null || true) /boot/limine.conf /boot/limine/limine.conf /boot/EFI/limine/limine.conf /efi/limine.conf /efi/EFI/limine/limine.conf /boot/efi/limine.conf /boot/efi/EFI/limine/limine.conf /boot/EFI/BOOT/limine.conf; do
   if [ -f "$c" ]; then CONF=$c; break; fi
 done
+[ -n "$CONF" ] || CONF=$(find /boot /efi /boot/efi -maxdepth 4 -name limine.conf -type f 2>/dev/null | head -n 1)
 [ -n "$CONF" ] || { echo "no limine.conf found: this machine does not boot with Limine (or set LIMINE_CONF)" >&2; exit 1; }
 CDIR=$(dirname "$CONF")
 
@@ -54,7 +57,7 @@ trap 'rm -f "$TMP"' EXIT INT TERM
 if [ "${1:-}" = "--restore" ]; then
   strip > "$TMP"
   write "$TMP"
-  rm -f "$CDIR/the-olympus.png" "$CONF.the-olympus.orig"
+  rm -f "$CDIR/the-olympus.png" "$CONF.the-olympus.orig" "$MARK"
   echo "Limine is back as it was ($CONF)."
   exit 0
 fi
@@ -106,6 +109,8 @@ fi
 } > "$TMP"
 write "$TMP"
 
+# For anyone to see that it is in place (the launcher's list, run as yourself): where it went.
+{ mkdir -p "$(dirname "$MARK")" && printf '%s\n' "$CONF" > "$MARK" && chmod 644 "$MARK"; } 2>/dev/null || true
 echo "The Olympus is set in $CONF; it shows at the next boot."
 if command -v omarchy-refresh-limine >/dev/null 2>&1; then
   echo "Omarchy: omarchy-refresh-limine replaces limine.conf with Omarchy's own — run this again after it."

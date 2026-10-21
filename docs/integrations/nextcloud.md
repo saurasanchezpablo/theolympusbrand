@@ -29,12 +29,15 @@ Made from Nextcloud’s seal. The files are in `themes/nextcloud/` of the integr
 
 1. Copy this folder to the server.
 
-2. Run the script — with Docker naming the container, otherwise telling it how to call `occ`. Add `--with-css` for the dark themes’ accent.
+2. Run the script — in Docker or Podman naming the container (with All-in-One, `nextcloud-aio-nextcloud`; the official and linuxserver images are both understood), otherwise telling it how to call `occ`. Add `--with-css` for the dark themes’ accent.
 
    ```sh
    NEXTCLOUD_CONTAINER=nextcloud sh apply.sh --with-css
-   # or
+   # All-in-One
+   NEXTCLOUD_CONTAINER=nextcloud-aio-nextcloud sh apply.sh --with-css
+   # installed on the machine, or as a snap
    OCC="sudo -u www-data php /var/www/nextcloud/occ" sh apply.sh --with-css
+   OCC=nextcloud.occ sh apply.sh --with-css
    ```
 
 3. Reload Nextcloud (Ctrl+Shift+R).

@@ -11,7 +11,7 @@
 import { PALETTE } from '../../brand/palette.ts';
 import { DOMAIN } from '../../brand/identity.ts';
 import { bannerMark, coinSvg, markSvg } from '../marks.ts';
-import { sq } from './shared.ts';
+import { containerOf, folderOf, PODMAN, sq } from './shared.ts';
 import type { ThemeKit } from './types.ts';
 
 const P = PALETTE;
@@ -120,12 +120,13 @@ export function homeAssistantScript(): string {
 # The Olympus — Home Assistant: installs the theme and the dashboard images.
 #
 #   Docker:      HA_CONTAINER=homeassistant sh apply.sh
-#   A folder:    sh apply.sh /path/to/homeassistant/config
+#   A folder:    sh apply.sh /path/to/homeassistant/config   (or HA_CONFIG=/path/…)
 #   Undo:        add --restore to either
 set -eu
 DIR=$(cd "$(dirname "$0")" && pwd)
+${PODMAN}
 restore=0
-config=
+config=\${HA_CONFIG:-}
 for a in "$@"; do
   case "$a" in
     --restore) restore=1 ;;
@@ -174,7 +175,14 @@ export const homeAssistant: ThemeKit = {
   label: 'Home Assistant',
   match: { ids: ['home-assistant', 'homeassistant', 'hass'], category: 'home' },
   how: '`apply.sh` installs the theme (light and dark) and the images; `picture-card.yaml` puts the seal on a dashboard',
-  installer: { summary: 'the theme, light and dark, and the dashboard images', detect: 'c=$( (docker ps --format \'{{.Names}} {{.Image}}\' 2>/dev/null || sudo -n docker ps --format \'{{.Names}} {{.Image}}\' 2>/dev/null) | awk \'tolower($2) ~ /home-?assistant/ { print $1; exit }\'); [ -n "$c" ] && echo "$c"', ask: { env: 'HA_CONTAINER', prompt: 'Home Assistant’s Docker container' }, root: true },
+  installer: {
+    summary: 'the theme, light and dark, and the dashboard images',
+    places: [
+      { label: 'In a Docker or Podman container', env: 'HA_CONTAINER', prompt: 'Home Assistant’s container', detect: containerOf('home-?assistant', 'addon|supervisor|observer|-dns|-audio|-cli|-multicast') },
+      { label: 'In a folder on this machine', env: 'HA_CONFIG', prompt: 'Home Assistant’s config folder (where configuration.yaml is)', detect: folderOf(['/config', '/homeassistant', '/var/lib/hass', '/home/homeassistant/.homeassistant', '/srv/homeassistant', '/srv/homeassistant/config', '/opt/homeassistant/config', '/usr/share/hassio/homeassistant'], '[ -f "$d/configuration.yaml" ]') },
+    ],
+    root: true,
+  },
   guide: (t) => ({
     title: 'Home Assistant',
     intro: `A Home Assistant theme: the house's greys for the whole interface, in a light and a dark mode that follow each user's own setting, with ${t.name}'s banner for a dashboard card.`,
@@ -192,6 +200,7 @@ export const homeAssistant: ThemeKit = {
     requires: ['Home Assistant 2026.10 or close to it.', 'Access to its configuration folder: through Docker (`HA_CONTAINER`), or as a folder on disk (the *Samba share* or *File editor* add-ons, or SSH).'],
     steps: [
       { text: 'Run the script — with Docker, naming the container; otherwise, giving the configuration folder.', code: 'HA_CONTAINER=homeassistant sh apply.sh\n# or\nsh apply.sh /path/to/homeassistant/config' },
+      { text: 'Home Assistant OS has no shell of its own for scripts: copy `the-olympus.yaml` into `/config/themes/` and the two images into `/config/www/the-olympus/` with the *File editor* or *Samba* add-on (this chapter’s files can be shown and copied below), then go on with the next step.' },
       { text: 'If the script says Home Assistant does not read the themes folder yet, add these two lines to `configuration.yaml` and restart Home Assistant once.', code: 'frontend:\n  themes: !include_dir_merge_named themes' },
       { text: 'Reload the themes: **Developer tools → Actions → Frontend: Reload themes**.' },
       { text: 'On your **profile** page, choose **The Olympus** as the theme. Each user chooses for themselves; *Mode* there picks light or dark.' },

@@ -8,6 +8,8 @@
 // file it may need and that file's SHA-256, so it can fetch the parts from
 // the house's site and check them before running anything.
 
+import { LIMINE_MARK, LIMINE_PLACES, LIMINE_SEARCH } from './limine.ts';
+
 export type ScreenPart = {
   id: string;
   label: string;
@@ -37,8 +39,9 @@ export const SCREEN_PARTS: readonly ScreenPart[] = [
     id: 'limine',
     label: 'Limine boot menu',
     dir: 'boot/limine',
-    fits: '( for c in ${LIMINE_CONF:-} /boot/limine.conf /boot/limine/limine.conf /boot/EFI/limine/limine.conf /efi/limine.conf /efi/EFI/limine/limine.conf /boot/efi/limine.conf /boot/efi/EFI/limine/limine.conf /boot/EFI/BOOT/limine.conf; do [ -f "$c" ] && exit 0; done; exit 1 )',
-    installed: '( for c in ${LIMINE_CONF:-} /boot/limine.conf /boot/limine/limine.conf /boot/EFI/limine/limine.conf /efi/limine.conf /efi/EFI/limine/limine.conf /boot/efi/limine.conf /boot/efi/EFI/limine/limine.conf /boot/EFI/BOOT/limine.conf; do grep -qsF "# The Olympus — begin" "$c" && exit 0; done; exit 1 )',
+    // As root, limine.conf itself. As anyone else (the boot partition is root's alone), the signs Limine leaves in the system.
+    fits: `( for c in \${LIMINE_CONF:-} ${LIMINE_PLACES}; do [ -f "$c" ] && exit 0; done; [ -n "$(${LIMINE_SEARCH})" ] && exit 0; [ "$(id -u)" != 0 ] || exit 1; [ -f ${LIMINE_MARK} ] || command -v limine >/dev/null 2>&1 || [ -d /usr/share/limine ] || [ -f /etc/default/limine ] || command -v limine-entry-tool >/dev/null 2>&1 || command -v limine-update >/dev/null 2>&1 )`,
+    installed: `( [ -f ${LIMINE_MARK} ] && exit 0; for c in \${LIMINE_CONF:-} ${LIMINE_PLACES}; do grep -qsF "# The Olympus — begin" "$c" && exit 0; done; exit 1 )`,
     unfit: 'this machine does not boot with Limine',
     options: [],
   },

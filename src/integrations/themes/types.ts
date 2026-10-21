@@ -40,14 +40,33 @@ export type KitInstaller = {
   /** What the menu says it does. */
   summary: string;
   /**
-   * A shell test: is the application on this machine? It may print a value
-   * (a container's name, a folder) that becomes the default answer to `ask`.
+   * For an application that can be anywhere — in a container, in a folder:
+   * the ways to say where it is. The menu offers each, with what it found on
+   * the machine; the answer goes to apply.sh in that place's variable. A kit
+   * with places can always be chosen, found or not.
    */
-  detect: string;
-  /** A question for the person installing: its answer goes to apply.sh in this environment variable. */
-  ask?: { env: string; prompt: string };
+  places?: readonly KitPlace[];
+  /** For an application that is the machine itself (Proxmox VE): a shell test it must pass. */
+  requires?: string;
+  /** A shell test: is the kit in place? */
+  installed?: string;
   /** Options for apply.sh. */
   args?: string;
   /** apply.sh needs root (the system's files, or Docker). */
   root: boolean;
+};
+
+export type KitPlace = {
+  /** How the menu offers it: "In a Docker or Podman container". */
+  label: string;
+  /** The environment variable apply.sh reads it from (and the name for the installer's --set). */
+  env: string;
+  /** The question, when it is typed. */
+  prompt: string;
+  /**
+   * A shell snippet that prints where the application is on this machine, or
+   * nothing. It runs as root when the installer can, and may use
+   * `containers`: the running Docker and Podman containers, "name image" a line.
+   */
+  detect: string;
 };

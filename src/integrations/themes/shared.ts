@@ -5,6 +5,15 @@ export const cssSvg = (svg: string) =>
   `url("data:image/svg+xml,${svg.replace(/\n\s*/g, ' ').replace(/%/g, '%25').replace(/#/g, '%23').replace(/</g, '%3C').replace(/>/g, '%3E').replace(/"/g, "'")}")`;
 
 /** A single-quoted shell word. */
+/** For a place's detect: the first running container whose image matches `image` (an awk pattern, lower case) and not `not`. */
+export const containerOf = (image: string, not?: string) => `containers | awk 'tolower($2) ~ /${image}/${not ? ` && tolower($2) !~ /${not}/` : ''} { print $1; exit }'`;
+
+/** For a place's detect: the first of these folders that passes `test` (written with "$d"). */
+export const folderOf = (dirs: readonly string[], test: string) => `for d in ${dirs.join(' ')}; do if ${test}; then echo "$d"; exit 0; fi; done`;
+
+/** For apply.sh: Podman stands in for Docker when only Podman is there. */
+export const PODMAN = 'if ! command -v docker >/dev/null 2>&1 && command -v podman >/dev/null 2>&1; then docker() { podman "$@"; }; fi';
+
 export const sq = (s: string) => `'${s.replace(/'/g, `'\\''`)}'`;
 
 /** A kit's guide, always in the same order, so every application reads alike. Markdown. */
