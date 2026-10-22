@@ -7,6 +7,23 @@ import { KitFiles } from './KitFiles.tsx';
 const clean = (t: string) => t.replace(/^\d+\s*—\s*/, '').replace(/^The Olympus\s*—\s*/, '');
 
 /** The guide: the repository's docs, rendered, with their links and pictures pointed at the site. */
+
+/**
+ * A chapter's images, found beside the chapter (files/docs/…) and loaded only
+ * when near: set while the HTML is still inert, before the page asks for them.
+ */
+function withImages(html: string, chapter: string): string {
+  const t = document.createElement('template');
+  t.innerHTML = html;
+  const base = new URL(`files/docs/${chapter}.md`, location.href);
+  for (const img of t.content.querySelectorAll('img')) {
+    const src = img.getAttribute('src') ?? '';
+    if (!/^[a-z]+:/i.test(src)) img.setAttribute('src', new URL(src, base).href);
+    img.setAttribute('loading', 'lazy');
+  }
+  return t.innerHTML;
+}
+
 export function GuidePage({ doc }: { doc?: string }) {
   const { index, error: indexError } = useIndex();
   const files = index?.files ?? [];
@@ -35,7 +52,7 @@ export function GuidePage({ doc }: { doc?: string }) {
         if (!r.ok) throw new Error(`This chapter could not be loaded (${r.status}). Reload the page; if it persists, rebuild the site.`);
         return r.text();
       })
-      .then((md) => live && setHtml(guideMarked.parse(md) as string))
+      .then((md) => live && setHtml(withImages(guideMarked.parse(md) as string, current.id)))
       .catch((e: Error) => live && setError(e.message));
     setChaptersOpen(false);
     return () => {
@@ -47,11 +64,6 @@ export function GuidePage({ doc }: { doc?: string }) {
     const el = body.current;
     if (!el || !current) return;
     const base = new URL(`files/docs/${current.id}.md`, location.href);
-    for (const img of el.querySelectorAll('img')) {
-      const src = img.getAttribute('src') ?? '';
-      if (!/^[a-z]+:/i.test(src)) img.src = new URL(src, base).href;
-      img.loading = 'lazy';
-    }
     for (const a of el.querySelectorAll('a')) {
       const href = a.getAttribute('href') ?? '';
       if (!safeUrl(href)) {

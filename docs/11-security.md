@@ -34,10 +34,12 @@ layer, and checks that nothing runs and every file still parses.
   dropped, an image is rebuilt from its source, width and text alone, anything
   else is shown as text, and links go only to pages and web addresses.
 - The page carries a content policy of its own (scripts and everything else
-  only from the site itself, forms only to it), and nginx sends the same with
-  `X-Content-Type-Options`, a referrer policy, a permissions policy (no camera,
-  microphone or location), and no version number. The brand's files are served
-  sandboxed.
+  only from the site itself, forms only to it), and the house's server sends
+  the same with `X-Content-Type-Options`, a referrer policy, a permissions
+  policy (no camera, microphone or location), `Cross-Origin-Opener-Policy`,
+  and no version number. The brand's files are served sandboxed. It serves
+  only files inside the published release: no `..`, no hidden file, no folder
+  listing, nothing but GET and HEAD outside `/api/`.
 - Nothing in the browser talks to another server; designs stay in the
   browser that made them.
 
@@ -58,20 +60,43 @@ could change the script and its checksums together. So:
 - On Arch, the package's `PKGBUILD` pins every file; build it from a copy you
   trust for the same guarantee.
 
+## Editing the map
+
+The map's edit API (`/api/`, part of the house's server) writes only into
+the server's data folder, never into the repository.
+
+- There is no default password: until one is set on the server
+  (`npm run editor -- password`), nothing can be changed. It is kept as a
+  scrypt hash (N = 2¹⁵), readable only by the server's user; sign-ins are
+  taken one at a time, each failure slower than the last.
+- A session is an `HttpOnly`, `SameSite=Strict` cookie limited to `/api`
+  (`Secure` behind HTTPS), lasting 12 hours. Every change also carries the
+  page's token, and a request whose `Origin` is another site is refused.
+- What is sent is checked before anything is written: ids are plain names
+  (never a path), text has no control characters and a length limit, logos
+  are SVG files checked and limited in size, a request body is limited, and
+  a place must be a plot of the city. Files are written whole, one change at a
+  time.
+- An error the server did not expect is answered with a plain sentence; the
+  detail goes only to the server's log.
+
 ## The automatic rebuild
 
-The builder runs the repository's own code whenever the catalogue changes or
-it pulls from GitHub. Whoever can push to the repository can therefore run
-code on the server, as the builder's user: keep push access to yourself
-(and two-factor authentication on the account). Within that:
+The house's server runs the repository's own code whenever the catalogue or
+the data folder changes or it pulls from GitHub. Whoever can push to the
+repository can therefore run code on the server, as the server's user: keep
+push access to yourself (and two-factor authentication on the account).
+Within that:
 
 - it only fast-forwards — it never merges, rebases or discards a change made
   on the server;
 - dependencies are installed with `npm ci --ignore-scripts`: no package's
   install script ever runs (none of the house's dependencies needs one);
-- the builder runs as an ordinary user, with no open ports; both containers
-  run with `no-new-privileges`, and the web server read-only with only the
-  capabilities nginx needs;
+- the server runs as an ordinary user, with one port; the container drops
+  every capability and runs with `no-new-privileges`;
+- a build is a separate process that writes a new release; the served one is
+  replaced only when the build succeeded, in one step, so a failed or
+  half-finished build is never served;
 - `npm audit` reports no known vulnerability in the dependencies.
 
 ## Scripts that run as root

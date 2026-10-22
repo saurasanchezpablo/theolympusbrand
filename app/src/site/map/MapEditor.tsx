@@ -8,7 +8,7 @@ import type { MapData, MapEntry } from '../../../../src/map/items.ts';
 import type { Place } from '../../../../src/map/places.ts';
 import type { ServiceSpec } from '../../../../src/catalog/service.ts';
 import type { MachineSpec } from '../../../../src/catalog/machine.ts';
-import { CATEGORIES } from '../../../../src/geometry/pantheon.ts';
+import { CATEGORIES } from '../../../../src/catalog/categories.ts';
 import { building } from '../../../../src/map/buildings/index.ts';
 import { machineSpecOf } from '../../../../src/map/items.ts';
 import { BuildingPicker } from './BuildingPicker.tsx';
@@ -22,7 +22,7 @@ const slug = (s: string) => s.normalize('NFKD').replace(/[̀-ͯ]/g, '').toLowerC
 const norm = (r: number) => ((r % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2);
 
 type Draft = { kind: 'service' | 'machine'; id?: string; place: Place; fields: Record<string, string>; logoSvg?: string; logoName?: string };
-type Step = { label: string; undo: () => Promise<void>; redo: () => Promise<void> };
+type Step = { label: string; undo: () => Promise<unknown>; redo: () => Promise<unknown> };
 
 type ServerCatalog = { services: ServiceSpec[]; logos: Record<string, string> };
 let catalogCache: Promise<ServerCatalog> | null = null;
@@ -60,31 +60,34 @@ export function useMapEditor({ live, data, scene, selected, onSelect, reload }: 
     if (live) api.session().then(setSession, () => setSession(null));
   }, [live]);
 
-  /** After a change the rebuild follows: say so until build.json says it is done. */
-  const watchBuild = useCallback((what: string) => {
+  /** A saved change is on the server at once; the site shows it when a build that includes it is published. Say which, truthfully. */
+  const watchBuild = useCallback((what: string, change: number) => {
     const since = Date.now();
-    setRebuild(`${what} — the house is rebuilding for it…`);
+    setRebuild(`${what}: saved on the server, publishing…`);
     const look = async () => {
       const b = await api.buildState();
-      if (!b || b.state === 'static') return setRebuild(`${what}.`);
-      if (b.state === 'failed' && b.at && Date.parse(b.at) > since) return setRebuild(`${what}, but the rebuild failed: ${b.error?.split('\n')[0] ?? 'see the Downloads page'}`);
-      if (b.state === 'ok' && b.at && Date.parse(b.at) > since) return setRebuild(`${what} — the house is rebuilt.`);
-      if (Date.now() - since < 10 * 60_000) window.setTimeout(look, 3000);
+      if (!b || b.state === 'static' || typeof b.published !== 'number') return setRebuild(`${what}: saved.`);
+      if (b.published >= change) return setRebuild(`${what}: saved and published.`);
+      if (b.state === 'failed')
+        return setRebuild(`${what}: saved on the server, but the site could not be rebuilt (${b.error?.split('\n')[0] ?? 'see the server’s log'}). The published site is unchanged.`);
+      if (Date.now() - since < 10 * 60_000) window.setTimeout(look, 1500);
+      else setRebuild(`${what}: saved on the server; the site is still being rebuilt.`);
     };
-    window.setTimeout(look, 3000);
+    window.setTimeout(look, 1000);
   }, []);
 
   const run = useCallback(
-    async (step: Step, what: string, rebuilds: boolean) => {
+    async (step: Step, what: string) => {
       setBusy(true);
       setMessage(null);
+      const before = api.lastChange();
       try {
         await step.redo();
         undo.current.push(step);
         redo.current = [];
         catalogCache = null;
         await reload();
-        if (rebuilds) watchBuild(what);
+        if (api.lastChange() > before) watchBuild(what, api.lastChange());
         else setRebuild(`${what}.`);
       } catch (e) {
         setMessage((e as Error).message);
@@ -99,34 +102,38 @@ export function useMapEditor({ live, data, scene, selected, onSelect, reload }: 
     const step = undo.current.pop();
     if (!step) return;
     setBusy(true);
+    const before = api.lastChange();
     try {
       await step.undo();
       redo.current.push(step);
       catalogCache = null;
       await reload();
-      setRebuild(`Undone: ${step.label}.`);
+      if (api.lastChange() > before) watchBuild(`Undone: ${step.label}`, api.lastChange());
+      else setRebuild(`Undone: ${step.label}.`);
     } catch (e) {
       setMessage((e as Error).message);
     } finally {
       setBusy(false);
     }
-  }, [reload]);
+  }, [reload, watchBuild]);
   const forward = useCallback(async () => {
     const step = redo.current.pop();
     if (!step) return;
     setBusy(true);
+    const before = api.lastChange();
     try {
       await step.redo();
       undo.current.push(step);
       catalogCache = null;
       await reload();
-      setRebuild(`Done again: ${step.label}.`);
+      if (api.lastChange() > before) watchBuild(`Done again: ${step.label}`, api.lastChange());
+      else setRebuild(`Done again: ${step.label}.`);
     } catch (e) {
       setMessage((e as Error).message);
     } finally {
       setBusy(false);
     }
-  }, [reload]);
+  }, [reload, watchBuild]);
 
   // Keys: Escape stops placing; R turns what is being placed; Ctrl+Z / Ctrl+Shift+Z outside text fields.
   useEffect(() => {
@@ -200,7 +207,7 @@ export function useMapEditor({ live, data, scene, selected, onSelect, reload }: 
         } else if (previous) await writeSpec(previous.spec, previous.logoSvg);
       },
     };
-    await run(step, isNew ? `${name} is on the map` : `${name} is saved`, true);
+    await run(step, isNew ? `${name} is on the map` : `${name} is saved`);
     setDraft(null);
     onSelect(theId);
   };
@@ -221,13 +228,12 @@ export function useMapEditor({ live, data, scene, selected, onSelect, reload }: 
         },
       },
       `${e.name} is off the map`,
-      e.kind === 'service',
     );
   };
 
   const turn = (e: MapEntry, by: number) => {
     const after = { ...e.place, rotation: norm(e.place.rotation + by) };
-    void run(placeStep(e.id, e.placed === 'owner' ? e.place : null, after, `${e.name} turned`), `${e.name} is turned`, false);
+    void run(placeStep(e.id, e.placed === 'owner' ? e.place : null, after, `${e.name} turned`), `${e.name} is turned`);
   };
 
   // ---- the pointer on the map ----
@@ -281,7 +287,7 @@ export function useMapEditor({ live, data, scene, selected, onSelect, reload }: 
       const e = data?.items.find((x) => x.id === d.id);
       if (e && d.ok && d.at) {
         const after = { ...e.place, ...d.at };
-        void run(placeStep(e.id, e.placed === 'owner' ? e.place : null, after, `${e.name} moved`), `${e.name} is moved`, false);
+        void run(placeStep(e.id, e.placed === 'owner' ? e.place : null, after, `${e.name} moved`), `${e.name} is moved`);
       }
       return true;
     }
@@ -299,7 +305,7 @@ export function useMapEditor({ live, data, scene, selected, onSelect, reload }: 
         Edit
       </button>
       <span id="map-edit-why" className="map-edit__why">
-        Saving needs the map’s edit service on the server — <a href="#/guide/13-the-map">see the guide</a>.
+        Saving needs the house’s own server (npm start), which this copy of the site is not on — <a href="#/guide/13-the-map">see the guide</a>.
       </span>
     </span>
   ) : !editing ? (
@@ -396,7 +402,10 @@ export function useMapEditor({ live, data, scene, selected, onSelect, reload }: 
               onSelect(null);
             } else if (selected) {
               const after = { ...selected.place, building: type };
-              void run(placeStep(selected.id, selected.placed === 'owner' ? selected.place : null, after, `${selected.name} rebuilt`), `${selected.name} stands in a ${building(type)?.name.toLowerCase()}`, false);
+              void run(
+                placeStep(selected.id, selected.placed === 'owner' ? selected.place : null, after, `${selected.name} rebuilt`),
+                `${selected.name} stands in a ${building(type)?.name.toLowerCase()}`,
+              );
             }
           }}
         />
@@ -524,4 +533,3 @@ export function useMapEditor({ live, data, scene, selected, onSelect, reload }: 
 
   return { tools, overlay, cardActions, pointerDown, pointerMove, pointerUp, busy };
 }
-

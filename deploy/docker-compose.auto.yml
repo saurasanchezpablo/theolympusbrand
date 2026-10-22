@@ -1,92 +1,45 @@
-# The Olympus — the site, rebuilt automatically.
+# The Olympus — the site, following the repository: one service, one port.
 #
 #   cd deploy && docker compose -f docker-compose.auto.yml up -d --build
+#   docker compose -f docker-compose.auto.yml exec olympus node scripts/editor.ts password
 #
-# Run it from the repository on the server (a git clone). The builder watches
-# catalog/ — add, change or remove a service there and the site follows within
-# seconds — and pulls from GitHub every OLYMPUS_GIT_INTERVAL minutes (0: never).
-# The first start installs and builds everything (a few minutes); after that,
-# only what changed. Then open http://<server>:8080.
+# Run it from a git clone on the server. The service works in the clone: it
+# watches catalog/ and data/ — change a service there, or on the map, and the
+# site follows within seconds — and pulls from the remote every
+# OLYMPUS_GIT_INTERVAL minutes (0: never). The first start installs and builds
+# everything (a few minutes); after that, only what changed. Then open
+# http://<server>:8080.
 #
-# The builder runs as uid 1000 (the node image's user): the repository must be
-# writable by it (chown -R 1000:1000 the clone, or set user: to your own uid
-# and gid and make /site and node_modules theirs).
+# It runs as uid 1000 (the node image's user): the clone must be writable by it
+# (chown -R 1000:1000 the clone, or set user: to your own uid and gid).
+# data/ in the clone is the server's own state — never committed; back it up.
 services:
-  builder:
+  olympus:
     build:
-      context: .
-      dockerfile: Dockerfile.builder
-    image: theolympus-builder
-    container_name: olympus-builder
+      context: ..
+      dockerfile: deploy/Dockerfile
+    image: theolympus
+    container_name: olympus
+    working_dir: /repo
+    ports:
+      - "8080:8080"
     volumes:
       - ..:/repo
       - node_modules:/repo/node_modules
-      - site:/site
+      - site:/var/lib/olympus/site
     environment:
+      OLYMPUS_DATA: /repo/data
       OLYMPUS_GIT_INTERVAL: "10"
       OLYMPUS_GIT_REMOTE: origin
-      # The repository is owned by the host's user; let git work in it anyway.
+      # The clone is owned by the host's user; let git work in it anyway.
       GIT_CONFIG_COUNT: "1"
       GIT_CONFIG_KEY_0: safe.directory
       GIT_CONFIG_VALUE_0: /repo
     restart: unless-stopped
     security_opt:
       - no-new-privileges:true
-
-  # The map's edit service: what is added, moved or changed on the map is
-  # written to data/ in the repository (never committed; back it up), and the
-  # builder sees it and rebuilds. Set its password once:
-  #   docker compose -f docker-compose.auto.yml run --rm -it editor node scripts/editor.ts password
-  editor:
-    image: theolympus-builder
-    container_name: olympus-editor
-    command: ["node", "scripts/editor.ts", "serve"]
-    working_dir: /repo
-    volumes:
-      - ..:/repo
-      - node_modules:/repo/node_modules
-    environment:
-      OLYMPUS_DATA: /repo/data
-      OLYMPUS_EDITOR_HOST: 0.0.0.0
-    depends_on:
-      - builder
-    restart: unless-stopped
-    security_opt:
-      - no-new-privileges:true
-    # Only the right to send a ping, for the map's "online" marks.
     cap_drop:
       - ALL
-    cap_add:
-      - NET_RAW
-
-  web:
-    build:
-      context: .
-      dockerfile: Dockerfile.web
-    image: theolympus-web
-    container_name: olympus
-    ports:
-      - "8080:80"
-    volumes:
-      - site:/site:ro
-    depends_on:
-      - builder
-    restart: unless-stopped
-    security_opt:
-      - no-new-privileges:true
-    # nginx needs only to bind port 80 and hand its workers to its own user.
-    cap_drop:
-      - ALL
-    cap_add:
-      - CHOWN
-      - SETGID
-      - SETUID
-      - NET_BIND_SERVICE
-    read_only: true
-    tmpfs:
-      - /var/cache/nginx
-      - /var/run
-      - /tmp
 
 volumes:
   node_modules:

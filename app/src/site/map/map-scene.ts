@@ -88,7 +88,8 @@ export type MapScene = {
   /** The building being placed, snapped to the plot under the point: where it would stand, or why it cannot. */
   ghost(type: string | null, at?: { x: number; z: number; rotation: number }, except?: string): { ok: true; place: { x: number; z: number; rotation: number } } | { ok: false; why: Refusal } | null;
   setPanning(on: boolean): void;
-  stats(): { triangles: number; calls: number; fps: number; people: number; peopleMs: number };
+  /** What the page reports and the checks read: the last frame's work, frames drawn so far, and how long each part of the start took (ms). */
+  stats(): { triangles: number; calls: number; fps: number; frames: number; people: number; peopleMs: number; startup: Record<string, number> };
   /** Test hook: put the camera at a pose (target x/z on the ground, distance, tilt from straight down, turn from north). */
   look(p: { x: number; z: number; distance: number; polar: number; azimuth: number }): void;
   dispose(): void;
@@ -150,6 +151,14 @@ function cloudTexture(): CanvasTexture {
 type Pose = { target: Vector3; distance: number; polar: number; azimuth: number };
 
 export function createMapScene(canvas: HTMLCanvasElement, terrainBytes: ArrayBuffer, plan: CityPlan, opts: { reducedMotion: boolean; lite: boolean }): MapScene {
+  // How long each part of the start takes, for stats() (a handful of numbers, kept for the page's checks).
+  const startup: Record<string, number> = {};
+  let mark = performance.now();
+  const lap = (what: string) => {
+    const now = performance.now();
+    startup[what] = Math.round((startup[what] ?? 0) + now - mark);
+    mark = now;
+  };
   const base = decodeTerrain(new Uint8Array(terrainBytes));
   const land: Terrain = base;
   const plots = plotsOf(plan);
@@ -201,11 +210,25 @@ export function createMapScene(canvas: HTMLCanvasElement, terrainBytes: ArrayBuf
   landMesh.receiveShadow = true;
   landMesh.castShadow = true;
   scene.add(landMesh);
+  lap('setup');
   {
     const p = landGeo.attributes.position;
     for (let i = 0; i < p.count; i++) p.setY(i, heightAt(land, p.getX(i), p.getZ(i)));
     p.needsUpdate = true;
     landGeo.computeVertexNormals();
+    // The sea is opaque: a cell wholly beneath it is never seen and shades nothing above it. Most of the grid is sea, so only
+    // the cells that reach the surface are drawn (the normals above were taken with all of them, so the coast is lit the same).
+    const n = base.res,
+      keep: number[] = [];
+    for (let z = 0; z < n - 1; z++)
+      for (let x = 0; x < n - 1; x++) {
+        const a = z * n + x,
+          b = a + n,
+          c = b + 1,
+          d = a + 1;
+        if (Math.max(p.getY(a), p.getY(b), p.getY(c), p.getY(d)) >= MAP.sea - 0.05) keep.push(a, b, d, b, c, d);
+      }
+    landGeo.setIndex(keep);
     landGeo.computeBoundingSphere();
   }
   const sea = new Mesh(new PlaneGeometry(3000, 3000), seaMaterial());
@@ -281,7 +304,9 @@ export function createMapScene(canvas: HTMLCanvasElement, terrainBytes: ArrayBuf
     });
   };
 
+  lap('land');
   plant();
+  lap('forest');
 
   // ---- buildings ----
   const marble = marbleMaterial();
@@ -299,12 +324,14 @@ export function createMapScene(canvas: HTMLCanvasElement, terrainBytes: ArrayBuf
   // ---- the city: its stone built once; its houses and precincts with the items ----
   const trees = cityTrees();
   const city = buildCity(plan, (type) => geometryOf(type, 'near'), S, trees, (x, z) => heightAt(land, x, z));
+  lap('city');
   scene.add(city.group);
   let houses: Fabric | null = null;
 
   // The people: a crowd on the walkways and squares, fewer on a phone. (How long their step takes, for the page's numbers.)
   let peopleMs = 0;
   const people = createPeople(plan, { count: opts.lite ? 160 : 420, still: opts.reducedMotion });
+  lap('people');
   scene.add(people.group);
 
   /** Which plot each item stands on: plot id → item id. */
@@ -366,6 +393,7 @@ export function createMapScene(canvas: HTMLCanvasElement, terrainBytes: ArrayBuf
   };
 
   const setItems = (items: readonly MapEntry[]) => {
+    mark = performance.now();
     const kept = items.filter((e) => building(e.place.building));
     // The houses fill every plot no item takes; each item stands in its precinct.
     taken = new Map(kept.map((e) => [e.lot, e.id]));
@@ -407,6 +435,7 @@ export function createMapScene(canvas: HTMLCanvasElement, terrainBytes: ArrayBuf
     relod();
     renderer.shadowMap.needsUpdate = true;
     wake();
+    lap('items');
   };
 
   // ---- the cloud layer: parted round the island, drawn over it at the start ----
@@ -597,7 +626,10 @@ export function createMapScene(canvas: HTMLCanvasElement, terrainBytes: ArrayBuf
     const u = (landMat.userData as { time?: { value: number } }).time;
     if (u) u.value = time;
     relod();
+    const first = !frames.length && !startup.firstFrame;
+    if (first) mark = performance.now();
     renderer.render(scene, camera);
+    if (first) lap('firstFrame');
     frames.push(now);
     while (frames.length && now - frames[0] > 1000) frames.shift();
     lastDraw = now;
@@ -762,7 +794,7 @@ export function createMapScene(canvas: HTMLCanvasElement, terrainBytes: ArrayBuf
       wake();
     },
     stats() {
-      return { triangles: renderer.info.render.triangles, calls: renderer.info.render.calls, fps: frames.length, people: people.group.visible ? people.count : 0, peopleMs: Math.round(peopleMs * 100) / 100 };
+      return { triangles: renderer.info.render.triangles, calls: renderer.info.render.calls, fps: frames.length, frames: renderer.info.render.frame, people: people.group.visible ? people.count : 0, peopleMs: Math.round(peopleMs * 100) / 100, startup: { ...startup } };
     },
     dispose() {
       running = false;

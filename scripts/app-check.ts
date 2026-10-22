@@ -44,30 +44,27 @@ const chrome = [process.env.CHROME_PATH, '/usr/bin/google-chrome', '/usr/bin/chr
 if (!chrome) throw new Error('No Chrome or Chromium found — set CHROME_PATH.');
 if (!REMOTE && !existsSync(join(ROOT, 'app', 'dist', 'index.html'))) throw new Error('Build the app first: npm run app:build');
 
-// The map's edit service, on a data folder of its own, behind the preview's /api/.
-const EDITOR_PORT = 4180;
+// The house's own server (the site and the map's edit API, one port) on the built app/dist as it is, with a data folder of its own.
 const EDITOR_DATA = mkdtempSync(join(tmpdir(), 'olympus-check-data-'));
 const EDITOR_PASSWORD = 'olympus-check-password';
-const editorEnv = { ...process.env, OLYMPUS_DATA: EDITOR_DATA, OLYMPUS_EDITOR_PORT: String(EDITOR_PORT) };
-if (!REMOTE) execFileSync('node', ['-e', `import('./scripts/lib/editor/auth.ts').then((m) => m.setPassword(${JSON.stringify(EDITOR_PASSWORD)}))`], { cwd: ROOT, env: editorEnv });
-let editor = REMOTE ? null : spawn('node', ['scripts/editor.ts', 'serve'], { cwd: ROOT, env: editorEnv, stdio: 'ignore' });
-const server = REMOTE ? null : spawn(join(ROOT, 'node_modules/.bin/vite'), ['preview', '--config', 'app/vite.config.ts', '--host', '127.0.0.1', '--port', String(PORT), '--strictPort'], { cwd: ROOT, stdio: 'ignore', env: { ...process.env, OLYMPUS_EDITOR_URL: `http://127.0.0.1:${EDITOR_PORT}` } });
+const serverEnv = { ...process.env, OLYMPUS_DATA: EDITOR_DATA, OLYMPUS_SITE: join(ROOT, 'app', 'dist'), PORT: String(PORT), HOST: '127.0.0.1' };
+if (!REMOTE) execFileSync('node', ['-e', `import('./scripts/lib/editor/auth.ts').then((m) => m.setPassword(${JSON.stringify(EDITOR_PASSWORD)}))`], { cwd: ROOT, env: serverEnv });
+const server = REMOTE ? null : spawn('node', ['scripts/serve.ts'], { cwd: ROOT, env: serverEnv, stdio: 'ignore' });
 const stop = () => {
   server?.kill();
-  editor?.kill();
 };
 process.on('exit', stop);
 
 async function waitForServer() {
   for (let i = 0; i < 200; i++) {
     try {
-      if ((await fetch(URL_)).ok && (REMOTE || (await fetch(`http://127.0.0.1:${EDITOR_PORT}/api/session`)).ok)) return;
+      if ((await fetch(URL_)).ok && (await fetch(new URL('api/session', URL_))).ok) return;
     } catch {
       /* not up yet */
     }
     await new Promise((r) => setTimeout(r, 100));
   }
-  throw new Error('The preview server or the edit service did not start.');
+  throw new Error('The server did not start.');
 }
 
 const steps: string[] = [];
@@ -456,7 +453,7 @@ try {
     step(`map: the island draws (${Math.round(stats.triangles / 1000)}k triangles, ${stats.calls} draw calls); intro, a ring per service, the directory searched, a place with its address, next, back, the keyboard (Enter, Escape), a link to a place`);
 
     // Text from the data folder is shown as text.
-    const api = `http://127.0.0.1:${EDITOR_PORT}/api`;
+    const api = new URL('api', URL_).href;
     const signIn = await fetch(`${api}/login`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ password: EDITOR_PASSWORD }) });
     const cookie = (signIn.headers.get('set-cookie') ?? '').split(';')[0];
     const { csrf } = (await signIn.json()) as { csrf: string };
@@ -497,6 +494,8 @@ try {
     await mp.getByRole('button', { name: 'Save' }).click();
     await mp.locator('.place h2', { hasText: 'Uptime watch' }).waitFor({ timeout: 60_000 });
     assert.ok(existsSync(join(EDITOR_DATA, 'services/uptime-watch.json')), 'saved in the data folder');
+    // This server serves a fixed folder: the change is saved, and never said to be published.
+    await mp.locator('.map-notice', { hasText: 'Uptime watch is on the map.' }).waitFor({ timeout: 20_000 });
     const saved = JSON.parse(readFileSync(join(EDITOR_DATA, 'places.json'), 'utf8'))['uptime-watch'];
     assert.equal(saved.building, 'lighthouse');
     assert.ok(
@@ -520,15 +519,13 @@ try {
     await shot(mp, '18-map-editing');
     step('map: editing — sign in, add a lighthouse on a plot (the sea refused, with the reason), save to the data folder, turn, delete, undo');
 
-    // Without the edit service, the map still shows, and saving says why.
-    editor?.kill();
-    editor = null;
-    await new Promise((r) => setTimeout(r, 500));
+    // A copy of the site on a plain web server (no edit API: /api/ answers {"editor":false}): the map still shows, and saving says why.
+    await mapCtx.route('**/api/**', (route) => route.fulfill({ status: 200, contentType: 'application/json', body: '{"editor":false}' }));
     await mp.reload();
     await mp.locator('[data-phase="overview"]').waitFor({ timeout: 180_000 });
     assert.ok(await mp.getByRole('button', { name: 'Edit' }).isDisabled());
-    await mp.getByText('Saving needs the map’s edit service').waitFor();
-    step('map: without the edit service, the map shows read-only and says why');
+    await mp.getByText('Saving needs the house’s own server').waitFor();
+    step('map: on a plain web server without the edit API, the map shows read-only and says why');
     assert.deepEqual(mapErrors, [], `map console errors:\n${mapErrors.join('\n')}`);
     await mapCtx.close();
 

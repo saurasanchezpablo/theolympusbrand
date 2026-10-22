@@ -1,8 +1,9 @@
-// The map's edit service: the one part of the site that is not a static file.
-// It reads the merged catalogue and the map for anyone, and — with the house's
+// The map's edit API: the one part of the site that is not a static file. It
+// reads the merged catalogue and the map for anyone, and — with the house's
 // password, a session cookie and the page's token — saves services, machines
-// and places into the server's data folder, one write at a time. The automatic
-// rebuild sees the folder change and makes the rest of the house again.
+// and places into the server's data folder, one write at a time. The site's
+// own server (scripts/serve.ts) mounts it under /api/ and is told of every
+// change, so the house is rebuilt for it at once.
 //
 //   GET    /api/map /api/catalog /api/session /api/status
 //   POST   /api/login /api/logout
@@ -22,8 +23,8 @@ import { dataLogo, loadMachines, loadPlaces, removeItem, saveMachine, savePlace,
 import { ID, SPEC_KEYS, isHost, validateSpec } from '../../../src/catalog/service.ts';
 import { validateMachine } from '../../../src/catalog/machine.ts';
 import { validatePlace } from '../../../src/map/places.ts';
-import { island } from '../../../src/map/island.ts';
-import { mapData } from '../../../src/map/items.ts';
+import { island } from '../../../src/node/island.ts';
+import { mapData, sealPath } from '../../../src/map/items.ts';
 import { building } from '../../../src/map/buildings/index.ts';
 import { importLogo } from '../../../src/geometry/logo.ts';
 import { Sessions, Throttle, checkPassword, hasPassword, setPassword } from './auth.ts';
@@ -33,6 +34,8 @@ export { setPassword, hasPassword };
 
 const BODY_MAX = 600 * 1024;
 const COOKIE = 'olympus_session';
+/** The repository: its own assets/, where a seal is when no built site is named. */
+const REPO = join(import.meta.dirname, '..', '..', '..');
 
 class HttpError extends Error {
   status: number;
@@ -86,9 +89,20 @@ const send = (res: ServerResponse, status: number, value: unknown, headers: Reco
   res.end(JSON.stringify(value));
 };
 
-export type EditorOptions = { port: number; host: string; delayScale?: number; statusTtl?: number; reachable?: (host: string) => Promise<boolean> };
+export type ApiOptions = {
+  delayScale?: number;
+  statusTtl?: number;
+  reachable?: (host: string) => Promise<boolean>;
+  /** Told of each saved change (what changed); its answer — the change's number — goes back to the page, which waits for that change to be published. */
+  onChange?: (what: 'place' | 'service' | 'machine' | 'removed') => number | undefined;
+  /** The folder of the site being served (its files under files/), to offer only seals that are there; else the repository's own. */
+  site?: () => string | null | undefined;
+};
+export type EditorOptions = ApiOptions & { port: number; host: string };
+export type EditorApi = { handle: (req: IncomingMessage, res: ServerResponse) => Promise<void> };
 
-export async function createEditor(opts: EditorOptions): Promise<{ url: string; close: () => Promise<void> }> {
+/** The API, as a handler for /api/… requests: any server can mount it. */
+export function createEditorApi(opts: ApiOptions = {}): EditorApi {
   const { plan } = island();
   const sessions = new Sessions();
   const throttle = new Throttle(opts.delayScale ?? 1);
@@ -110,7 +124,9 @@ export async function createEditor(opts: EditorOptions): Promise<{ url: string; 
     const services = loadCatalog();
     const machines = loadMachines();
     const logos = new Set([...services, ...machines].filter((x) => x.logo && (dataLogo(x.id) || existsSync(join(CATALOG_DIR, x.logo)))).map((x) => x.id));
-    return { services, machines, data: mapData(services, machines, loadPlaces(), plan, logos) };
+    const site = opts.site?.();
+    const sealed = (id: string) => existsSync(site ? join(site, sealPath(id)) : join(REPO, sealPath(id).replace(/^files\//, '')));
+    return { services, machines, data: mapData(services, machines, loadPlaces(), plan, logos, sealed) };
   };
   const logoText = (id: string, logo: string | undefined) => {
     if (!logo) return null;
@@ -172,6 +188,17 @@ export async function createEditor(opts: EditorOptions): Promise<{ url: string; 
       });
       return send(res, 200, await checking);
     }
+    // A write (signing in included) must come from this site: a page elsewhere is refused, whatever cookies the browser holds.
+    if (method !== 'GET' && method !== 'HEAD' && typeof req.headers.origin === 'string') {
+      const here = String(req.headers['x-forwarded-host'] ?? req.headers.host ?? '');
+      let there = '';
+      try {
+        there = new URL(req.headers.origin).host;
+      } catch {
+        /* not a URL: refused below */
+      }
+      if (there !== here) throw new HttpError(403, 'this request did not come from the map page');
+    }
     if (method === 'POST' && path === '/api/login') {
       const { password } = await body(req);
       const ok = await throttle.attempt(() => (typeof password === 'string' ? checkPassword(password) : Promise.resolve(false)));
@@ -199,12 +226,12 @@ export async function createEditor(opts: EditorOptions): Promise<{ url: string; 
       const place = b.place === null ? null : validated(() => validatePlace(b.place));
       if (place && !building(place.building)) throw new HttpError(400, `there is no building "${place.building}"`);
       await serial(() => savePlace(id, place));
-      return send(res, 200, { ok: true });
+      return send(res, 200, { ok: true, change: opts.onChange?.('place') });
     }
     const kind = what === 'services' ? 'service' : 'machine';
     if (method === 'DELETE' && what !== 'places') {
       await serial(() => removeItem(kind, id));
-      return send(res, 200, { ok: true });
+      return send(res, 200, { ok: true, change: opts.onChange?.('removed') });
     }
     if (method !== 'PUT') throw new HttpError(405, 'not allowed');
     const raw = b.spec as Record<string, unknown> | undefined;
@@ -220,7 +247,7 @@ export async function createEditor(opts: EditorOptions): Promise<{ url: string; 
     const spec = validated(() => (kind === 'service' ? validateSpec(raw) : validateMachine(raw)));
     if (spec.logo && logoSvg === undefined && !dataLogo(id) && !existsSync(join(CATALOG_DIR, spec.logo))) throw new HttpError(400, `the logo ${spec.logo} does not exist: send it with the spec`);
     await serial(() => (kind === 'service' ? saveService(spec as never, logoSvg) : saveMachine(spec as never, logoSvg)));
-    return send(res, 200, { ok: true });
+    return send(res, 200, { ok: true, change: opts.onChange?.(kind) });
   }
 
   const validated = <T>(fn: () => T): T => {
@@ -231,14 +258,22 @@ export async function createEditor(opts: EditorOptions): Promise<{ url: string; 
     }
   };
 
-  const server = createServer((req, res) => {
-    route(req, res).catch((e: unknown) => {
-      const status = e instanceof HttpError ? e.status : 500;
-      if (status === 500) console.error(e);
-      if (!res.headersSent) send(res, status, { error: e instanceof Error ? e.message : String(e) }, status === 413 ? { connection: 'close' } : {});
-      else res.end();
-    });
-  });
+  return {
+    handle: (req, res) =>
+      route(req, res).catch((e: unknown) => {
+        const status = e instanceof HttpError ? e.status : 500;
+        // An unexpected failure is logged here and answered plainly: no paths or stack reach the page.
+        if (status === 500) console.error(e);
+        if (!res.headersSent) send(res, status, { error: status === 500 ? 'the server could not do that; its log says why' : e instanceof Error ? e.message : String(e) }, status === 413 ? { connection: 'close' } : {});
+        else res.end();
+      }),
+  };
+}
+
+/** The API on a server of its own (the tests use it; the site's server mounts the handler itself). */
+export async function createEditor(opts: EditorOptions): Promise<{ url: string; close: () => Promise<void> }> {
+  const api = createEditorApi(opts);
+  const server = createServer((req, res) => void api.handle(req, res));
   await new Promise<void>((r) => server.listen(opts.port, opts.host, r));
   const { port } = server.address() as AddressInfo;
   return {

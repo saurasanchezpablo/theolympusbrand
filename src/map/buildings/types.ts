@@ -3,7 +3,7 @@
 
 import type { BufferGeometry } from 'three';
 import { Builder, type Detail } from './parts.ts';
-import type { Category } from '../../geometry/pantheon.ts';
+import type { Category } from '../../catalog/categories.ts';
 
 export type Family = 'temples' | 'sanctuary' | 'civic' | 'sport' | 'works' | 'monuments' | 'machines';
 

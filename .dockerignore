@@ -1,4 +1,4 @@
-# Only what the site is built from goes into the image.
+# Only what the site is built from, and the server that serves it, goes into the image.
 *
 !package.json
 !package-lock.json
@@ -8,7 +8,7 @@
 !catalog
 !docs
 !manufacturing
-!scripts/map.ts
-!deploy/nginx.conf
+!scripts
 app/dist
+scripts/dev
 **/node_modules

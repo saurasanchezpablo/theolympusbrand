@@ -13,6 +13,7 @@
 import { mkdirSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { Resvg } from '@resvg/resvg-js';
+import { marbleGround } from './lib/marble.ts';
 import { loadNodeFonts } from '../src/node/fonts.ts';
 import { loadCatalog, logoOf } from '../src/node/catalog.ts';
 import { baseMarks } from '../src/catalog/fileset.ts';
@@ -61,7 +62,8 @@ const marks = (id: string): KitMarks => {
 
 const files = await integrationKit(
   { entries: services.map((s) => ({ id: s.id, name: s.name, category: s.category, description: s.description, url: s.url, app: s.app })), marks },
-  { png: (svg, width) => new Resvg(svg, { fitTo: { mode: 'width', value: width } }).render().asPng() },
+  // The marble grounds drawn on every core and kept between builds (scripts/lib/marble.ts).
+  { png: (svg, width) => new Resvg(svg, { fitTo: { mode: 'width', value: width } }).render().asPng(), ground: marbleGround },
   opts,
 );
 rmSync(out, { recursive: true, force: true });

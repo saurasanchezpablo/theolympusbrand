@@ -56,6 +56,21 @@ export function HomePage() {
     };
   }, []);
 
+  // The drifting clouds and the running names move only while they are on screen: out of view, nothing is drawn for them.
+  useEffect(() => {
+    const scroller = document.getElementById('site-main');
+    const moving = root.current ? [...root.current.querySelectorAll<HTMLElement>('.ascent__clouds, .band')] : [];
+    if (!moving.length) return;
+    const seen = new IntersectionObserver(
+      (entries) => {
+        for (const e of entries) (e.target as HTMLElement).toggleAttribute('data-moving', e.isIntersecting);
+      },
+      { root: scroller },
+    );
+    for (const el of moving) seen.observe(el);
+    return () => seen.disconnect();
+  }, [services]);
+
   // The scroll choreography loads after the page has drawn, and only for visitors who want motion.
   useEffect(() => {
     if (!services || !prefersMotion()) return;

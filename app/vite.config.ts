@@ -1,4 +1,6 @@
-import { defineConfig, type Plugin, type ProxyOptions } from 'vite';
+import { defineConfig, type Connect, type Plugin } from 'vite';
+import type { IncomingMessage, ServerResponse } from 'node:http';
+import { pathToFileURL } from 'node:url';
 import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
 import { join } from 'node:path';
@@ -27,26 +29,40 @@ const contentPolicy = (): Plugin => ({
   ],
 });
 
-/** /api/ goes to the map's edit service when one runs; without it, the same plain answer the house's nginx gives. */
-const editorProxy: ProxyOptions = {
-  target: process.env.OLYMPUS_EDITOR_URL || 'http://127.0.0.1:8091',
-  changeOrigin: false,
-  configure: (proxy) =>
-    proxy.on('error', (_err, _req, res) => {
-      if (!('writeHead' in res) || res.headersSent) return;
-      res.writeHead(200, { 'content-type': 'application/json', 'cache-control': 'no-store' });
-      res.end('{"editor":false}');
-    }),
+/**
+ * /api/ — the map's edit API, in the dev server itself (as in the house's own
+ * server, scripts/serve.ts) when OLYMPUS_DATA names a data folder; otherwise
+ * the plain answer a site without it gives. Changes are saved, not published:
+ * there is no release to rebuild here.
+ */
+const editorApi = (): Plugin => {
+  type Handler = (req: IncomingMessage, res: ServerResponse) => Promise<void>;
+  let handler: Promise<Handler> | null = null;
+  const load = (): Promise<Handler> =>
+    (handler ??= process.env.OLYMPUS_DATA
+      ? import(pathToFileURL(join(import.meta.dirname, '../scripts/lib/editor/server.ts')).href).then((m: { createEditorApi: () => { handle: Handler } }) => m.createEditorApi().handle)
+      : Promise.resolve(async (_req, res) => {
+          res.writeHead(200, { 'content-type': 'application/json', 'cache-control': 'no-store' });
+          res.end('{"editor":false}');
+        }));
+  const mount = (server: { middlewares: Connect.Server }): void => {
+    server.middlewares.use((req, res, next) => {
+      const path = (req.url ?? '').split('?')[0];
+      if (path !== '/api' && !path.startsWith('/api/')) return next();
+      load()
+        .then((h) => h(req, res))
+        .catch(next);
+    });
+  };
+  return { name: 'olympus-editor-api', configureServer: mount, configurePreviewServer: mount };
 };
 
 export default defineConfig({
   root: import.meta.dirname,
   base: './',
-  plugins: [react(), tailwindcss(), contentPolicy(), filesPlugin(join(import.meta.dirname, '..'))],
+  plugins: [react(), tailwindcss(), contentPolicy(), filesPlugin(join(import.meta.dirname, '..')), editorApi()],
   // `@/…` is app/src — the alias shadcn/ui and Aceternity components are written against.
   resolve: { alias: { '@': join(import.meta.dirname, 'src') } },
   build: { outDir: 'dist', emptyOutDir: true, chunkSizeWarningLimit: 1500 },
-  // The map's edit service, when one runs beside the dev server or the preview (npm run editor -- serve).
-  server: { fs: { allow: ['..'] }, proxy: { '/api': editorProxy } },
-  preview: { proxy: { '/api': editorProxy } },
+  server: { fs: { allow: ['..'] } },
 });

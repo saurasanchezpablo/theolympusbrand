@@ -8,11 +8,13 @@
 // accessibility violations.
 
 import { spawn } from 'node:child_process';
-import { existsSync, mkdirSync, readdirSync, readFileSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
+import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { chromium, type Page } from 'playwright-core';
 import { ROOT } from './lib/build-service.ts';
+import { PIGMENTS } from '../src/brand/pigments.ts';
 
 const PORT = 4180;
 const arg = (k: string) => {
@@ -44,7 +46,10 @@ const ROUTES = [
 const chrome = [process.env.CHROME_PATH, '/usr/bin/google-chrome', '/usr/bin/chromium', '/usr/bin/chromium-browser'].find((p) => p && existsSync(p));
 if (!chrome) throw new Error('No Chrome or Chromium found — set CHROME_PATH.');
 if (!REMOTE && !existsSync(join(ROOT, 'app', 'dist', 'index.html'))) throw new Error('Build the site first: npm run site');
-const server = REMOTE ? null : spawn(join(ROOT, 'node_modules/.bin/vite'), ['preview', '--config', 'app/vite.config.ts', '--host', '127.0.0.1', '--port', String(PORT), '--strictPort'], { cwd: ROOT, stdio: 'ignore' });
+// The house's own server on the built app/dist as it is, with an empty data folder of its own (never the repository's data/).
+const server = REMOTE
+  ? null
+  : spawn('node', ['scripts/serve.ts'], { cwd: ROOT, stdio: 'ignore', env: { ...process.env, OLYMPUS_SITE: join(ROOT, 'app', 'dist'), OLYMPUS_DATA: mkdtempSync(join(tmpdir(), 'olympus-viewports-')), PORT: String(PORT), HOST: '127.0.0.1' } });
 process.on('exit', () => server?.kill());
 for (let i = 0; i < 100; i++) {
   try {
@@ -108,9 +113,14 @@ const clipped = (page: Page) =>
     return out.slice(0, 6);
   });
 
-/** Any element drawn with a colour that is not a grey — a browser default, a library's accent. */
+/** The house's pigments, as the browser writes them: the only hues allowed (where they are used is the palette test's business). */
+const PIGMENT_RGB = Object.values(PIGMENTS).flatMap((p) =>
+  [p.dark, p.darkBright, p.light, p.lightBright].map((hex) => `rgb(${[1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16)).join(', ')})`),
+);
+
+/** Any element drawn with a colour that is neither a grey nor a pigment — a browser default, a library's accent. */
 const hues = (page: Page) =>
-  page.evaluate(() => {
+  page.evaluate((pigments) => {
     const out: string[] = [];
     for (const el of Array.from(document.querySelectorAll<HTMLElement>('body *'))) {
       if (!el.getClientRects().length || el.closest('svg, canvas, img, video')) continue;
@@ -118,14 +128,14 @@ const hues = (page: Page) =>
       for (const prop of ['color', 'background-color', 'border-top-color', 'outline-color'] as const) {
         const m = cs.getPropertyValue(prop).match(/rgba?\((\d+), (\d+), (\d+)(?:, ([\d.]+))?\)/);
         if (!m || m[4] === '0') continue;
-        if (m[1] !== m[2] || m[2] !== m[3]) {
+        if ((m[1] !== m[2] || m[2] !== m[3]) && !pigments.includes(`rgb(${m[1]}, ${m[2]}, ${m[3]})`)) {
           const cls = typeof el.className === 'string' && el.className ? `.${el.className.trim().split(/\s+/).join('.')}` : '';
           out.push(`${el.tagName.toLowerCase()}${cls} ${prop} ${m[0]}`);
         }
       }
     }
     return [...new Set(out)].slice(0, 6);
-  });
+  }, PIGMENT_RGB);
 
 const browser = await chromium.launch({ executablePath: chrome, headless: true });
 try {

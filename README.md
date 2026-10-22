@@ -30,7 +30,8 @@ Mount Olympus is the server, and every service is a god with a domain.
 - [Handoff and validation](docs/10-handoff.md): what there is, how to run and
   extend it, how it is checked, and what is still unproven.
 - [The site on your server](docs/07-self-hosting.md): everything above as one
-  static website — build it, or run it with Docker.
+  website, served, kept built and editable by one service — `npm start`, or
+  Docker.
 - [Creative directions](docs/01-creative-directions.md): how the mark was
   arrived at.
 
@@ -50,10 +51,11 @@ Each service has the same set, plus name lockups, in
 
 ```sh
 npm run app            # the site, with live reload, at http://localhost:5173
-docker compose -f deploy/docker-compose.yml up -d --build   # on a server, port 8080
+npm start              # on a server: the site, the map's editing and its rebuilds, port 8080
+docker compose -f deploy/docker-compose.yml up -d --build   # the same, in Docker
 ```
 
-One static site with the Atelier, the catalogue, the guide and every
+One site with the Atelier, the catalogue, the map, the guide and every
 download. See [the site on your server](docs/07-self-hosting.md).
 
 ## Making a new logo
@@ -88,6 +90,7 @@ npm test               # locks the marks: geometry, border, palette, printabilit
 npm run build:master   # regenerate assets/master/
 npm run service -- build   # regenerate assets/services/ and the catalogue
 npm run app            # the Atelier (web app), with live reload
+npm run build          # everything generated, only what changed (build:clean, build:profile)
 npm run app:build      # the Atelier as a static site in app/dist/
 npm run app:check      # the site's workflows, driven in Chrome
 npm run app:viewports  # every page at phone, tablet, laptop and desktop sizes, with an accessibility audit

@@ -1,131 +1,195 @@
-// The automatic rebuild's plan: what it rebuilds for each kind of change.
+// The server's rebuilds: changes coalesced into one build, a release published
+// in one step only when it is good and different, the request numbers the page
+// waits on, and the last good release kept when a build fails.
 
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { plan, command, type Snapshot } from '../scripts/lib/rebuild-plan.ts';
+import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { createRebuilder, type RebuilderOptions } from '../scripts/lib/rebuilder.ts';
+import { toReset } from '../scripts/lib/pull.ts';
+import { services } from '../scripts/lib/sources.ts';
 
-const base: Snapshot = { deps: 'd1', code: 'c1', content: 'h1', services: { jellyfin: 'j1', nextcloud: 'n1' }, map: 'm1' };
-const kinds = (s: Snapshot | null, n: Snapshot) => plan(s, n).steps.map((x) => ('ids' in x ? `${x.kind}:${x.ids.join(',')}` : x.kind));
+/** A rebuilder on a scratch folder whose "build" writes a page saying `site.text` (or fails), counting its runs. */
+function scratch(extra: Partial<RebuilderOptions> = {}, out = mkdtempSync(join(tmpdir(), 'olympus-releases-'))) {
+  const root = mkdtempSync(join(tmpdir(), 'olympus-root-'));
+  mkdirSync(join(root, 'catalog', 'services'), { recursive: true });
+  const site = { text: 'one', fail: false, builds: 0, gate: null as Promise<void> | null };
+  const r = createRebuilder({
+    root,
+    out,
+    settle: 30,
+    log: () => {},
+    build: async (dir) => {
+      site.builds++;
+      if (site.gate) await site.gate;
+      if (site.fail) throw new Error('the build broke');
+      mkdirSync(dir, { recursive: true });
+      writeFileSync(join(dir, 'index.html'), site.text);
+      writeFileSync(join(dir, '.manifest.json'), JSON.stringify({ 'index.html': site.text }));
+      return { steps: [] };
+    },
+    ...extra,
+  });
+  const page = () => readFileSync(join(r.current()!, 'index.html'), 'utf8');
+  return { r, site, out, page };
+}
 
-test('nothing changed: nothing to do', () => {
-  assert.deepEqual(kinds(base, structuredClone(base)), []);
+test('changes in quick succession are one build; the published number covers them all', async () => {
+  const { r, site, page } = scratch();
+  const numbers = [r.request('a'), r.request('b'), r.request('c')];
+  assert.deepEqual(numbers, [1, 2, 3]);
+  await r.idle();
+  assert.equal(site.builds, 1);
+  assert.equal(r.status().state, 'ok');
+  assert.equal(r.status().published, 3);
+  assert.equal(page(), 'one');
 });
 
-test('a first start installs and builds everything', () => {
-  assert.deepEqual(kinds(null, base), ['install', 'build-all', 'screens:jellyfin,nextcloud', 'site']);
+test('a change during a build is built after it, never lost and never claimed early', async () => {
+  const { r, site, page } = scratch();
+  let open!: () => void;
+  site.gate = new Promise((ok) => (open = ok));
+  const first = r.request('first');
+  await new Promise((ok) => setTimeout(ok, 80));
+  assert.equal(r.status().state, 'building');
+  site.text = 'two';
+  const second = r.request('second');
+  // The running build started before the second change: it may publish only the first.
+  site.gate = null;
+  open();
+  await new Promise((ok) => setTimeout(ok, 10));
+  assert.ok(r.status().published < second, 'the second change is not said to be published by the first build');
+  await r.idle();
+  assert.equal(site.builds, 2);
+  assert.ok(r.status().published >= second && second > first);
+  assert.equal(page(), 'two');
 });
 
-test('code or dependencies changed: everything is rebuilt', () => {
-  assert.deepEqual(kinds(base, { ...base, code: 'c2' }), ['build-all', 'screens:jellyfin,nextcloud', 'site']);
-  assert.deepEqual(kinds(base, { ...base, deps: 'd2', code: 'c2' }), ['install', 'build-all', 'screens:jellyfin,nextcloud', 'site']);
+test('a failed build leaves the last good release served and says why; the next good one publishes', async () => {
+  const { r, site, page } = scratch();
+  r.request('good');
+  await r.idle();
+  const good = r.current();
+  site.fail = true;
+  site.text = 'broken';
+  const n = r.request('bad');
+  await r.idle();
+  assert.equal(r.status().state, 'failed');
+  assert.match(r.status().error ?? '', /the build broke/);
+  assert.equal(r.current(), good, 'still the good release');
+  assert.equal(page(), 'one');
+  assert.ok(r.status().published < n, 'the failed change is not published');
+  site.fail = false;
+  site.text = 'fixed';
+  const m = r.request('fixed');
+  await r.idle();
+  assert.equal(r.status().state, 'ok');
+  assert.ok(r.status().published >= m);
+  assert.equal(page(), 'fixed');
 });
 
-test('a service added, changed or renamed: only it — its files and its screens — then what lists every service, then the site', () => {
-  assert.deepEqual(kinds(base, { ...base, services: { ...base.services, vault: 'v1' } }), ['build-services:vault', 'integrations', 'screens:vault', 'installer', 'map', 'site']);
-  assert.deepEqual(kinds(base, { ...base, services: { ...base.services, jellyfin: 'j2' } }), ['build-services:jellyfin', 'integrations', 'screens:jellyfin', 'installer', 'map', 'site']);
+test('a build that changes nothing the site shows publishes no new release', async () => {
+  const { r, out } = scratch();
+  r.request('first');
+  await r.idle();
+  const before = readdirSync(join(out, 'releases'));
+  const current = r.current();
+  const n = r.request('nothing new');
+  await r.idle();
+  assert.deepEqual(readdirSync(join(out, 'releases')), before);
+  assert.equal(r.current(), current);
+  assert.equal(r.status().published, n, 'the change is in the release already served');
 });
 
-test('a service removed: its files go, the lists are rebuilt without it', () => {
-  assert.deepEqual(kinds(base, { ...base, services: { nextcloud: 'n1' } }), ['remove-services:jellyfin', 'index', 'integrations', 'installer', 'map', 'site']);
-  // Removed and another changed at once: the build of the changed one rebuilds the index too.
-  assert.deepEqual(kinds(base, { ...base, services: { nextcloud: 'n2' } }), ['remove-services:jellyfin', 'build-services:nextcloud', 'integrations', 'screens:nextcloud', 'installer', 'map', 'site']);
+test('old releases go; the served one and the one before stay', async () => {
+  const { r, site, out } = scratch({ keep: 2 });
+  for (const text of ['a', 'b', 'c', 'd']) {
+    site.text = text;
+    r.request(text);
+    await r.idle();
+    await new Promise((ok) => setTimeout(ok, 1100)); // release names are by the second
+  }
+  const left = readdirSync(join(out, 'releases'));
+  assert.equal(left.length, 2);
+  assert.ok(left.includes(r.current()!.split('/').pop()!));
 });
 
-test('moving a building rebuilds only the map and the site', () => {
-  assert.deepEqual(kinds(base, { ...base, map: 'm2' }), ['map', 'site']);
-  assert.deepEqual(plan(base, { ...base, map: 'm2' }).why, ['the map changed']);
-  assert.deepEqual(command({ kind: 'map' }, '/x'), ['node', 'scripts/map.ts']);
+test('after a restart, the numbers go on: a page waiting on a change from before still sees it published', async () => {
+  const a = scratch();
+  a.r.request('one');
+  a.r.request('two');
+  await a.r.idle();
+  a.r.stop();
+  const b = scratch({}, a.out);
+  assert.ok(b.r.status().requested >= 2);
+  assert.ok(b.r.current(), 'the release from before is served at once');
+  const n = b.r.request('after the restart');
+  assert.ok(n > 2);
+  await b.r.idle();
+  assert.ok(b.r.status().published >= n);
 });
 
-test('the server\'s own services are fingerprinted like the catalogue\'s; places are not', async () => {
-  const { mkdtempSync, cpSync, mkdirSync, writeFileSync } = await import('node:fs');
-  const { tmpdir } = await import('node:os');
-  const { join } = await import('node:path');
-  const { services, snapshot } = await import('../scripts/lib/rebuild-snapshot.ts');
+test('a change made but not published before a restart is not said to be published', async () => {
+  const a = scratch();
+  a.r.request('one');
+  await a.r.idle();
+  a.site.fail = true;
+  const lost = a.r.request('failed before the restart');
+  await a.r.idle();
+  a.r.stop();
+  const b = scratch({}, a.out);
+  assert.ok(b.r.status().published < lost);
+});
+
+test('the server\'s own services are fingerprinted like the catalogue\'s; places are not', () => {
   const root = mkdtempSync(join(tmpdir(), 'olympus-snap-'));
   cpSync(new URL('../catalog', import.meta.url).pathname, join(root, 'catalog'), { recursive: true });
   const data = join(root, 'data');
   process.env.OLYMPUS_DATA = data;
-  const before = services(root);
-  const map0 = snapshot(root).map;
-  mkdirSync(join(data, 'services'), { recursive: true });
-  writeFileSync(join(data, 'places.json'), '{"jellyfin":{"building":"temple-doric","x":1,"z":2,"rotation":0}}');
-  assert.deepEqual(services(root), before, 'a place is not a service change');
-  assert.notEqual(snapshot(root).map, map0, 'but it is a map change');
-  writeFileSync(join(data, 'services', 'jellyfin.json'), '{"id":"jellyfin","name":"Cinema","category":"media"}');
-  assert.notEqual(services(root).jellyfin, before.jellyfin, 'an override changes the service');
-  writeFileSync(join(data, 'services', 'pihole.json'), '{"id":"pihole","name":"Pi-hole","category":"networking"}');
-  assert.ok(services(root).pihole, 'a service of the server\'s own');
-  writeFileSync(join(data, 'removed.json'), '["nextcloud"]');
-  assert.ok(!('nextcloud' in services(root)), 'a default removed from the browser');
-  delete process.env.OLYMPUS_DATA;
+  try {
+    const before = services(root);
+    mkdirSync(join(data, 'services'), { recursive: true });
+    writeFileSync(join(data, 'places.json'), '{"jellyfin":{"building":"temple-doric","x":1,"z":2,"rotation":0}}');
+    assert.deepEqual(services(root), before, 'a place is not a service change');
+    writeFileSync(join(data, 'services', 'jellyfin.json'), '{"id":"jellyfin","name":"Cinema","category":"media"}');
+    assert.notEqual(services(root).jellyfin, before.jellyfin, 'an override changes the service');
+    writeFileSync(join(data, 'services', 'pihole.json'), '{"id":"pihole","name":"Pi-hole","category":"networking"}');
+    assert.ok(services(root).pihole, 'a service of the server\'s own');
+    writeFileSync(join(data, 'removed.json'), '["nextcloud"]');
+    assert.ok(!('nextcloud' in services(root)), 'a default removed from the browser');
+  } finally {
+    delete process.env.OLYMPUS_DATA;
+  }
 });
 
-test('only the published content changed (a pulled commit): just the site', () => {
-  assert.deepEqual(kinds(base, { ...base, content: 'h2' }), ['site']);
-  assert.deepEqual(plan(base, { ...base, content: 'h2' }).why, ['the published content changed']);
-});
-
-test('the commands: service builds never fail on a print warning; the site goes to the release folder', () => {
-  assert.deepEqual(command({ kind: 'build-services', ids: ['vault'] }, '/x'), ['node', 'scripts/service.ts', 'build', 'vault', '--warn-only']);
-  assert.deepEqual(command({ kind: 'site' }, '/site/releases/r1').slice(-3), ['--outDir', '/site/releases/r1', '--emptyOutDir']);
-  // Removal names only ids, quoted as JSON inside the script, and takes the service's screens too.
-  assert.match(command({ kind: 'remove-services', ids: ['a-b'] }, '/x')[2], /\["a-b"\][\s\S]*assets\/screens\/services\//);
-  assert.deepEqual(command({ kind: 'screens', ids: ['a', 'b'] }, '/x'), ['node', 'scripts/screens.ts', 'a', 'b']);
-  // Dependencies are installed without running any package's install script.
-  assert.ok(command({ kind: 'install' }, '/x').includes('--ignore-scripts'));
-});
-
-test('the automatic deployment: two containers sharing the releases, the web server serving the current one', async () => {
-  const { readFileSync, existsSync } = await import('node:fs');
-  const { parse } = await import('yaml');
-  const deploy = new URL('../deploy/', import.meta.url).pathname;
-  const compose = parse(readFileSync(`${deploy}docker-compose.auto.yml`, 'utf8'));
-  for (const svc of Object.values(compose.services) as { build?: { dockerfile: string } }[]) if (svc.build) assert.ok(existsSync(`${deploy}${svc.build.dockerfile}`), svc.build.dockerfile);
-  assert.ok(compose.services.builder.volumes.includes('site:/site') && compose.services.web.volumes.includes('site:/site:ro'));
-  assert.ok(compose.services.builder.volumes.includes('..:/repo'), 'the builder works in the repository on the server');
-  const builder = readFileSync(`${deploy}Dockerfile.builder`, 'utf8');
-  assert.match(builder, /CMD \["node", "scripts\/autobuild\.ts"\]/);
-  assert.ok(existsSync(new URL('../scripts/autobuild.ts', import.meta.url)));
-  assert.match(readFileSync(`${deploy}Dockerfile.web`, 'utf8'), /ln -s \/site\/current \/usr\/share\/nginx\/html/);
-  // The placeholder status every build ships, so the page never asks for a file that is not there.
-  assert.equal(JSON.parse(readFileSync(new URL('../app/public/build.json', import.meta.url), 'utf8')).state, 'static');
-});
-
-test('the map\'s edit service: its own container with only the right to ping, reached through the web server under /api/', async () => {
-  const { readFileSync } = await import('node:fs');
-  const { parse } = await import('yaml');
-  const deploy = new URL('../deploy/', import.meta.url).pathname;
-  const compose = parse(readFileSync(`${deploy}docker-compose.auto.yml`, 'utf8'));
-  const editor = compose.services.editor;
-  assert.ok(editor, 'an editor service');
-  assert.deepEqual(editor.command, ['node', 'scripts/editor.ts', 'serve']);
-  assert.deepEqual(editor.cap_drop, ['ALL']);
-  assert.deepEqual(editor.cap_add, ['NET_RAW']);
-  assert.ok(editor.security_opt.includes('no-new-privileges:true'));
-  assert.ok(editor.volumes.includes('..:/repo'));
-  assert.equal(editor.environment.OLYMPUS_EDITOR_HOST, '0.0.0.0');
-  assert.ok(!editor.ports, 'not published: only the web server reaches it');
-  const nginx = readFileSync(`${deploy}nginx.conf`, 'utf8');
-  const api = nginx.match(/location \/api\/ \{([\s\S]*?)\n  \}/);
-  assert.ok(api, 'a location for /api/');
-  assert.match(api[1], /proxy_pass \$editor;/);
-  assert.match(api[1], /client_max_body_size 1m;/);
-  assert.equal((nginx.match(/proxy_pass/g) ?? []).length, 1, 'nothing else is proxied');
-  // The static deployment has no editor: nginx must still start (the address is looked up per request).
-  assert.match(nginx, /resolver 127\.0\.0\.11/);
-  assert.match(nginx, /resolver_timeout 2s;/, 'a missing editor is given up on quickly');
-  assert.match(nginx, /return 200 '\{"editor":false\}'/, 'without the editor, a plain read-only answer');
-  assert.ok(!parse(readFileSync(`${deploy}docker-compose.yml`, 'utf8')).services.editor, 'the static deployment stays read-only');
-});
-
-test('before a pull, only generated files the pull also changes are put back; never a hand edit', async () => {
-  const { toReset } = await import('../scripts/lib/rebuild-plan.ts');
-  // Nothing in the way: nothing to put back.
+test('before a pull, only generated files the pull also changes are put back; never a hand edit', () => {
   assert.deepEqual(toReset(['assets/services/index.json'], ['src/x.ts']), []);
-  // A generated file the server's data changed, and the pull changes too: put back, to be made again.
   assert.deepEqual(toReset(['assets/services/index.json', 'docs/03-catalog.md', 'assets/integrations/dashboards/homepage.yaml'], ['assets/services/index.json', 'docs/03-catalog.md', 'README.md']), ['assets/services/index.json', 'docs/03-catalog.md']);
-  // A hand edit in the way: nothing is put back, and the pull is refused as before.
   assert.equal(toReset(['docs/07-self-hosting.md', 'assets/services/index.json'], ['docs/07-self-hosting.md', 'assets/services/index.json']), null);
   assert.equal(toReset(['catalog/services/x.json'], ['catalog/services/x.json']), null);
+});
+
+test('the deployment: one service, one port, the data and the releases in volumes, nothing proxied', async () => {
+  const { parse } = await import('yaml');
+  const deploy = new URL('../deploy/', import.meta.url).pathname;
+  assert.deepEqual(readdirSync(deploy).sort(), ['Dockerfile', 'docker-compose.auto.yml', 'docker-compose.yml']);
+  const docker = readFileSync(join(deploy, 'Dockerfile'), 'utf8');
+  assert.match(docker, /CMD \["node", "scripts\/serve\.ts"\]/);
+  assert.match(docker, /^USER node$/m, 'not root');
+  for (const file of ['docker-compose.yml', 'docker-compose.auto.yml']) {
+    const compose = parse(readFileSync(join(deploy, file), 'utf8'));
+    const names = Object.keys(compose.services);
+    assert.deepEqual(names, ['olympus'], `${file}: one service`);
+    const svc = compose.services.olympus;
+    assert.deepEqual(svc.ports, ['8080:8080']);
+    assert.deepEqual(svc.cap_drop, ['ALL']);
+    assert.ok(!svc.cap_add, 'no capability added');
+    assert.ok(svc.security_opt.includes('no-new-privileges:true'));
+    assert.ok(svc.volumes.some((v: string) => v.endsWith(':/var/lib/olympus/site')), 'the releases are kept');
+    const data = svc.environment?.OLYMPUS_DATA ?? '/var/lib/olympus/data';
+    assert.ok(svc.volumes.some((v: string) => v.endsWith(`:${data}`) || (v.startsWith('..:/repo') && data.startsWith('/repo/'))), `${file}: the data folder is kept`);
+  }
+  assert.ok(!existsSync(new URL('../scripts/lib/rebuild-plan.ts', import.meta.url)));
 });

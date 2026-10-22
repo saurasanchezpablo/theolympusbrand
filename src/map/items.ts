@@ -33,6 +33,9 @@ export type MapEntry = {
 /** `unplaced`: what found no room on the island — never left out in silence. */
 export type MapData = { version: 1; items: MapEntry[]; unplaced: { id: string; kind: 'service' | 'machine'; name: string }[] };
 
+/** Where a service's seal is on the site. */
+export const sealPath = (id: string) => `files/assets/services/${id}/svg/the-olympus-${id}-seal.svg`;
+
 export const ENTRY_KEYS = ['id', 'kind', 'name', 'description', 'url', 'ip', 'hostname', 'os', 'role', 'category', 'app', 'seal', 'logo', 'place', 'lot', 'placed'] as const;
 
 const hash = (s: string) => {
@@ -51,9 +54,10 @@ export function suggestedBuilding(kind: 'service' | 'machine', id: string, categ
 const clean = <T extends object>(o: T): T => Object.fromEntries(Object.entries(o).filter(([, v]) => v !== undefined && v !== '')) as T;
 
 /** Everything on the map. `logos` names which items have a logo published for the map (assets/map/logos/<id>.svg). */
-export function mapData(services: readonly Service[], machines: readonly MachineSpec[], places: Places, plan: CityPlan, logos: ReadonlySet<string> = new Set()): MapData {
+/** `sealed`: whether a service's seal is on the site yet (a service just added has none until the site is rebuilt); every one by default. */
+export function mapData(services: readonly Service[], machines: readonly MachineSpec[], places: Places, plan: CityPlan, logos: ReadonlySet<string> = new Set(), sealed: (id: string) => boolean = () => true): MapData {
   const base = [
-    ...services.map((s) => ({ id: s.id, kind: 'service' as const, entry: { name: s.name, description: s.description, url: s.url, ip: s.ip, category: s.category, app: s.app, seal: `files/assets/services/${s.id}/svg/the-olympus-${s.id}-seal.svg` } })),
+    ...services.map((s) => ({ id: s.id, kind: 'service' as const, entry: { name: s.name, description: s.description, url: s.url, ip: s.ip, category: s.category, app: s.app, seal: sealed(s.id) ? sealPath(s.id) : undefined } })),
     ...machines.map((m) => ({ id: m.id, kind: 'machine' as const, entry: { name: m.name, description: m.description, ip: m.ip, hostname: m.hostname, os: m.os, role: m.role } })),
   ].sort((a, b) => (a.id < b.id ? -1 : 1));
   // The owner's places, where their building still exists.

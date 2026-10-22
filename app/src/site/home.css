@@ -169,6 +169,13 @@
   background-position: 0 100%;
   background-size: 33.3334% 100%;
   animation: drift 160s linear infinite;
+  will-change: transform;
+}
+
+/* Out of view, the clouds and the names stand still (HomePage marks what is seen with data-moving). */
+.ascent__clouds:not([data-moving]) .cloudbank::before,
+.band:not([data-moving]) .band__run {
+  animation-play-state: paused;
 }
 
 .cloudbank--back {
@@ -301,6 +308,7 @@
   display: flex;
   flex: none;
   animation: band-run 90s linear infinite;
+  will-change: transform;
 }
 
 .band__row--outline .band__run {

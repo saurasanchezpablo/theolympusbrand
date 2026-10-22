@@ -17,10 +17,11 @@ still unproven or undecided. State as of 20 October 2026.
 | **Integrations** — Homepage, Dashy, Homer, bookmarks; Nextcloud, Jellyfin, Proxmox VE, Grafana, Uptime Kuma | `assets/integrations/` | `npm run integrations` |
 | **Screens** — 20 wallpapers, GRUB, Plymouth, message of the day, console login, SSH banner | `assets/screens/` | `npm run screens` |
 | **The map** — the island (kept), the list of buildings and its picture (made on each server), 77 kinds of building | `src/map/` → `assets/map/` | `npm run map` |
-| **The map's edit service** — saves the map's changes into the server's data folder | `scripts/editor.ts`, `data/` (never committed) | runs beside the site: `npm run editor -- serve` |
+| **The house's server** — serves the site, answers the map's edit API (`/api/`, saving into the server's data folder) and rebuilds and publishes the site incrementally | `scripts/serve.ts`, `scripts/lib/{static,rebuilder}.ts`, `scripts/lib/editor/`, `data/` (never committed) | `npm start`; the password: `npm run editor -- password` |
 
-`npm run build` rebuilds everything kept in the repository except the models
-and stickers. Every file is generated from the code in `src/`: the same
+`npm run build` (`scripts/build.ts`) rebuilds everything kept in the
+repository except the models and stickers — only the steps whose inputs
+changed, several at once; `npm run build:clean` ignores the cache. Every file is generated from the code in `src/`: the same
 input gives the same bytes, on any machine and in any time zone.
 
 ## Running it on the server
@@ -94,10 +95,11 @@ it is documented too.
   between providers — confirm with yours.
 - **The deployed site** has been built and served in CI, not yet on the
   server.
-- **The map's edit service in Docker** — the `editor` container, its ping
-  from inside the container and nginx's `/api/` route have not been run here
-  (no Docker on this machine); the service itself is tested on its own and
-  through the site in the browser checks.
+- **The server in Docker** — the image (one service: the site, the map's
+  API, the rebuilds) and its ping from inside the container have not been
+  run here (no room for Docker images on this machine); CI builds and runs
+  it. The server itself is tested on its own (`tests/serve.test.ts`,
+  `tests/rebuild.test.ts`) and through the site in the browser checks.
 - **The map's speed on a real GPU** — measured here only in software
   rendering (triangles and draw calls within budget); how smooth it pans on
   your laptop is still to be seen.
@@ -131,5 +133,5 @@ assets/         generated: master, services, integrations, screens
 manufacturing/  generated: 3D models and stickers
 docs/           this guide and the brand book
 tests/          the test suite
-deploy/         Dockerfile, nginx configuration, compose file
+deploy/         Dockerfile (one service), compose files
 ```

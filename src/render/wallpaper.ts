@@ -43,18 +43,23 @@ export function screenStone(x: number, y: number, seed: number): number {
 
 /** An 8-bit gray marble ground, w × h pixels, rows top to bottom. */
 export function marbleScreen(w: number, h: number, tone: ScreenTone = 'marble-dark'): Uint8Array {
-  const out = new Uint8Array(w * h);
+  return marbleRows(w, h, tone, 0, h);
+}
+
+/** Rows y0 … y1 − 1 of the same ground: each pixel depends on its place alone, so parts made apart join into the whole. */
+export function marbleRows(w: number, h: number, tone: ScreenTone, y0: number, y1: number): Uint8Array {
+  const out = new Uint8Array(w * (y1 - y0));
   const k = SPAN / Math.max(w, h);
   const dark = tone === 'marble-dark';
   const seed = dark ? 23 : 11;
-  for (let y = 0; y < h; y++) {
+  for (let y = y0; y < y1; y++) {
     const ny = (y + 0.5) / h - 0.5;
     for (let x = 0; x < w; x++) {
       const nx = (x + 0.5) / w - 0.5;
       const v = screenStone((x + 0.5) * k, (y + 0.5) * k, seed);
       const r2 = (nx * nx + ny * ny) / 0.5;
       const g = dark ? (18 + 70 * v) * (1 - 0.35 * r2) : (246 - 70 * v) * (1 - 0.06 * r2);
-      out[y * w + x] = Math.max(0, Math.min(255, Math.round(g)));
+      out[(y - y0) * w + x] = Math.max(0, Math.min(255, Math.round(g)));
     }
   }
   return out;

@@ -10,27 +10,9 @@ import { flatten, union, difference, offset, ringsPath } from './poly.ts';
 import { lineText } from './fonts.ts';
 import { SYMBOLS, type SymbolDetail, type SymbolId } from './symbols.ts';
 
-/** Service categories. Each has a default god; a service may still name another. */
-export const CATEGORIES = {
-  virtualization: 'Hypervisors, virtual machines, clusters',
-  networking: 'Routing, DNS, DHCP, switching, connectivity',
-  proxy: 'Reverse proxies, gateways, application routing',
-  storage: 'NAS, volumes, object stores, file servers',
-  backup: 'Backups, snapshots, replication, archives',
-  monitoring: 'Metrics, logs, alerting, uptime',
-  security: 'VPN, firewalls, identity, secrets, access',
-  cloud: 'Private cloud, file sync, collaboration',
-  media: 'Streaming, music, photos, books',
-  home: 'Home automation, IoT',
-  containers: 'Container runtimes, orchestration, registries',
-  web: 'Websites, web apps, wikis, dashboards',
-  gaming: 'Game servers in general',
-  sandbox: 'Crafting and building games (e.g. Minecraft)',
-  competitive: 'Competitive and dedicated multiplayer servers',
-  community: 'Game communities, voice, chat, events',
-  other: 'Anything else — falls back to a monogram',
-} as const;
-export type Category = keyof typeof CATEGORIES;
+// The categories live in a module of their own (no geometry), so the pages that only list them do not load the drawings.
+import { CATEGORIES, type Category } from '../catalog/categories.ts';
+export { CATEGORIES, type Category };
 
 export type GodId =
   | 'zeus' | 'atlas' | 'iris' | 'hermes' | 'hades' | 'kronos' | 'argus' | 'athena' | 'nephele'

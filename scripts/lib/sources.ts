@@ -1,30 +1,13 @@
-// The automatic rebuild's snapshot of a repository: fingerprints of what the
-// outputs are made from (see rebuild-plan.ts). Node's own modules only.
+// What the build reads from the catalogue: each service's file and logo, the
+// repository's catalogue with the server's own data laid over it, and whether
+// the repository is a git clone. Node's own modules only.
 
 import { execFileSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
-import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
-import { join, relative } from 'node:path';
-import type { Snapshot } from './rebuild-plan.ts';
+import { existsSync, readFileSync, readdirSync } from 'node:fs';
+import { join } from 'node:path';
 
-const SKIP = new Set(['node_modules', 'dist', '.git']);
 const ID = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
-
-/** A fingerprint of files under the given paths: names and contents. */
-export function digest(root: string, paths: string[]): string {
-  const h = createHash('sha256');
-  const walk = (p: string) => {
-    if (!existsSync(p)) return;
-    const st = statSync(p);
-    if (st.isDirectory()) {
-      for (const e of readdirSync(p).sort()) if (!SKIP.has(e)) walk(join(p, e));
-    } else {
-      h.update(relative(root, p)).update('\0').update(readFileSync(p)).update('\0');
-    }
-  };
-  for (const p of paths) walk(join(root, p));
-  return h.digest('hex');
-}
 
 export function isGit(root: string): boolean {
   try {
@@ -76,21 +59,4 @@ export function services(root: string): Record<string, string> {
     out[id] = h.digest('hex');
   }
   return out;
-}
-
-/** What only the map shows: where each building stands, the machines, the logos of the server's own. */
-export const mapOf = (_root: string): string => {
-  const data = dataOf();
-  return data ? digest(data, ['places.json', 'machines', 'logos']) : '';
-};
-
-export function snapshot(root: string): Snapshot {
-  return {
-    deps: digest(root, ['package-lock.json']),
-    code: digest(root, ['src', 'scripts', 'app/src', 'app/public', 'app/index.html', 'app/vite.config.ts', 'app/files-plugin.ts', 'app/tsconfig.json', 'package.json']),
-    // With git, the commit stands for the content (hashing every committed asset each time would be slow).
-    content: isGit(root) ? execFileSync('git', ['rev-parse', 'HEAD'], { cwd: root, encoding: 'utf8' }).trim() : digest(root, ['docs']),
-    services: services(root),
-    map: mapOf(root),
-  };
 }

@@ -20,7 +20,7 @@ import { baseMarks } from '../src/catalog/fileset.ts';
 import { crest, seal } from '../src/geometry/crest.ts';
 import { DOMAIN } from '../src/brand/identity.ts';
 import { png } from '../src/export/png.ts';
-import { marbleScreen } from '../src/render/wallpaper.ts';
+import { marbleGround } from './lib/marble.ts';
 import { screensKit, type ScreenSubject } from '../src/screens/screens.ts';
 import { ROOT } from './lib/build-service.ts';
 
@@ -64,7 +64,8 @@ async function build(target: string) {
         for (let i = 0; i < gray.length; i++) gray[i] = px[4 * i];
         return png(gray, r.width, r.height, 1);
       },
-      ground: (w, h, tone) => png(marbleScreen(w, h, tone), w, h, 1),
+      // The marble grounds are drawn on every core, once: the same grounds serve the master and every service (scripts/lib/marble.ts).
+      ground: async (w, h, tone) => png(await marbleGround(w, h, tone), w, h, 1),
       sha256: (data) => createHash('sha256').update(data).digest('hex'),
     },
     { wallpapers },

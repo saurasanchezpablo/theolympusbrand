@@ -99,10 +99,20 @@ island when you want it.
   change its details, or **Delete** it — from its panel.
 - **Undo** (Ctrl+Z) takes back the last change.
 
-Each change is saved on the server at once. A new service, or a change to a
-service's name or logo, rebuilds the rest of the house for it — its seal, its
-dashboard entries, its theme kit, its boot screens — within a minute or two;
-the map says when the rebuild is done. Moving a building rebuilds only the map.
+Each change is saved on the server at once, and the map shows it. The rest
+of the site follows when the server has rebuilt and published it: moving a
+building rebuilds the map's list and picture (a few seconds); a new service,
+or a change to a service's name or logo, rebuilds the rest of the house for
+it too — its seal, its dashboard entries, its theme kit, its boot screens —
+within a minute or two. The map says which it is: *saved on the server,
+publishing…*, then *saved and published* — or, when a build fails, that the
+change is saved but the published site is unchanged, and why. Several
+changes in a row are built together.
+
+Editing needs the house's own server (`npm start`, or the Docker image —
+see [the site on your server](07-self-hosting.md)): it serves the site and
+answers the map's edit API under `/api/` on the same address, so there is
+nothing else to run or route.
 
 ## Where it is kept
 
@@ -120,8 +130,8 @@ What you change on the map is kept in the server's **data folder** —
 
 git never sees this folder: nothing about your machines reaches the
 repository, and the server keeps pulling the house's updates. Only the
-server's own tools read it — the edit service and the automatic rebuild,
-which set `OLYMPUS_DATA` for themselves. A build run by hand on the server
+server's own tools read it — the house's server (`npm start`), which sets
+`OLYMPUS_DATA` for itself. A build run by hand on the server
 should name it too (`OLYMPUS_DATA=data npm run build`); a working copy that
 does not builds the house's catalogue alone, so nothing from a data folder
 can be committed by mistake. **Back it up**
@@ -147,7 +157,7 @@ even when it is up.
 
 | What you see | What to do |
 |---|---|
-| **Edit** says saving needs the edit service | The site is served without it: see [the site on your server](07-self-hosting.md#the-maps-edit-service) |
+| **Edit** says saving needs the house's own server | This copy of the site is served by another web server: see [the site on your server](07-self-hosting.md) |
 | The password is refused | Set it again on the server: `npm run editor -- password` |
 | A building is not where you left it | Its building type no longer exists: it stands where it was, as the default building |
-| A new service has no seal yet | The rebuild is still running, or failed: the Downloads page says which |
+| A new service has no seal yet | The rebuild is still running, or failed: the map's notice and the Downloads page say which |

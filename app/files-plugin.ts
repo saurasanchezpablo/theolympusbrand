@@ -130,6 +130,8 @@ export function filesPlugin(root: string): Plugin {
     // Only for the page's own bundle (the worker is bundled separately).
     writeBundle(options) {
       if (!options.dir || resolve(options.dir) !== outDir) return;
+      // The incremental build makes the bundle alone and puts the site together itself (scripts/lib/site.ts).
+      if (process.env.OLYMPUS_BUNDLE_ONLY) return;
       const index = publishedFiles(root);
       for (const f of index.files) {
         const to = join(outDir, 'files', f.path);

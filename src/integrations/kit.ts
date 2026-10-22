@@ -11,6 +11,7 @@ import { bookmarks, dashy, homepage, homer, iconName, servicesCsv, addressOf, ty
 import { coinSvg, BACKGROUND, type KitMarks } from './marks.ts';
 import { themeAssignments, type ThemeAssignment } from './themes/index.ts';
 import { guideMarkdown } from './themes/shared.ts';
+import { LOGIN_BACKGROUND } from './themes/nextcloud.ts';
 import { mdText } from '../catalog/text.ts';
 
 export { coinSvg, bannerMark, BACKGROUND, type CoinTone, type KitMarks } from './marks.ts';
@@ -20,7 +21,12 @@ export type KitSource = {
   /** The marks of a service, or of the master for 'master'. */
   marks: (id: string) => KitMarks;
 };
-export type KitHost = { png: (svg: string, width: number) => Uint8Array | Promise<Uint8Array> };
+/**
+ * What the kit asks of where it runs: SVG to PNG, and — optionally — the marble
+ * grounds (8-bit grey, w × h), when the host can make them faster than drawing
+ * them here (the build's are drawn on every core and cached).
+ */
+export type KitHost = { png: (svg: string, width: number) => Uint8Array | Promise<Uint8Array>; ground?: (w: number, h: number, tone: ScreenTone) => Promise<Uint8Array> };
 export type KitFile = { path: string; data: string | Uint8Array };
 
 /* ---------------------------------------------------------------- */
@@ -37,6 +43,14 @@ export async function integrationKit(src: KitSource, host: KitHost, opts: Dashbo
     if (!grounds.has(key)) grounds.set(key, png(marbleScreen(w, h, tone), w, h, 1));
     return grounds.get(key)!;
   };
+  // The grounds the kit uses, from the host when it has them (the same pixels either way).
+  if (host.ground)
+    for (const [w, h, tone] of [
+      [BACKGROUND.width, BACKGROUND.height, 'marble-dark'],
+      [BACKGROUND.width, BACKGROUND.height, 'marble-light'],
+      [LOGIN_BACKGROUND.width, LOGIN_BACKGROUND.height, 'marble-dark'],
+    ] as const)
+      grounds.set(`${w}x${h}-${tone}`, png(await host.ground(w, h, tone), w, h, 1));
 
   // Icons: a dark and a light coin for every service and the master.
   const favicons = new Map<string, Uint8Array>();

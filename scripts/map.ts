@@ -14,7 +14,7 @@ import { join } from 'node:path';
 import { loadCatalog, CATALOG_DIR } from '../src/node/catalog.ts';
 import { dataLogo, loadMachines, loadPlaces } from '../src/node/data.ts';
 import { encodeTerrain } from '../src/map/terrain.ts';
-import { island } from '../src/map/island.ts';
+import { island } from '../src/node/island.ts';
 import { mapData } from '../src/map/items.ts';
 import { stillImage } from '../src/map/still.ts';
 import { png } from '../src/export/png.ts';

@@ -1,19 +1,18 @@
-// The map's edit service (see scripts/lib/editor/server.ts).
+// The map's editing password (the edit API itself is part of the site's
+// server: npm start, scripts/serve.ts).
 //
 //   npm run editor -- password   set the house's password (asked twice, not shown)
-//   npm run editor -- serve      run it: http://127.0.0.1:8091/api/…, behind the site's web server
+//   … password --stdin            the same, from the first line piped in
 //
 //   OLYMPUS_DATA          the data folder (default: data/ in the repository)
-//   OLYMPUS_EDITOR_HOST   where to listen (default 127.0.0.1; 0.0.0.0 in a container)
-//   OLYMPUS_EDITOR_PORT   (default 8091)
 
-import { createEditor, hasPassword, setPassword } from './lib/editor/server.ts';
+import { setPassword } from './lib/editor/server.ts';
 import { DEFAULT_DATA, dataDir } from '../src/node/data.ts';
 
 // The edit service always works with a data folder: data/ in the repository unless OLYMPUS_DATA names another.
 process.env.OLYMPUS_DATA ||= DEFAULT_DATA;
 
-const [command = 'serve'] = process.argv.slice(2);
+const [command = 'password'] = process.argv.slice(2);
 
 /** A line from the terminal without showing it. */
 function secret(prompt: string): Promise<string> {
@@ -42,9 +41,17 @@ function secret(prompt: string): Promise<string> {
   });
 }
 
+/** The first line of what is piped in (for scripts: a secrets file, a container's setup). */
+async function piped(): Promise<string> {
+  let text = '';
+  for await (const chunk of process.stdin) text += String(chunk);
+  return text.split(/\r?\n/)[0];
+}
+
 if (command === 'password') {
-  const a = await secret('The password for editing the map: ');
-  const b = await secret('Again: ');
+  const fromPipe = process.argv.includes('--stdin');
+  const a = fromPipe ? await piped() : await secret('The password for editing the map: ');
+  const b = fromPipe ? a : await secret('Again: ');
   if (a !== b) {
     console.error('✖ the two did not match; nothing changed');
     process.exit(1);
@@ -57,12 +64,9 @@ if (command === 'password') {
   }
   console.log(`✔ set (kept as a hash in ${dataDir()}/editor.json)`);
 } else if (command === 'serve') {
-  const host = process.env.OLYMPUS_EDITOR_HOST || '127.0.0.1';
-  const port = Number(process.env.OLYMPUS_EDITOR_PORT || 8091);
-  const { url } = await createEditor({ port, host });
-  console.log(`the map's edit service: ${url}/api/ · data in ${dataDir()}${hasPassword() ? '' : ' · no password yet: run `npm run editor -- password`; until then the map can be seen, not changed'}`);
-  for (const sig of ['SIGTERM', 'SIGINT'] as const) process.on(sig, () => process.exit(0));
+  console.error('The map’s edit API is part of the site’s server now: npm start (scripts/serve.ts) serves the site and /api/ together.');
+  process.exit(2);
 } else {
-  console.error('usage: npm run editor -- serve | password');
+  console.error('usage: npm run editor -- password');
   process.exit(2);
 }

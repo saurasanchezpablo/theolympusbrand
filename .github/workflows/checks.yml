@@ -65,12 +65,28 @@ jobs:
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v5
-      - run: docker build -f deploy/Dockerfile -t theolympus-site .
-      - name: The image serves the site
+      - run: docker build -f deploy/Dockerfile -t theolympus .
+      - name: The one service serves the site, the map's API and its build status
         run: |
-          docker run -d -p 8080:80 --name olympus theolympus-site
-          for i in $(seq 1 20); do curl -fsS http://127.0.0.1:8080/ >/dev/null && break; sleep 1; done
+          docker run -d -p 8080:8080 -v olympus-data:/var/lib/olympus/data -v olympus-site:/var/lib/olympus/site --name olympus theolympus
+          for i in $(seq 1 180); do curl -fsS http://127.0.0.1:8080/build.json 2>/dev/null | grep -q '"state":"ok"' && break; sleep 1; done
+          curl -fsS http://127.0.0.1:8080/build.json
+          curl -fsS http://127.0.0.1:8080/build.json | grep -q '"state":"ok"'
           curl -fsS http://127.0.0.1:8080/ | grep -q '<title>The Olympus</title>'
           curl -fsS http://127.0.0.1:8080/files/index.json | grep -q 'assets/master'
           curl -fsSI http://127.0.0.1:8080/files/assets/master/web/site.webmanifest | grep -qi 'application/manifest+json'
           curl -fsSI http://127.0.0.1:8080/ | grep -qi 'content-security-policy'
+          curl -fsSI -H 'accept-encoding: br' http://127.0.0.1:8080/ | grep -qi 'content-encoding: br'
+          curl -fsS http://127.0.0.1:8080/api/session | grep -q '"editing":false'
+          curl -fsS http://127.0.0.1:8080/api/map | grep -q '"items"'
+          test "$(curl -s -o /dev/null -w '%{http_code}' -X PUT http://127.0.0.1:8080/api/places/nextcloud)" = 401
+      - name: Its state survives a new container
+        run: |
+          echo olympus-ci-password | docker exec -i olympus node scripts/editor.ts password --stdin
+          docker rm -f olympus
+          docker run -d -p 8080:8080 -v olympus-data:/var/lib/olympus/data -v olympus-site:/var/lib/olympus/site --name olympus theolympus
+          for i in $(seq 1 60); do curl -fsS http://127.0.0.1:8080/ >/dev/null 2>&1 && break; sleep 1; done
+          curl -fsS http://127.0.0.1:8080/ | grep -q '<title>The Olympus</title>'
+          curl -fsS -X POST -H 'content-type: application/json' -d '{"password":"olympus-ci-password"}' http://127.0.0.1:8080/api/login | grep -q csrf
+      - if: failure()
+        run: docker logs olympus || true
