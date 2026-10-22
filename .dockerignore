@@ -8,6 +8,7 @@
 !catalog
 !docs
 !manufacturing
+!scripts/map.ts
 !deploy/nginx.conf
 app/dist
 **/node_modules
