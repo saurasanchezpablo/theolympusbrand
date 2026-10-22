@@ -5,10 +5,13 @@
 // colours as theme variables; the rest are the frontend's own and may be
 // renamed by an update. Newer components read the primary colour scale
 // (ha-color-primary-05 … 95) directly, so it is set too — otherwise blue shows
-// through. Status and state colours keep their meaning and are left alone.
+// through. Errors, warnings, successes and notices take the house's pigments
+// (rosso antico, gold, verde antico, lapis); the colours of entities' states
+// (a light that is on) keep Home Assistant's own.
 // No theme can change the sidebar title, a sidebar logo or the favicon.
 
 import { PALETTE } from '../../brand/palette.ts';
+import { STATUS } from '../../brand/pigments.ts';
 import { DOMAIN } from '../../brand/identity.ts';
 import { bannerMark, coinSvg, markSvg } from '../marks.ts';
 import { containerOf, folderOf, PODMAN, sq } from './shared.ts';
@@ -59,6 +62,10 @@ const MODES = {
     'app-header-background-color': PANEL,
     'app-header-text-color': P.charcoal,
     'ha-card-border-color': LINE,
+    'error-color': STATUS.error.light,
+    'warning-color': STATUS.warn.light,
+    'success-color': STATUS.ok.light,
+    'info-color': STATUS.info.light,
   },
   dark: {
     'primary-color': P.marble,
@@ -82,6 +89,10 @@ const MODES = {
     'app-header-background-color': '#161616',
     'app-header-text-color': P.marble,
     'ha-card-border-color': P.graphite,
+    'error-color': STATUS.error.dark,
+    'warning-color': STATUS.warn.dark,
+    'success-color': STATUS.ok.dark,
+    'info-color': STATUS.info.dark,
   },
 } as const;
 
@@ -190,11 +201,12 @@ export const homeAssistant: ThemeKit = {
       'Grounds, cards, sidebar and header: the house’s greys, light or dark.',
       'Home Assistant’s accent colour and its whole colour scale: greys instead of blue.',
       'Card corners: square, as the house’s are.',
+      'Errors, warnings, successes and notices: the house’s pigments — rosso antico, gold, verde antico, lapis.',
       `A picture card with ${t.name}'s banner, for the top of a dashboard.`,
     ],
     limits: [
       'The sidebar title (*Home Assistant*), a logo in the sidebar and the favicon: no theme can change them.',
-      'Colours that carry meaning — a light that is on, an alarm, an error — keep them.',
+      'The colours of entities’ states — a light that is on, an alarm — stay Home Assistant’s own.',
       'Home Assistant documents only a few theme variables; the kit also sets the colour scale newer screens use, which an update may rename (blue would then show again in places — rebuild the kit).',
     ],
     requires: ['Home Assistant 2026.10 or close to it.', 'Access to its configuration folder: through Docker (`HA_CONTAINER`), or as a folder on disk (the *Samba share* or *File editor* add-ons, or SSH).'],

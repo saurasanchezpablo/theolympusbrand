@@ -10,12 +10,13 @@ Made from Home Assistant’s seal. The files are in `themes/home-assistant/` of 
 - Grounds, cards, sidebar and header: the house’s greys, light or dark.
 - Home Assistant’s accent colour and its whole colour scale: greys instead of blue.
 - Card corners: square, as the house’s are.
+- Errors, warnings, successes and notices: the house’s pigments — rosso antico, gold, verde antico, lapis.
 - A picture card with Home Assistant's banner, for the top of a dashboard.
 
 ## What it cannot change
 
 - The sidebar title (*Home Assistant*), a logo in the sidebar and the favicon: no theme can change them.
-- Colours that carry meaning — a light that is on, an alarm, an error — keep them.
+- The colours of entities’ states — a light that is on, an alarm — stay Home Assistant’s own.
 - Home Assistant documents only a few theme variables; the kit also sets the colour scale newer screens use, which an update may rename (blue would then show again in places — rebuild the kit).
 
 ## Before you start

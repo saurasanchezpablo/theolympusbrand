@@ -1,6 +1,6 @@
 # Proxmox VE
 
-The whole Proxmox VE web interface in the house's greys, with Proxmox's seal and name in the header and on the browser tab. The theme is made on the node itself from the dark theme Proxmox ships — every blue and blue-grey becomes the grey of the same lightness, while the colours that report something (a running guest, a warning, an error) keep their meaning — and the house's own layer goes on top: an obsidian ground, marble buttons and tabs, and a marble rule beside what is selected. Because it is made from the installed release, it matches whatever version the node runs, and it is made again after every update.
+The whole Proxmox VE web interface in the house's greys, with Proxmox's seal and name in the header and on the browser tab. The theme is made on the node itself from the dark theme Proxmox ships — every blue and blue-grey becomes the grey of the same lightness — and the house's own layer goes on top: an obsidian ground, marble buttons and tabs, a marble rule beside what is selected, and the house's pigments for what reports a state (verde antico for good, gold for a warning, rosso antico for an error). Because it is made from the installed release, it matches whatever version the node runs, and it is made again after every update.
 
 Made from Proxmox’s seal. The files are in `themes/proxmox/` of the integration kit
 (Downloads → Dashboards and themes), with this guide as their README.
@@ -12,11 +12,13 @@ Made from Proxmox’s seal. The files are in `themes/proxmox/` of the integratio
 - The sign-in window, in the same greys.
 - The header logo: Proxmox's seal and name (Proxmox VE 8 and 9 each have their own file; both are replaced).
 - The icon of the browser tab: the seal on its own disc.
+- States in the house’s pigments: good in verde antico, warnings and the gauges’ warning band in gold, errors and critical gauges in rosso antico, notices in lapis; the journal’s errors and warnings likewise.
 
 ## What it cannot change
 
 - The console (noVNC, xterm.js) has no theme setting; its colours stay. The crest *at login* in a shell is the screens kit’s *terminal* part.
-- Status colours — green for running, orange for a warning, red for an error — are kept on purpose.
+- A few states Proxmox paints in places the kit does not know keep Proxmox’s own colour (still green, orange or red: their meaning is kept).
+- The charts’ series colours (CPU usage in olive, IO delay in blue…) are set in Proxmox’s code, not its stylesheets: no theme can change them.
 - Proxmox Backup Server is not covered by this kit.
 - It changes Proxmox’s own page template (one line) and adds files to its folders: `debsums` or `dpkg --verify` list the template as modified until the next update puts Proxmox’s back — and the hook makes it again.
 

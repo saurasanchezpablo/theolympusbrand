@@ -1,7 +1,36 @@
 /* The Olympus — Nextcloud (Custom CSS app). In the dark themes the accent
-   is marble rather than charcoal, so it stays visible on dark grounds. */
+   is marble rather than charcoal, so it stays visible on dark grounds; in
+   every theme, errors, warnings, successes and notices in the house's pigments. */
+body[data-theme-light],
+body[data-theme-default] {
+  --color-error: #9B3C31;
+  --color-error-hover: #B2483B;
+  --color-error-text: #9B3C31;
+  --color-warning: #86651C;
+  --color-warning-hover: #8C6B1F;
+  --color-warning-text: #86651C;
+  --color-success: #3E6E4C;
+  --color-success-hover: #437353;
+  --color-success-text: #3E6E4C;
+  --color-info: #34568E;
+  --color-info-hover: #3F64A0;
+  --color-info-text: #34568E;
+}
+
 body[data-theme-dark],
 body[data-theme-dark-highcontrast] {
+  --color-error: #C46A5C;
+  --color-error-hover: #E3907F;
+  --color-error-text: #C46A5C;
+  --color-warning: #C9A55E;
+  --color-warning-hover: #E8CB8A;
+  --color-warning-text: #C9A55E;
+  --color-success: #7FA98B;
+  --color-success-hover: #A6CDB0;
+  --color-success-text: #7FA98B;
+  --color-info: #7391C4;
+  --color-info-hover: #9EB7E0;
+  --color-info-text: #7391C4;
   --color-primary: #EDEDED;
   --color-primary-hover: #FAFAFA;
   --color-primary-text: #0E0E0E;
@@ -18,6 +47,18 @@ body[data-theme-dark-highcontrast] {
 
 @media (prefers-color-scheme: dark) {
   body[data-theme-default] {
+    --color-error: #C46A5C;
+    --color-error-hover: #E3907F;
+    --color-error-text: #C46A5C;
+    --color-warning: #C9A55E;
+    --color-warning-hover: #E8CB8A;
+    --color-warning-text: #C9A55E;
+    --color-success: #7FA98B;
+    --color-success-hover: #A6CDB0;
+    --color-success-text: #7FA98B;
+    --color-info: #7391C4;
+    --color-info-hover: #9EB7E0;
+    --color-info-text: #7391C4;
     --color-primary: #EDEDED;
     --color-primary-hover: #FAFAFA;
     --color-primary-text: #0E0E0E;

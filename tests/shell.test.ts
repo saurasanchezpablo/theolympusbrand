@@ -1,6 +1,6 @@
-// The terminal kit: every colour file in its format and in greys, the bash
-// prompt as bash shows it (a branch name cannot run code), and the per-user
-// installer run end to end in a stand-in home folder.
+// The terminal kit: every colour file in its format, in greys and the house's
+// pigments, the bash prompt as bash shows it (a branch name cannot run code),
+// and the per-user installer run end to end in a stand-in home folder.
 
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
@@ -10,6 +10,8 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { XMLValidator } from 'fast-xml-parser';
 import './helpers.ts';
+import { ANSI_PIGMENTS, PIGMENTS } from '../src/brand/pigments.ts';
+import { SCHEMES } from '../src/screens/palette16.ts';
 
 const ROOT = new URL('..', import.meta.url).pathname;
 const SHELL = join(ROOT, 'assets/screens/shell');
@@ -19,18 +21,38 @@ const grey = (hex: string) => {
   return h.slice(0, 2) === h.slice(2, 4) && h.slice(2, 4) === h.slice(4, 6);
 };
 
-test('every colour in the terminal kit is a grey', () => {
+/** The house's pigments, as hex and as the r;g;b of an escape. */
+const PIGMENT_HEX = new Set(Object.values(PIGMENTS).flatMap((p) => [p.dark, p.darkBright, p.light, p.lightBright].map((h) => h.toLowerCase())));
+const PIGMENT_RGB = new Set([...PIGMENT_HEX].map((h) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16)).join(';')));
+
+test('every colour in the terminal kit is a grey or one of the house’s pigments', () => {
   const walk = (d: string): string[] => readdirSync(d, { withFileTypes: true }).flatMap((e) => (e.isDirectory() ? walk(join(d, e.name)) : [join(d, e.name)]));
   let seen = 0;
   for (const f of walk(SHELL)) {
     const text = readFileSync(f, 'utf8');
     for (const [hex] of text.matchAll(/#[0-9a-fA-F]{6}\b/g)) {
-      assert.ok(grey(hex), `${f}: ${hex}`);
+      assert.ok(grey(hex) || PIGMENT_HEX.has(hex.toLowerCase()), `${f}: ${hex}`);
       seen++;
     }
-    for (const [, r, g, b] of text.matchAll(/38;2;(\d+);(\d+);(\d+)/g)) assert.ok(r === g && g === b, `${f}: ${r};${g};${b}`);
+    for (const [, r, g, b] of text.matchAll(/38;2;(\d+);(\d+);(\d+)/g)) assert.ok((r === g && g === b) || PIGMENT_RGB.has(`${r};${g};${b}`), `${f}: ${r};${g};${b}`);
   }
   assert.ok(seen > 200, `${seen} colours checked`);
+});
+
+test('a terminal’s six colours are the pigments — red rosso antico, green verde antico, yellow gold, blue lapis, magenta porphyry, cyan aquamarine — black and white grey', () => {
+  for (const [tone, s] of Object.entries(SCHEMES)) {
+    ANSI_PIGMENTS.forEach((p, i) => {
+      assert.equal(s.ansi[1 + i], tone === 'dark' ? PIGMENTS[p].dark : PIGMENTS[p].light, `${tone} ${p}`);
+      assert.equal(s.ansi[9 + i], tone === 'dark' ? PIGMENTS[p].darkBright : PIGMENTS[p].lightBright, `${tone} bright ${p}`);
+    });
+    for (const i of [0, 7, 8, 15]) assert.ok(grey(s.ansi[i]), `${tone} ${i} stays grey`);
+  }
+  // The prompts: the branch in gold, a failure in rosso antico.
+  const rgb = (h: string) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16)).join(';');
+  const bash = read('bash/prompt.bash');
+  assert.ok(bash.includes(rgb(PIGMENTS.gold.dark)) && bash.includes(rgb(PIGMENTS.rossoAntico.darkBright)), 'bash: gold branch, red failure');
+  const fish = read('fish/the-olympus.fish');
+  assert.ok(fish.includes(PIGMENTS.gold.dark.slice(1).toLowerCase()) && fish.includes(PIGMENTS.rossoAntico.darkBright.slice(1).toLowerCase()), 'fish: gold branch, red failure');
 });
 
 test('the colour schemes, each in its own format', () => {
@@ -49,7 +71,9 @@ test('the colour schemes, each in its own format', () => {
     const bytes = Buffer.from(b64, 'base64');
     assert.equal(bytes.subarray(0, 8).toString(), 'bplist00', key);
     const rgb = bytes.toString('latin1').match(/([\d.]+) ([\d.]+) ([\d.]+)\0/);
-    assert.ok(rgb && rgb[1] === rgb[2] && rgb[2] === rgb[3], `${key} is grey`);
+    // Grey, or one of the house's pigments (the stored floats are each channel / 255).
+    const hex = rgb && '#' + rgb.slice(1, 4).map((v) => Math.round(Number(v) * 255).toString(16).padStart(2, '0')).join('');
+    assert.ok(rgb && (rgb[1] === rgb[2] && rgb[2] === rgb[3] || PIGMENT_HEX.has(hex!)), `${key} is a grey or a pigment (${hex})`);
     assert.ok(bytes.includes(Buffer.from('NSKeyedArchiver')) && bytes.includes(Buffer.from('NSColor')), key);
   }
   // kitty, Alacritty, WezTerm, Ptyxis, GNOME Terminal.

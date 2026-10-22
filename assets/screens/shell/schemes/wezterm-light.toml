@@ -7,8 +7,8 @@ cursor_fg = "#fafafa"
 cursor_border = "#1c1c1c"
 selection_bg = "#c9c9c9"
 selection_fg = "#0e0e0e"
-ansi = ["#1c1c1c", "#5a5a5a", "#4a4a4a", "#6e6e6e", "#3e3e3e", "#5e5e5e", "#525252", "#8e8e8e"]
-brights = ["#4e4e4e", "#444444", "#343434", "#5e5e5e", "#2e2e2e", "#3a3a3a", "#2a2a2a", "#0e0e0e"]
+ansi = ["#1c1c1c", "#9b3c31", "#3e6e4c", "#86651c", "#34568e", "#76416c", "#2e6d6c", "#8e8e8e"]
+brights = ["#4e4e4e", "#b2483b", "#437353", "#8c6b1f", "#3f64a0", "#87507c", "#2f7170", "#0e0e0e"]
 
 [metadata]
 name = "The Olympus Light"

@@ -1,4 +1,4 @@
-# The Olympus — Starship, in the house's greys.
+# The Olympus — Starship, in the house's greys, with gold and rosso antico.
 # Use it with: export STARSHIP_CONFIG=~/.config/the-olympus/starship.toml
 format = """
 $fill
@@ -10,6 +10,8 @@ palette = "olympus"
 quiet = "#7a7a7a"
 text = "#c9c9c9"
 strong = "#fafafa"
+branch = "#c9a55e"
+failed = "#e3907f"
 
 [fill]
 symbol = " "
@@ -23,11 +25,11 @@ style = "text"
 truncation_length = 4
 
 [git_branch]
-format = "[· $branch](quiet) "
+format = "[· $branch](branch) "
 
 [status]
 disabled = false
-format = "[✕ $status](strong) "
+format = "[✕ $status](failed) "
 
 [character]
 success_symbol = "[❯](strong)"

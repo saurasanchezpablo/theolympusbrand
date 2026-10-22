@@ -34,12 +34,24 @@ installed. From a downloaded copy of this folder: \`sh install.sh\`.
 
 ## The colours
 
-Sixteen greys, told apart by lightness: a terminal in the house's stone. A
-colour that means something in a program — red for an error, green for an
-addition — becomes a darker or lighter grey; the prompt marks a failed command
-with **✕ and its exit code**, a sign rather than a colour. There is a dark
-scheme (*The Olympus*, installed by default) and a light one (*The Olympus
-Light*, in \`schemes/\`).
+Grey grounds and text, and for the six colours a program uses to tell
+things apart, the house's pigments — the colours of ancient stone and metal,
+muted to sit beside marble:
+
+| Terminal colour | Pigment | Used for, often |
+|---|---|---|
+| red | rosso antico | errors, deletions, failed services |
+| green | verde antico | successes, additions, running services |
+| yellow | gold | warnings, the prompt's git branch |
+| blue | lapis | folders, notices |
+| magenta | porphyry | images and media, special files |
+| cyan | aquamarine | links |
+
+Black and white stay grey. The prompt shows the git branch in gold and a
+failed command as **✕ and its exit code** in rosso antico — a sign as well as
+a colour. There is a dark scheme (*The Olympus*, installed by default) and a
+light one (*The Olympus Light*, in \`schemes/\`), each with the pigments in the
+tones that read on its ground.
 
 ## The prompt
 

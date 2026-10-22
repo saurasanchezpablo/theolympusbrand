@@ -1,4 +1,4 @@
-# The Olympus — the fish prompt and colours, in the house's greys.
+# The Olympus — the fish prompt and colours, in the house's greys, with gold and rosso antico.
 #
 #   ▲ host ~/where/you/are · branch ✕ 1
 #   ❯
@@ -13,10 +13,10 @@ function __olympus_prompt
     set_color c9c9c9; echo -n (prompt_pwd)
     set -l branch (git symbolic-ref --short HEAD 2>/dev/null; or git rev-parse --short HEAD 2>/dev/null)
     if test -n "$branch"
-        set_color 7a7a7a; echo -n " · $branch"
+        set_color c9a55e; echo -n " · $branch"
     end
     if test $last -ne 0
-        set_color fafafa; echo -n " ✕ $last"
+        set_color e3907f; echo -n " ✕ $last"
     end
     echo
     set_color fafafa; echo -n "$mark "
@@ -35,7 +35,7 @@ function __olympus_take_prompt --on-event fish_prompt
     end
 end
 
-# Syntax highlighting: commands bright, arguments quieter, mistakes underlined rather than red.
+# Syntax highlighting: commands bright, arguments quieter, a mistake in rosso antico and underlined.
 set -g fish_color_command fafafa
 set -g fish_color_param c9c9c9
 set -g fish_color_keyword fafafa --bold
@@ -46,7 +46,7 @@ set -g fish_color_comment 6a6a6a
 set -g fish_color_operator c9c9c9
 set -g fish_color_escape b4b4b4
 set -g fish_color_autosuggestion 5e5e5e
-set -g fish_color_error fafafa --underline
+set -g fish_color_error e3907f --underline
 set -g fish_color_valid_path --underline
 set -g fish_color_search_match --background=3a3a3a
 set -g fish_color_selection --background=3a3a3a

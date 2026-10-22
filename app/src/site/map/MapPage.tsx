@@ -20,6 +20,7 @@ import { Hotspots } from './Hotspots.tsx';
 import { LocationPanel } from './LocationPanel.tsx';
 import { Compass, Directory, MapBar } from './MapNav.tsx';
 import { portrait } from './thumbs.ts';
+import { STATUS } from '../../../../src/brand/pigments.ts';
 import * as api from './map-api.ts';
 import type { MapScene, Filter } from './map-scene.ts';
 import './map.css';
@@ -37,6 +38,8 @@ const hasWebGL = () => {
   }
 };
 const SEEN = 'olympus-map-seen';
+/** The two colours the map shows: online and offline, in the pigments' tones for the marble they sit on. */
+const STATES = { '--state-up': STATUS.ok.light, '--state-down': STATUS.error.light } as React.CSSProperties;
 const seen = () => {
   try {
     return !!sessionStorage.getItem(SEEN);
@@ -198,7 +201,7 @@ export function MapPage({ arg }: { arg?: string }) {
   const showUi = phase !== 'intro' && phase !== 'entering' && phase !== 'loading';
 
   return (
-    <div className="map" data-map={phase === 'still' ? 'still' : phase === 'loading' ? 'loading' : 'ready'} data-phase={phase}>
+    <div className="map" data-map={phase === 'still' ? 'still' : phase === 'loading' ? 'loading' : 'ready'} data-phase={phase} style={STATES}>
       {inScene ? (
         <canvas
           ref={canvas}

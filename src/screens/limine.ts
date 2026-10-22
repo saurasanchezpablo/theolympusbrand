@@ -8,7 +8,7 @@
 // Written for Limine 12 (colours as RRGGBB; earlier releases take a palette
 // index for the menu's colours, which the script detects).
 
-import { SCHEMES } from './palette16.ts';
+import { SCHEMES, STONE_ANSI } from './palette16.ts';
 import { oneLine } from '../catalog/text.ts';
 import type { ScreenSubject } from './screens.ts';
 
@@ -107,7 +107,7 @@ if command -v b2sum >/dev/null 2>&1; then WALLPAPER="$WALLPAPER#$(b2sum "$CDIR/t
 # Limine 12 takes the menu's colours as RRGGBB; earlier releases, as an index of the palette.
 VERSION=$(limine --version 2>/dev/null | grep -oE '[0-9]+' | head -n 1 || true)
 if [ "\${VERSION:-12}" -ge 12 ]; then
-  BRANDING_COLOUR=${hex(D.bold)}; HELP_COLOUR=${hex(D.ansi[5])}; HELP_BRIGHT="interface_help_colour_bright: ${hex(D.bold)}"
+  BRANDING_COLOUR=${hex(D.bold)}; HELP_COLOUR=${hex(STONE_ANSI[5])}; HELP_BRIGHT="interface_help_colour_bright: ${hex(D.bold)}"
 else
   BRANDING_COLOUR=7; HELP_COLOUR=7; HELP_BRIGHT=
 fi
@@ -121,8 +121,8 @@ fi
   echo "interface_branding_colour: $BRANDING_COLOUR"
   echo "interface_help_colour: $HELP_COLOUR"
   [ -z "$HELP_BRIGHT" ] || echo "$HELP_BRIGHT"
-  echo "term_palette: ${D.ansi.slice(0, 8).map(hex).join(';')}"
-  echo "term_palette_bright: ${D.ansi.slice(8).map(hex).join(';')}"
+  echo "term_palette: ${STONE_ANSI.slice(0, 8).map(hex).join(';')}"
+  echo "term_palette_bright: ${STONE_ANSI.slice(8).map(hex).join(';')}"
   # TTRRGGBB, the transparency inverted: 30 lets a little of the wallpaper through.
   echo "term_background: 30${hex(D.background)}"
   echo "term_foreground: ${hex(D.foreground)}"

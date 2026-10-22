@@ -1,10 +1,13 @@
 // Proxmox VE: the whole web interface in the house's greys, with its logo and
 // favicon. The theme is made on the server from the dark theme Proxmox ships
-// with — its blues and blue-greys turned to greys of the same lightness, its
-// status colours kept — so it always matches the installed release. An APT
-// hook makes it again after every update. Everything can be undone.
+// with — its blues and blue-greys turned to greys of the same lightness —
+// so it always matches the installed release; on top, the house's layer, which
+// also gives the colours that report something (running, a warning, an error)
+// the house's pigments. An APT hook makes it again after every update.
+// Everything can be undone.
 
 import { PALETTE } from '../../brand/palette.ts';
+import { PIGMENTS, STATUS } from '../../brand/pigments.ts';
 import { ico } from '../../export/ico.ts';
 import { bannerMark, coinSvg, markSvg } from '../marks.ts';
 import type { ThemeKit } from './types.ts';
@@ -21,7 +24,9 @@ const sized = (svg: string, width: number, height: number) => svg.replace(/^<svg
  * the house's and not only Proxmox's without its blue: an obsidian ground,
  * marble for the main buttons and the open tab, a marble rule beside what is
  * selected, titles in marble. Proxmox's icons stay as they are (they are drawn
- * light, for a dark ground), and so do its status colours.
+ * light, for a dark ground). What reports a state — running, a warning, an
+ * error, a gauge filling up, the journal's priorities — takes the house's
+ * pigments, in their tones for a dark ground.
  */
 export function proxmoxLayer(): string {
   const lift = '#4A4A4A'; // the selected row: a step lighter than Proxmox's own grounds
@@ -46,6 +51,16 @@ img[src*="proxmox_logo"] { filter: none !important; } /* the dark theme inverts 
 .x-btn-default-small.x-btn-pressed:not(.x-btn-disabled), .x-btn-default-toolbar-small.x-btn-pressed, .x-btn-default-toolbar-small.x-btn-menu-active { background-color: ${P.silver} !important; border-color: ${P.silver} !important; }
 .x-menu-header { background-color: ${P.graphite} !important; }
 .x-progress-default .x-progress-bar-default { background-color: ${P.silver} !important; }
+/* States: verde antico for good, gold for a warning, rosso antico for an error, lapis for a notice. */
+:root { --pwt-gauge-warn: ${STATUS.warn.dark}; --pwt-gauge-crit: ${STATUS.error.dark}; }
+.good, .fa.good { color: ${STATUS.ok.darkBright} !important; }
+.warning, .fa.warning { color: ${STATUS.warn.darkBright} !important; }
+.critical, .fa.critical { color: ${STATUS.error.darkBright} !important; }
+.info-blue { color: ${STATUS.info.darkBright} !important; }
+.x-progress.warning .x-progress-bar { background-color: ${STATUS.warn.dark} !important; }
+.x-progress.critical .x-progress-bar { background-color: ${STATUS.error.dark} !important; }
+.pmx-journal-prio-0, .pmx-journal-prio-1, .pmx-journal-prio-2, .pmx-journal-prio-3 { color: ${PIGMENTS.rossoAntico.darkBright} !important; }
+.pmx-journal-prio-4 { color: ${PIGMENTS.gold.darkBright} !important; }
 `;
 }
 
@@ -234,17 +249,19 @@ export const proxmox: ThemeKit = {
   },
   guide: (t) => ({
     title: 'Proxmox VE',
-    intro: `The whole Proxmox VE web interface in the house's greys, with ${t.name}'s seal and name in the header and on the browser tab. The theme is made on the node itself from the dark theme Proxmox ships — every blue and blue-grey becomes the grey of the same lightness, while the colours that report something (a running guest, a warning, an error) keep their meaning — and the house's own layer goes on top: an obsidian ground, marble buttons and tabs, and a marble rule beside what is selected. Because it is made from the installed release, it matches whatever version the node runs, and it is made again after every update.`,
+    intro: `The whole Proxmox VE web interface in the house's greys, with ${t.name}'s seal and name in the header and on the browser tab. The theme is made on the node itself from the dark theme Proxmox ships — every blue and blue-grey becomes the grey of the same lightness — and the house's own layer goes on top: an obsidian ground, marble buttons and tabs, a marble rule beside what is selected, and the house's pigments for what reports a state (verde antico for good, gold for a warning, rosso antico for an error). Because it is made from the installed release, it matches whatever version the node runs, and it is made again after every update.`,
     changes: [
       'Every panel, tree, grid, toolbar, menu and window: Proxmox’s dark theme, in greys, on an obsidian ground.',
       'The main buttons and the open tab: marble, with dark lettering; what is selected in the trees and lists: a lighter stone with a marble rule.',
       'The sign-in window, in the same greys.',
       `The header logo: ${t.name}'s seal and name (Proxmox VE 8 and 9 each have their own file; both are replaced).`,
       'The icon of the browser tab: the seal on its own disc.',
+      'States in the house’s pigments: good in verde antico, warnings and the gauges’ warning band in gold, errors and critical gauges in rosso antico, notices in lapis; the journal’s errors and warnings likewise.',
     ],
     limits: [
       'The console (noVNC, xterm.js) has no theme setting; its colours stay. The crest *at login* in a shell is the screens kit’s *terminal* part.',
-      'Status colours — green for running, orange for a warning, red for an error — are kept on purpose.',
+      'A few states Proxmox paints in places the kit does not know keep Proxmox’s own colour (still green, orange or red: their meaning is kept).',
+      'The charts’ series colours (CPU usage in olive, IO delay in blue…) are set in Proxmox’s code, not its stylesheets: no theme can change them.',
       'Proxmox Backup Server is not covered by this kit.',
       'It changes Proxmox’s own page template (one line) and adds files to its folders: `debsums` or `dpkg --verify` list the template as modified until the next update puts Proxmox’s back — and the hook makes it again.',
     ],

@@ -2,6 +2,7 @@
 // header logo, favicon and login background. Nextcloud 28 or later.
 
 import { PALETTE } from '../../brand/palette.ts';
+import { STATUS } from '../../brand/pigments.ts';
 import { DOMAIN } from '../../brand/identity.ts';
 import { coinSvg, markSvg } from '../marks.ts';
 import { containerOf, PODMAN, sq } from './shared.ts';
@@ -13,8 +14,8 @@ export const LOGIN_BACKGROUND = { width: 2560, height: 1440 } as const;
 /**
  * The stylesheet for the Custom CSS app: Nextcloud already takes the house's
  * charcoal as its primary colour, but in its dark themes charcoal sinks into
- * the ground — there the accent becomes marble. Status and favourite colours
- * keep their meaning.
+ * the ground — there the accent becomes marble. Errors, warnings, successes
+ * and notices take the house's pigments, in the tone for each ground.
  */
 const OCC_DETECT = [
   'if command -v nextcloud.occ >/dev/null 2>&1; then echo nextcloud.occ; exit 0; fi',
@@ -28,8 +29,27 @@ const OCC_DETECT = [
   'done',
 ].join('\n');
 
+/** Nextcloud's four status colours, each with its hover and text variants, in the pigments' tones for a ground. */
+const statusVars = (ground: 'light' | 'dark') =>
+  (
+    [
+      ['error', STATUS.error],
+      ['warning', STATUS.warn],
+      ['success', STATUS.ok],
+      ['info', STATUS.info],
+    ] as const
+  )
+    .map(([k, p]) => {
+      const [base, bright] = ground === 'light' ? [p.light, p.lightBright] : [p.dark, p.darkBright];
+      return `  --color-${k}: ${base};
+  --color-${k}-hover: ${bright};
+  --color-${k}-text: ${base};`;
+    })
+    .join('\n');
+
 export function nextcloudCss(): string {
-  const dark = `  --color-primary: ${P.marble};
+  const dark = `${statusVars('dark')}
+  --color-primary: ${P.marble};
   --color-primary-hover: ${P.paper};
   --color-primary-text: ${P.obsidian};
   --color-primary-light: ${P.graphite};
@@ -42,7 +62,13 @@ export function nextcloudCss(): string {
   --color-primary-element-light-hover: #4A4A4A;
   --color-primary-element-light-text: ${P.marble};`;
   return `/* The Olympus — Nextcloud (Custom CSS app). In the dark themes the accent
-   is marble rather than charcoal, so it stays visible on dark grounds. */
+   is marble rather than charcoal, so it stays visible on dark grounds; in
+   every theme, errors, warnings, successes and notices in the house's pigments. */
+body[data-theme-light],
+body[data-theme-default] {
+${statusVars('light')}
+}
+
 body[data-theme-dark],
 body[data-theme-dark-highcontrast] {
 ${dark}
@@ -159,9 +185,9 @@ export const nextcloud: ThemeKit = {
       'The primary colour: charcoal; the background colour: obsidian.',
       'The sign-in logo (the emblem), the header logo (the seal) and the favicon.',
       'The sign-in background: black marble.',
-      'With the Custom CSS app: in the dark themes, the accent in marble instead of charcoal.',
+      'With the Custom CSS app: in the dark themes, the accent in marble instead of charcoal; in every theme, errors, warnings, successes and notices in the house’s pigments (rosso antico, gold, verde antico, lapis).',
     ],
-    limits: ['Error, warning, success and the favourite star keep their colours.', 'The desktop and phone apps draw their own interface.', 'Users can still choose their own background and colour unless you turn that off (*Administration → Theming → Disable user theming*).'],
+    limits: ['Without the Custom CSS app, errors, warnings and successes keep Nextcloud’s own colours; the favourite star keeps its yellow.', 'The desktop and phone apps draw their own interface.', 'Users can still choose their own background and colour unless you turn that off (*Administration → Theming → Disable user theming*).'],
     requires: ['Nextcloud 28 or later (older releases get the colour through its older setting).', 'A shell on the server: `docker exec` into the container, or `occ` as the web server’s user.', 'For `--with-css`: the server can reach the App Store, or the *Custom CSS* app is already installed.'],
     steps: [
       { text: 'Copy this folder to the server.' },
@@ -173,7 +199,7 @@ export const nextcloud: ThemeKit = {
     updates: 'Nextcloud keeps theming settings and the Custom CSS app’s stylesheet across updates.',
     files: [
       ['apply.sh', 'Sets everything with `occ` (`--with-css`, `--restore`)'],
-      ['custom.css', 'The dark themes’ accent, for the Custom CSS app'],
+      ['custom.css', 'The dark themes’ accent and the status colours, for the Custom CSS app'],
       ['logo.svg', 'The sign-in logo: the emblem in marble'],
       ['logoheader.svg', 'The header logo: the seal in marble'],
       ['favicon.png', 'The favicon'],

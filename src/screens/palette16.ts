@@ -1,10 +1,12 @@
-// The house's terminal colours: the sixteen ANSI colours as greys, told apart
-// by lightness alone — a terminal in the house's stone. What a colour means in
-// a program (an error, an addition) is carried by its tone and by the
-// program's own symbols; the prompt marks a failed command with a sign, not a
-// colour. Then each terminal's own format for the same sixteen.
+// The house's terminal colours: grey grounds and text, and for the six colours
+// that tell things apart in a program — an error, an addition, a folder — the
+// house's pigments (gold, rosso antico, verde antico, lapis, porphyry,
+// aquamarine), muted like stone. Black and white stay grey. A grey set of
+// sixteen remains for screens that must stay grey (the boot menu). Then each
+// terminal's own format for the same sixteen.
 
 import { PALETTE } from '../brand/palette.ts';
+import { ANSI_PIGMENTS, PIGMENTS } from '../brand/pigments.ts';
 
 const P = PALETTE;
 
@@ -36,8 +38,8 @@ export const SCHEMES: Record<Tone, Scheme> = {
     cursorText: P.obsidian,
     selection: P.graphite,
     selectionText: P.paper,
-    // black, red, green, yellow, blue, magenta, cyan, white — each a distinct step of grey.
-    ansi: [P.charcoal, '#8A8A8A', '#B4B4B4', '#D2D2D2', '#727272', P.silver, '#C2C2C2', '#DADADA', '#6A6A6A', '#A6A6A6', '#C8C8C8', '#E6E6E6', '#8E8E8E', '#B0B0B0', '#D6D6D6', P.paper],
+    // black, the six pigments, white; then the same, bright.
+    ansi: [P.charcoal, ...ANSI_PIGMENTS.map((p) => PIGMENTS[p].dark), P.ash, '#5E5E5E', ...ANSI_PIGMENTS.map((p) => PIGMENTS[p].darkBright), P.paper],
   },
   light: {
     name: 'The Olympus Light',
@@ -49,9 +51,12 @@ export const SCHEMES: Record<Tone, Scheme> = {
     cursorText: P.paper,
     selection: P.ash,
     selectionText: P.obsidian,
-    ansi: [P.charcoal, '#5A5A5A', '#4A4A4A', '#6E6E6E', '#3E3E3E', P.slate, '#525252', '#8E8E8E', '#4E4E4E', '#444444', '#343434', '#5E5E5E', '#2E2E2E', '#3A3A3A', '#2A2A2A', P.obsidian],
+    ansi: [P.charcoal, ...ANSI_PIGMENTS.map((p) => PIGMENTS[p].light), '#8E8E8E', '#4E4E4E', ...ANSI_PIGMENTS.map((p) => PIGMENTS[p].lightBright), P.obsidian],
   },
 };
+
+/** The sixteen as greys, told apart by lightness alone: for screens that stay grey (the boot menu). */
+export const STONE_ANSI = [P.charcoal, '#8A8A8A', '#B4B4B4', '#D2D2D2', '#727272', P.silver, '#C2C2C2', '#DADADA', '#6A6A6A', '#A6A6A6', '#C8C8C8', '#E6E6E6', '#8E8E8E', '#B0B0B0', '#D6D6D6', P.paper];
 
 const rgb = (hex: string) => [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16));
 const lower = (hex: string) => hex.toLowerCase();

@@ -11,28 +11,32 @@ import { ARTBOARD } from '../geometry/math.ts';
 import { DOMAIN } from '../brand/identity.ts';
 import { SCHEMES, alacritty, gnomeTerminalProfile, itermColors, kitty, ptyxis, terminalApp, windowsTerminal, wezterm } from './palette16.ts';
 import { oneLine } from '../catalog/text.ts';
+import { PIGMENTS } from '../brand/pigments.ts';
 
 const S = ARTBOARD;
 const D = SCHEMES.dark;
 
-/** Truecolour escapes for the prompt's three tones: quiet, text, emphasis. */
+/** Truecolour escapes for the prompt's tones — quiet, text, emphasis — and its two pigments: the branch in gold, a failure in rosso antico. */
 const tone = (hex: string) => [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16)).join(';');
 const QUIET = '#7A7A7A';
 const TEXT = D.foreground;
 const STRONG = D.bold;
+const BRANCH = PIGMENTS.gold.dark;
+const FAILED = PIGMENTS.rossoAntico.darkBright;
 
 /* ---------------------------------------------------------------- */
 /* Prompts                                                            */
 /* ---------------------------------------------------------------- */
 
 export function bashPrompt(): string {
-  return `# The Olympus — a bash prompt in the house's greys.
+  return `# The Olympus — a bash prompt in the house's greys, with gold and rosso antico.
 #
 #   ▲ host ~/where/you/are · branch ✕ 1
 #   ❯
 #
-# The mountain, the host, the folder and the git branch; a failed command's
-# exit code after a ✕ (a sign, not a colour); # instead of ❯ as root.
+# The mountain, the host, the folder and the git branch (in gold); a failed
+# command's exit code after a ✕ (in red, and a sign as well, for any eyes);
+# # instead of ❯ as root.
 
 __olympus_git() {
   local b
@@ -42,12 +46,12 @@ __olympus_git() {
 
 __olympus_prompt() {
   local status=$?
-  local quiet='\\[\\e[38;2;${tone(QUIET)}m\\]' text='\\[\\e[38;2;${tone(TEXT)}m\\]' strong='\\[\\e[38;2;${tone(STRONG)}m\\]' off='\\[\\e[0m\\]'
+  local quiet='\\[\\e[38;2;${tone(QUIET)}m\\]' text='\\[\\e[38;2;${tone(TEXT)}m\\]' strong='\\[\\e[38;2;${tone(STRONG)}m\\]' branch='\\[\\e[38;2;${tone(BRANCH)}m\\]' failure='\\[\\e[38;2;${tone(FAILED)}m\\]' off='\\[\\e[0m\\]'
   local mark='❯' failed=''
   [ "\${EUID:-$(id -u)}" -eq 0 ] && mark='#'
-  [ "$status" -ne 0 ] && failed=" \${strong}✕ \${status}\${off}"
+  [ "$status" -ne 0 ] && failed=" \${failure}✕ \${status}\${off}"
   # The branch is printed when the prompt is shown, never expanded again: a branch name cannot run code.
-  PS1="\\n\${quiet}▲\${off} \${strong}\\h\${off} \${text}\\w\${off}\${quiet}"'$(__olympus_git)'"\${off}\${failed}\\n\${strong}\${mark}\${off} "
+  PS1="\\n\${quiet}▲\${off} \${strong}\\h\${off} \${text}\\w\${off}\${branch}"'$(__olympus_git)'"\${off}\${failed}\\n\${strong}\${mark}\${off} "
   return "$status"
 }
 
@@ -60,7 +64,7 @@ esac
 
 export function fishConfig(): string {
   const hex = (h: string) => h.slice(1).toLowerCase();
-  return `# The Olympus — the fish prompt and colours, in the house's greys.
+  return `# The Olympus — the fish prompt and colours, in the house's greys, with gold and rosso antico.
 #
 #   ▲ host ~/where/you/are · branch ✕ 1
 #   ❯
@@ -75,10 +79,10 @@ function __olympus_prompt
     set_color ${hex(TEXT)}; echo -n (prompt_pwd)
     set -l branch (git symbolic-ref --short HEAD 2>/dev/null; or git rev-parse --short HEAD 2>/dev/null)
     if test -n "$branch"
-        set_color ${hex(QUIET)}; echo -n " · $branch"
+        set_color ${hex(BRANCH)}; echo -n " · $branch"
     end
     if test $last -ne 0
-        set_color ${hex(STRONG)}; echo -n " ✕ $last"
+        set_color ${hex(FAILED)}; echo -n " ✕ $last"
     end
     echo
     set_color ${hex(STRONG)}; echo -n "$mark "
@@ -97,7 +101,7 @@ function __olympus_take_prompt --on-event fish_prompt
     end
 end
 
-# Syntax highlighting: commands bright, arguments quieter, mistakes underlined rather than red.
+# Syntax highlighting: commands bright, arguments quieter, a mistake in rosso antico and underlined.
 set -g fish_color_command ${hex(STRONG)}
 set -g fish_color_param ${hex(TEXT)}
 set -g fish_color_keyword ${hex(STRONG)} --bold
@@ -108,7 +112,7 @@ set -g fish_color_comment 6a6a6a
 set -g fish_color_operator c9c9c9
 set -g fish_color_escape b4b4b4
 set -g fish_color_autosuggestion 5e5e5e
-set -g fish_color_error ${hex(STRONG)} --underline
+set -g fish_color_error ${hex(FAILED)} --underline
 set -g fish_color_valid_path --underline
 set -g fish_color_search_match --background=3a3a3a
 set -g fish_color_selection --background=3a3a3a
@@ -120,7 +124,7 @@ set -g fish_pager_color_description 7a7a7a
 
 /** For people who use Starship instead: the same prompt as a Starship palette. */
 export function starshipToml(): string {
-  return `# The Olympus — Starship, in the house's greys.
+  return `# The Olympus — Starship, in the house's greys, with gold and rosso antico.
 # Use it with: export STARSHIP_CONFIG=~/.config/the-olympus/starship.toml
 format = """
 $fill
@@ -132,6 +136,8 @@ palette = "olympus"
 quiet = "${QUIET.toLowerCase()}"
 text = "${TEXT.toLowerCase()}"
 strong = "${STRONG.toLowerCase()}"
+branch = "${BRANCH.toLowerCase()}"
+failed = "${FAILED.toLowerCase()}"
 
 [fill]
 symbol = " "
@@ -145,11 +151,11 @@ style = "text"
 truncation_length = 4
 
 [git_branch]
-format = "[· $branch](quiet) "
+format = "[· $branch](branch) "
 
 [status]
 disabled = false
-format = "[✕ $status](strong) "
+format = "[✕ $status](failed) "
 
 [character]
 success_symbol = "[❯](strong)"
@@ -233,9 +239,9 @@ export function fastfetchConfig(subject: ScreenSubject): string {
 export function omarchyColors(): string {
   const c = (h: string) => `"${h.toLowerCase()}"`;
   const a = D.ansi;
-  return `# The Olympus — an Omarchy theme in the house's greys (Omarchy 3 and 4).
+  return `# The Olympus — an Omarchy theme in the house's greys, its terminal colours in the house's pigments (Omarchy 3 and 4).
 mode = "dark"
-accent = ${c(D.ansi[5])}
+accent = "#9a9a9a"
 cursor = ${c(D.cursor)}
 foreground = ${c(D.foreground)}
 background = ${c(D.background)}
@@ -245,7 +251,7 @@ dark_background = "#080808"
 darker_background = "#040404"
 lighter_background = "#1c1c1c"
 dark_foreground = "#5e5e5e"
-light_foreground = ${c(D.ansi[5])}
+light_foreground = "#9a9a9a"
 bright_foreground = ${c(D.bold)}
 red = ${c(a[1])}
 green = ${c(a[2])}
@@ -253,8 +259,8 @@ yellow = ${c(a[3])}
 blue = ${c(a[4])}
 magenta = ${c(a[5])}
 cyan = ${c(a[6])}
-orange = "#7e7e7e"
-brown = "#4e4e4e"
+orange = ${c(PIGMENTS.gold.darkBright)}
+brown = ${c(PIGMENTS.gold.light)}
 bright_red = ${c(a[9])}
 bright_green = ${c(a[10])}
 bright_yellow = ${c(a[11])}

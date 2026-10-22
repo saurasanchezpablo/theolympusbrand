@@ -300,10 +300,16 @@
   background: #262626;
 }
 
-/* Offline: the dot is hollow. */
+/* Online: verde antico. Offline: a hollow ring of rosso antico (the shape says it as well as the colour). The pigments come from the page (--state-up, --state-down). */
+.hotspot.is-up .hotspot__dot {
+  background: var(--state-up);
+}
+
 .hotspot.is-down .hotspot__dot {
+  width: 6px;
+  height: 6px;
   background: transparent;
-  box-shadow: inset 0 0 0 1.5px #262626;
+  box-shadow: inset 0 0 0 1.8px var(--state-down);
 }
 
 .hotspot__label {
@@ -535,7 +541,12 @@
 }
 
 .directory__mark.is-up {
-  background: var(--ink);
+  border-color: var(--state-up);
+  background: var(--state-up);
+}
+
+.directory__mark.is-down {
+  border-color: var(--state-down);
 }
 
 .directory__name {
@@ -729,7 +740,12 @@
 }
 
 .place__dot--up {
-  background: var(--ink);
+  border-color: var(--state-up);
+  background: var(--state-up);
+}
+
+.place__dot--down {
+  border-color: var(--state-down);
 }
 
 .place__dot--unknown {

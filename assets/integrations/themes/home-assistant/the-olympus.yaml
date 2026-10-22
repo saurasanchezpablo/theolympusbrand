@@ -41,6 +41,10 @@
       app-header-background-color: "#F5F5F5"
       app-header-text-color: "#1C1C1C"
       ha-card-border-color: "#E1E1E1"
+      error-color: "#9B3C31"
+      warning-color: "#86651C"
+      success-color: "#3E6E4C"
+      info-color: "#34568E"
     dark:
       primary-color: "#EDEDED"
       accent-color: "#9A9A9A"
@@ -63,3 +67,7 @@
       app-header-background-color: "#161616"
       app-header-text-color: "#EDEDED"
       ha-card-border-color: "#3A3A3A"
+      error-color: "#C46A5C"
+      warning-color: "#C9A55E"
+      success-color: "#7FA98B"
+      info-color: "#7391C4"

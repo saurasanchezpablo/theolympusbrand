@@ -78,8 +78,10 @@ composition:
 
 ![Palette](design-system/ds-2-palette.png)
 
-Grayscale only. Every value is a neutral grey (R = G = B), and the test suite
-fails if any colour with a hue appears in the source.
+The house is grey. Every value below is a neutral grey (R = G = B), and so
+is everything the marks, the screens, the wallpapers and the site are drawn
+in. The test suite fails if a colour with a hue appears anywhere except in
+the pigments below.
 
 | Token | HEX | Role |
 |---|---|---|
@@ -94,6 +96,38 @@ fails if any colour with a hue appears in the source.
 
 There are two pairings: **charcoal on paper** for light grounds, and **marble
 on obsidian** for dark grounds.
+
+### Pigments: colour where it carries meaning
+
+Grey cannot tell apart the things a terminal or a status must: an error from
+a success, a folder from a link. For those cases only, the house has six
+**pigments**, the colours of ancient stone and metal, muted to sit beside
+marble (`src/brand/pigments.ts`).
+
+| Pigment | On dark grounds (normal · bright) | On light grounds (normal · bright) | Means |
+|---|---|---|---|
+| Gold, gilded bronze | `#C9A55E` · `#E8CB8A` | `#86651C` · `#8C6B1F` | a warning; the git branch |
+| Rosso antico | `#C46A5C` · `#E3907F` | `#9B3C31` · `#B2483B` | an error, a failure, offline |
+| Verde antico | `#7FA98B` · `#A6CDB0` | `#3E6E4C` · `#437353` | success, running, online |
+| Lapis | `#7391C4` · `#9EB7E0` | `#34568E` · `#3F64A0` | a notice; folders |
+| Porphyry | `#AA769D` · `#CDA0C2` | `#76416C` · `#87507C` | media, special files |
+| Aquamarine | `#6FA9A8` · `#9ACCCB` | `#2E6D6C` · `#2F7170` | links |
+
+Every pigment reads at 4.5:1 or more on its ground (obsidian or paper),
+which the test suite checks.
+
+They are used in:
+
+- the terminal colour schemes, as the six ANSI colours;
+- the shell prompts, where the branch is gold and a failure rosso antico;
+- the status colours of the theme kits that let a theme set them (Proxmox VE,
+  Home Assistant, Nextcloud);
+- the map's online and offline marks.
+
+The test suite also names the files allowed to use the pigments. The marks,
+wallpapers, boot screens and the site stay grey. Where colour marks a state,
+a sign marks it as well (✕ for a failure, a hollow ring for offline), so
+the meaning never rests on colour alone.
 
 ## 5. Typography
 

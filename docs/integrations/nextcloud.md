@@ -11,11 +11,11 @@ Made from Nextcloud’s seal. The files are in `themes/nextcloud/` of the integr
 - The primary colour: charcoal; the background colour: obsidian.
 - The sign-in logo (the emblem), the header logo (the seal) and the favicon.
 - The sign-in background: black marble.
-- With the Custom CSS app: in the dark themes, the accent in marble instead of charcoal.
+- With the Custom CSS app: in the dark themes, the accent in marble instead of charcoal; in every theme, errors, warnings, successes and notices in the house’s pigments (rosso antico, gold, verde antico, lapis).
 
 ## What it cannot change
 
-- Error, warning, success and the favourite star keep their colours.
+- Without the Custom CSS app, errors, warnings and successes keep Nextcloud’s own colours; the favourite star keeps its yellow.
 - The desktop and phone apps draw their own interface.
 - Users can still choose their own background and colour unless you turn that off (*Administration → Theming → Disable user theming*).
 
@@ -66,7 +66,7 @@ Nextcloud keeps theming settings and the Custom CSS app’s stylesheet across up
 | File | What it is |
 |---|---|
 | `apply.sh` | Sets everything with `occ` (`--with-css`, `--restore`) |
-| `custom.css` | The dark themes’ accent, for the Custom CSS app |
+| `custom.css` | The dark themes’ accent and the status colours, for the Custom CSS app |
 | `logo.svg` | The sign-in logo: the emblem in marble |
 | `logoheader.svg` | The header logo: the seal in marble |
 | `favicon.png` | The favicon |
