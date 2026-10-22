@@ -414,17 +414,43 @@ try {
     mp.on('response', (r) => r.status() >= 400 && mapErrors.push(`${r.status()} ${r.url()}`));
     mp.on('dialog', (d) => void d.accept());
     await mp.goto(`${URL_}#/map`);
-    await mp.locator('[data-map="ready"]').waitFor({ timeout: 180_000 });
-    await mp.getByRole('button', { name: 'List' }).click();
-    const listed = await mp.locator('.map-list li').count();
-    assert.equal(listed, loadCatalog().length, 'every service has a building');
-    await mp.locator('.map-list li button', { hasText: 'Jellyfin' }).click();
-    await mp.locator('.map-card h2', { hasText: 'Jellyfin' }).waitFor();
-    assert.match((await mp.locator('.map-card').textContent()) ?? '', /https:\/\/jellyfin\.theolympus\.cloud/);
+    await mp.locator('[data-phase="intro"]').waitFor({ timeout: 180_000 });
+    await mp.getByRole('button', { name: 'Explore the map' }).click();
+    await mp.locator('[data-phase="overview"]').waitFor({ timeout: 60_000 });
+    assert.equal(await mp.locator('.hotspot').count(), loadCatalog().length, 'every service has a building');
+    await mp.locator('.mapbar__select').click();
+    assert.equal(await mp.locator('.directory li').count(), loadCatalog().length, 'every service is in the directory');
+    await mp.getByLabel('Search the places').fill('jelly');
+    assert.equal(await mp.locator('.directory li').count(), 1, 'the search narrows the directory');
+    await mp.locator('.directory li button', { hasText: 'Jellyfin' }).click();
+    await mp.locator('[data-phase="place"]').waitFor({ timeout: 60_000 });
+    assert.equal(await mp.evaluate(() => location.hash), '#/map/jellyfin');
+    await mp.locator('.place h2', { hasText: 'Jellyfin' }).waitFor();
+    assert.match((await mp.locator('.place').textContent()) ?? '', /https:\/\/jellyfin\.theolympus\.cloud/);
+    assert.equal(await mp.locator('.hotspot.is-selected').getAttribute('data-id'), 'jellyfin', 'the ring follows the place');
     const stats = await mp.evaluate(() => (window as unknown as { olympusMapStats: () => { triangles: number; calls: number } }).olympusMapStats());
     assert.ok(stats.triangles < 2_500_000 && stats.calls < 250, `budget: ${JSON.stringify(stats)}`);
     await shot(mp, '17-map');
-    step(`map: the island draws (${Math.round(stats.triangles / 1000)}k triangles, ${stats.calls} draw calls), every service has a building, a card opens with its address`);
+    await mp.getByRole('button', { name: 'Next place' }).click();
+    await mp.waitForFunction(() => location.hash !== '#/map/jellyfin');
+    await mp.goBack();
+    await mp.locator('.place h2', { hasText: 'Jellyfin' }).waitFor();
+    await mp.getByRole('button', { name: 'Back to the island' }).first().click();
+    await mp.locator('[data-phase="overview"]').waitFor({ timeout: 60_000 });
+    assert.equal(await mp.locator('.map__place').count(), 0);
+    // A ring is a button: the keyboard opens its place.
+    const ring = mp.locator('.hotspot:not([data-off="true"])').first();
+    await ring.focus();
+    await mp.keyboard.press('Enter');
+    await mp.locator('[data-phase="place"]').waitFor({ timeout: 60_000 });
+    assert.equal(await mp.locator('.place h2').textContent(), (await ring.getAttribute('aria-label'))!.split(',')[0]);
+    await mp.keyboard.press('Escape');
+    await mp.locator('[data-phase="overview"]').waitFor({ timeout: 60_000 });
+    // A link opens a place straight away.
+    await mp.goto(`${URL_}#/map/nextcloud`);
+    await mp.reload();
+    await mp.locator('.place h2', { hasText: 'Nextcloud' }).waitFor({ timeout: 180_000 });
+    step(`map: the island draws (${Math.round(stats.triangles / 1000)}k triangles, ${stats.calls} draw calls); intro, a ring per service, the directory searched, a place with its address, next, back, the keyboard (Enter, Escape), a link to a place`);
 
     // Text from the data folder is shown as text.
     const api = `http://127.0.0.1:${EDITOR_PORT}/api`;
@@ -433,26 +459,24 @@ try {
     const { csrf } = (await signIn.json()) as { csrf: string };
     const put = await fetch(`${api}/services/odd`, { method: 'PUT', headers: { 'content-type': 'application/json', cookie, 'x-olympus-csrf': csrf }, body: JSON.stringify({ spec: { id: 'odd', name: '<b>x</b>', category: 'other', ip: '127.0.0.1' } }) });
     assert.equal(put.status, 200);
+    await mp.goto(`${URL_}#/map/odd`);
     await mp.reload();
-    await mp.locator('[data-map="ready"]').waitFor({ timeout: 180_000 });
-    await mp.getByRole('button', { name: 'List' }).click();
-    await mp.locator('.map-list li button', { hasText: '<b>x</b>' }).click();
-    await mp.locator('.map-card h2').waitFor();
-    assert.equal(await mp.locator('.map-card h2').textContent(), '<b>x</b>');
-    assert.equal(await mp.locator('.map-card h2 b').count(), 0, 'no markup from the data');
-    await mp.locator('.map-card', { hasText: 'Online' }).waitFor({ timeout: 20_000 });
+    await mp.locator('.place h2').waitFor({ timeout: 180_000 });
+    assert.equal(await mp.locator('.place h2').textContent(), '<b>x</b>');
+    assert.equal(await mp.locator('.place h2 b').count(), 0, 'no markup from the data');
+    await mp.locator('.place', { hasText: 'Online' }).waitFor({ timeout: 20_000 });
     step('map: names from the server are shown as text; an address on the map is pinged (online)');
 
     // Editing: sign in, add a lighthouse, a refused spot says why, save, turn, delete. From the whole island's view.
-    await mp.reload();
-    await mp.locator('[data-map="ready"]').waitFor({ timeout: 180_000 });
+    await mp.goto(`${URL_}#/map`);
+    await mp.locator('[data-phase="overview"]').waitFor({ timeout: 180_000 });
     await mp.getByRole('button', { name: 'Edit' }).click();
     await mp.getByLabel('The house’s password').fill(EDITOR_PASSWORD);
     await mp.getByRole('button', { name: 'Sign in' }).click();
     await mp.getByRole('button', { name: 'Add' }).click();
     await mp.getByRole('button', { name: 'Lighthouse' }).click();
     const box = (await mp.locator('.map__canvas').boundingBox())!;
-    await mp.mouse.move(box.x + box.width * 0.04, box.y + box.height * 0.95, { steps: 3 });
+    await mp.mouse.move(box.x + box.width * 0.985, box.y + box.height * 0.45, { steps: 3 });
     await mp.locator('.map-placing__why', { hasText: /In the sea|Off the island/ }).waitFor();
     let placed = false;
     for (const [fx, fy] of [[0.35, 0.75], [0.3, 0.6], [0.6, 0.75], [0.25, 0.5], [0.7, 0.6], [0.45, 0.8]]) {
@@ -468,7 +492,7 @@ try {
     await mp.getByLabel('Name').fill('Uptime watch');
     await mp.getByLabel('Kind of service').selectOption('monitoring');
     await mp.getByRole('button', { name: 'Save' }).click();
-    await mp.locator('.map-card h2', { hasText: 'Uptime watch' }).waitFor({ timeout: 20_000 });
+    await mp.locator('.place h2', { hasText: 'Uptime watch' }).waitFor({ timeout: 60_000 });
     assert.ok(existsSync(join(EDITOR_DATA, 'services/uptime-watch.json')), 'saved in the data folder');
     assert.equal(JSON.parse(readFileSync(join(EDITOR_DATA, 'places.json'), 'utf8'))['uptime-watch'].building, 'lighthouse');
     assert.ok(!existsSync(join(ROOT, 'catalog/services/uptime-watch.json')), 'not in the repository');
@@ -477,7 +501,7 @@ try {
     await mp.waitForFunction(() => !document.querySelector('.map-card__actions button:disabled'));
     assert.notEqual(JSON.parse(readFileSync(join(EDITOR_DATA, 'places.json'), 'utf8'))['uptime-watch'].rotation, before, 'turned');
     await mp.getByRole('button', { name: 'Delete' }).click();
-    await mp.locator('.map-card h2', { hasText: 'Uptime watch' }).waitFor({ state: 'detached' });
+    await mp.locator('.place h2', { hasText: 'Uptime watch' }).waitFor({ state: 'detached' });
     assert.ok(!existsSync(join(EDITOR_DATA, 'services/uptime-watch.json')), 'deleted');
     await mp.getByRole('button', { name: 'Undo' }).click();
     await mp.waitForFunction(() => !document.querySelector('.map-edit button:disabled'));
@@ -490,31 +514,35 @@ try {
     editor = null;
     await new Promise((r) => setTimeout(r, 500));
     await mp.reload();
-    await mp.locator('[data-map="ready"]').waitFor({ timeout: 180_000 });
+    await mp.locator('[data-phase="overview"]').waitFor({ timeout: 180_000 });
     assert.ok(await mp.getByRole('button', { name: 'Edit' }).isDisabled());
     await mp.getByText('Saving needs the map’s edit service').waitFor();
     step('map: without the edit service, the map shows read-only and says why');
     assert.deepEqual(mapErrors, [], `map console errors:\n${mapErrors.join('\n')}`);
     await mapCtx.close();
 
-    // Phones get the picture and the list; reduced motion holds the clouds still.
+    // Phones get the island too, a place as a sheet; reduced motion holds the clouds still.
     const phone = await browser.newContext({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
     const pp = await phone.newPage();
     await pp.goto(`${URL_}#/map`);
-    await pp.locator('[data-map="still"]').waitFor();
-    await pp.getByRole('button', { name: 'List' }).click();
-    assert.ok((await pp.locator('.map-list li').count()) >= loadCatalog().length);
+    await pp.locator('[data-phase="intro"]').waitFor({ timeout: 180_000 });
+    await pp.getByRole('button', { name: 'All places' }).click();
+    await pp.locator('.directory li button', { hasText: 'Jellyfin' }).click();
+    await pp.locator('[data-phase="place"] .place h2', { hasText: 'Jellyfin' }).waitFor({ timeout: 60_000 });
+    assert.ok(!(await pp.locator('.mapbar').isVisible()), 'the sheet carries the navigation');
     await phone.close();
     const calm = await browser.newContext({ viewport: { width: 1280, height: 800 }, reducedMotion: 'reduce' });
     const cp = await calm.newPage();
     await cp.goto(`${URL_}#/map`);
-    await cp.locator('[data-map="ready"]').waitFor({ timeout: 180_000 });
+    await cp.locator('[data-phase="intro"]').waitFor({ timeout: 180_000 });
+    await cp.getByRole('button', { name: 'Explore the map' }).click();
+    await cp.locator('[data-phase="overview"]').waitFor({ timeout: 60_000 });
     await cp.waitForTimeout(1500);
     const a = await cp.locator('.map__canvas').screenshot();
     await cp.waitForTimeout(1200);
     assert.ok(a.equals(await cp.locator('.map__canvas').screenshot()), 'nothing drifts under reduced motion');
     await calm.close();
-    step('map: phones get the picture of the island and the list; under reduced motion nothing moves');
+    step('map: phones get the island and a place as a sheet; under reduced motion nothing moves');
   }
 
   // The medallion: drawn live from its STL; it moves, unless the visitor asks for reduced motion.

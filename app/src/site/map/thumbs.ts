@@ -64,3 +64,40 @@ export function thumbsFor(types: readonly string[], ready: (type: string, url: s
     stopped = true;
   };
 }
+
+const portraits = new Map<string, string>();
+let big: WebGLRenderer | null = null;
+
+/**
+ * A building on its own, for a place's panel: its full model, lit from the
+ * side as on the island, framed from the front and a little above. Drawn once
+ * per kind, at 720 × 440.
+ */
+export function portrait(type: string): string | null {
+  const hit = portraits.get(type);
+  if (hit) return hit;
+  const k = building(type);
+  if (!k) return null;
+  if (!renderer) setup();
+  if (!big) {
+    big = new WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: true });
+    big.setSize(720, 440, false);
+    big.outputColorSpace = SRGBColorSpace;
+    big.toneMapping = ACESFilmicToneMapping;
+    big.toneMappingExposure = 1.1;
+  }
+  const g = k.build('near');
+  mesh.geometry = g;
+  mesh.rotation.y = -0.5;
+  const box = new Box3().setFromObject(mesh);
+  const size = box.getSize(new Vector3()).length();
+  const centre = box.getCenter(new Vector3());
+  const cam = new PerspectiveCamera(26, 720 / 440, 0.1, 800);
+  cam.position.copy(centre).add(new Vector3(0.9, 0.42, 1).setLength(size * 1.32));
+  cam.lookAt(centre.clone().add(new Vector3(0, -size * 0.04, 0)));
+  big.render(scene, cam);
+  const url = big.domElement.toDataURL('image/png');
+  g.dispose();
+  portraits.set(type, url);
+  return url;
+}

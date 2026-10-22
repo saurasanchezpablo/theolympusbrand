@@ -34,7 +34,10 @@ function grainTexture(): CanvasTexture {
 
 export function landMaterial(): MeshStandardMaterial {
   const m = new MeshStandardMaterial({ color: 0xffffff, roughness: 0.92, map: grainTexture() });
+  // The scene advances this: the clouds' shadows drift with the clouds.
+  m.userData.time = { value: 0 };
   m.onBeforeCompile = (sh) => {
+    sh.uniforms.uTime = m.userData.time;
     sh.vertexShader = sh.vertexShader
       .replace('#include <common>', '#include <common>\nvarying vec3 vW; varying vec3 vN;')
       .replace('#include <worldpos_vertex>', '#include <worldpos_vertex>\nvW = (modelMatrix * vec4(transformed, 1.0)).xyz; vN = normalize(mat3(modelMatrix) * objectNormal);');
@@ -43,6 +46,10 @@ export function landMaterial(): MeshStandardMaterial {
         '#include <common>',
         `#include <common>
 varying vec3 vW; varying vec3 vN;
+uniform float uTime;
+float h2(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
+float n2(vec2 p) { vec2 i = floor(p), f = fract(p); f = f * f * (3.0 - 2.0 * f);
+  return mix(mix(h2(i), h2(i + vec2(1, 0)), f.x), mix(h2(i + vec2(0, 1)), h2(i + vec2(1, 1)), f.x), f.y); }
 float line(float h, float step, float w) { float f = abs(fract(h / step - 0.5) - 0.5) * step; float d = fwidth(h); return 1.0 - smoothstep(0.0, d * w, f); }`,
       )
       .replace(
@@ -51,12 +58,16 @@ float line(float h, float step, float w) { float f = abs(fract(h / step - 0.5) -
 float h = vW.y;
 float slope = 1.0 - clamp(vN.y, 0.0, 1.0);
 float tone = mix(0.13, 0.075, smoothstep(0.25, 0.6, slope));
-tone = mix(tone, 0.32, smoothstep(55.0, 75.0, h) * (1.0 - smoothstep(0.35, 0.7, slope)));
+tone = mix(tone, 0.22, smoothstep(55.0, 80.0, h) * (1.0 - smoothstep(0.35, 0.7, slope)));
 tone = mix(tone, 0.2, 1.0 - smoothstep(0.2, 2.5, h));
 vec3 base = vec3(tone) * (0.7 + 0.6 * diffuseColor.r);
 float minor = line(h, 4.0, 1.1) * 0.45;
 float major = line(h, 20.0, 1.8);
 base = mix(base, vec3(0.42), clamp(minor + major, 0.0, 1.0) * step(0.3, h));
+// Shadows of the clouds passing over, soft and slow.
+vec2 c = vW.xz * 0.0065 + vec2(-uTime * 0.016, 0.0);
+float cloud = n2(c) * 0.6 + n2(c * 2.1 + 7.0) * 0.4;
+base *= 1.0 - smoothstep(0.55, 0.78, cloud) * 0.32;
 diffuseColor.rgb = base;`,
       );
   };

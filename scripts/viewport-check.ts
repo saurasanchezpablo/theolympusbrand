@@ -145,6 +145,8 @@ try {
         await page.goto(`${URL_}${route.hash}`);
         await page.locator(route.ready).first().waitFor({ timeout: 30000 });
         await page.waitForTimeout(400);
+        // Audit the page at rest: a colour caught mid-transition is not the page's colour.
+        await page.waitForFunction(() => document.getAnimations().every((a) => a.playState !== 'running' || a.effect?.getComputedTiming().iterations === Infinity), null, { timeout: 10000 }).catch(() => {});
         for (const o of await overflow(page)) findings.push({ page: route.name, viewport: tag, kind: 'horizontal overflow', detail: o });
         for (const o of await clipped(page)) findings.push({ page: route.name, viewport: tag, kind: 'clipped content', detail: o });
         for (const o of await hues(page)) findings.push({ page: route.name, viewport: tag, kind: 'colour with a hue', detail: o });

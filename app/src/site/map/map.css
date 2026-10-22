@@ -1,18 +1,50 @@
-/* The map: stone, whatever the visitor's theme — the island is graphite and
-   marble, and its chrome sits on it in the same greys. */
+/* The map: stone and marble, whatever the visitor's theme. The island fills
+   the screen; the controls stay quiet at its edges; a place opens in a marble
+   panel beside it (a sheet from the bottom on a phone). */
 
 .site.site--map {
   overflow: hidden;
   display: flex;
-  background: #0e0e0e;
+  background: #0d0d0d;
+}
+
+/* The header wears stone over the map. */
+.app:has(.site--map) .topbar {
+  border-bottom-color: #1e1e1e;
+  background: #0d0d0d;
+  color: #ededed;
+}
+
+.app:has(.site--map) .sitenav a {
+  color: #9a9a9a;
+}
+
+.app:has(.site--map) .sitenav a:hover,
+.app:has(.site--map) .sitenav a[aria-current='page'] {
+  color: #ededed;
+}
+
+.app:has(.site--map) .menu-toggle {
+  color: #ededed;
+}
+
+@media (prefers-color-scheme: light) {
+  .app:has(.site--map) .brand__seal {
+    filter: invert(1);
+  }
 }
 
 .map {
-  --stone: #0e0e0e;
+  --stone: #0d0d0d;
   --stone-2: #1a1a1a;
   --stone-line: #3a3a3a;
   --stone-ink: #ededed;
   --stone-soft: #b4b4b4;
+  --marble: #f2f2f2;
+  --marble-2: #e4e4e4;
+  --marble-line: #cfcfcf;
+  --ink: #161616;
+  --ink-soft: #4a4a4a;
   position: relative;
   flex: 1;
   min-height: 420px;
@@ -23,10 +55,27 @@
 }
 
 .map__canvas {
+  position: absolute;
+  inset: 0;
   display: block;
   width: 100%;
   height: 100%;
   touch-action: none;
+  cursor: grab;
+}
+
+.map__canvas:active {
+  cursor: grabbing;
+}
+
+/* Depth at the edges: the island seen through the air. */
+.map__veil {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse at 50% 46%, transparent 52%, rgba(13, 13, 13, 0.55) 100%),
+    linear-gradient(to bottom, rgba(13, 13, 13, 0.45), transparent 16%, transparent 82%, rgba(13, 13, 13, 0.5));
 }
 
 .map__still {
@@ -46,87 +95,727 @@
 
 .map__to3d {
   position: absolute;
-  bottom: 84px;
+  top: 18px;
   left: 50%;
   transform: translateX(-50%);
+  min-height: 44px;
+  padding: 0 18px;
+  border: 1px solid var(--stone-line);
+  border-radius: var(--radius);
+  background: rgba(13, 13, 13, 0.8);
+  color: var(--stone-ink);
+  font: 500 14px var(--sans);
+  cursor: pointer;
 }
 
-.map__loading,
-.map__note {
+.map__loading {
   position: absolute;
   left: 50%;
   top: 50%;
-  transform: translate(-50%, -50%);
   margin: 0;
+  transform: translate(-50%, -50%);
+  font: 600 17px/1.2 var(--display);
+  letter-spacing: 0.08em;
   color: var(--stone-soft);
 }
 
-.map__note {
-  top: auto;
-  bottom: 20px;
+/* ---- the introduction ---- */
+
+.map-intro {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  gap: 14px;
+  padding: 24px;
+  text-align: center;
+  background: radial-gradient(ellipse at 50% 50%, rgba(13, 13, 13, 0.2), rgba(13, 13, 13, 0.55) 70%);
 }
 
-.map__title {
+.map-intro__over {
+  margin: 0;
+  font: 600 14px/1 var(--display);
+  letter-spacing: 0.32em;
+  color: var(--stone-ink);
+  text-shadow: 0 1px 12px rgba(0, 0, 0, 0.6);
+}
+
+.map-intro h1 {
+  margin: 0;
+  font: 600 clamp(46px, 9vw, 132px) / 1 var(--display);
+  letter-spacing: 0.12em;
+  color: #fafafa;
+  text-shadow: 0 2px 30px rgba(0, 0, 0, 0.55);
+}
+
+.map-intro__line {
+  max-width: 36ch;
+  margin: 4px 0 10px;
+  font-size: 17px;
+  line-height: 1.5;
+  color: #dcdcdc;
+  text-shadow: 0 1px 10px rgba(0, 0, 0, 0.7);
+}
+
+.map-intro__actions {
+  display: grid;
+  justify-items: center;
+  gap: 14px;
+}
+
+.map-intro__go {
+  min-height: 48px;
+  padding: 0 28px;
+  border: 1px solid var(--marble);
+  border-radius: var(--radius);
+  background: var(--marble);
+  color: var(--ink);
+  font: 600 14px/1 var(--display);
+  letter-spacing: 0.14em;
+  cursor: pointer;
+  transition: background-color 0.2s var(--ease);
+}
+
+.map-intro__go:hover {
+  background: #ffffff;
+}
+
+.map-intro__all {
+  min-height: 44px;
+  border: 0;
+  border-bottom: 1px solid var(--stone-soft);
+  background: none;
+  color: var(--stone-ink);
+  font: 500 14px var(--sans);
+  cursor: pointer;
+}
+
+.map-intro > * {
+  animation: title-rise 0.9s var(--ease) backwards;
+}
+
+.map-intro > :nth-child(2) {
+  animation-delay: 0.08s;
+}
+
+.map-intro > :nth-child(3) {
+  animation-delay: 0.16s;
+}
+
+.map-intro > :nth-child(4) {
+  animation-delay: 0.24s;
+}
+
+/* ---- the lessons ---- */
+
+.map-lesson {
   position: absolute;
-  top: 18px;
-  left: 20px;
+  left: 50%;
+  top: 46%;
+  z-index: 3;
+  display: grid;
+  justify-items: center;
+  margin: 0;
+  transform: translate(-50%, -50%);
+  text-align: center;
+  pointer-events: none;
+  animation: title-rise 0.6s var(--ease) backwards;
+}
+
+.map-lesson span {
+  font: 400 34px/1.1 var(--display);
+  color: #fafafa;
+  text-shadow: 0 1px 16px rgba(0, 0, 0, 0.7);
+}
+
+.map-lesson small {
+  margin-top: 18px;
+  font-size: 13px;
+  color: #d8d8d8;
+  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.8);
+}
+
+/* ---- the places ---- */
+
+.hotspots {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  overflow: hidden;
+  pointer-events: none;
+  transition: opacity 0.6s var(--ease);
+}
+
+.hotspots[data-hidden] {
+  opacity: 0;
+}
+
+.hotspot {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 44px;
+  height: 44px;
+  margin: -22px 0 0 -22px;
+  padding: 0;
+  border: 0;
+  background: none;
+  display: grid;
+  place-items: center;
+  pointer-events: auto;
+  cursor: pointer;
+  will-change: transform;
+}
+
+.hotspots[data-hidden] .hotspot {
   pointer-events: none;
 }
 
-.map__title h1 {
-  margin: 0;
-  font: 600 26px/1.1 var(--display);
-  letter-spacing: 0.06em;
-  color: var(--stone-ink);
-  text-shadow: 0 1px 8px #000;
+.hotspot[data-off='true'] {
+  visibility: hidden;
+  pointer-events: none;
 }
 
-.map__title p {
-  margin: 4px 0 0;
-  font-size: 13px;
-  color: var(--stone-soft);
+.hotspot__ring {
+  display: grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: rgba(242, 242, 242, 0.94);
+  box-shadow: 0 0 0 1px rgba(13, 13, 13, 0.35), 0 2px 8px rgba(0, 0, 0, 0.55);
+  transition: transform 0.25s var(--ease), background-color 0.25s var(--ease), width 0.25s var(--ease), height 0.25s var(--ease);
+}
+
+.hotspot--machine .hotspot__ring {
+  border-radius: 3px;
+}
+
+.hotspot__dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #262626;
+}
+
+/* Offline: the dot is hollow. */
+.hotspot.is-down .hotspot__dot {
+  background: transparent;
+  box-shadow: inset 0 0 0 1.5px #262626;
+}
+
+.hotspot__label {
+  position: absolute;
+  left: 34px;
+  top: 50%;
+  padding: 6px 10px;
+  transform: translate(-4px, -50%);
+  border-radius: var(--radius);
+  background: var(--marble);
+  color: var(--ink);
+  font: 600 12px/1 var(--display);
+  letter-spacing: 0.08em;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s var(--ease), transform 0.2s var(--ease);
+}
+
+.hotspot:hover .hotspot__ring,
+.hotspot:focus-visible .hotspot__ring {
+  transform: scale(1.25);
+}
+
+.hotspot:hover .hotspot__label,
+.hotspot:focus-visible .hotspot__label,
+.hotspot.is-selected .hotspot__label {
+  opacity: 1;
+  transform: translate(0, -50%);
+}
+
+.hotspot:focus-visible {
+  outline: none;
+}
+
+.hotspot:focus-visible .hotspot__ring {
+  box-shadow: 0 0 0 2px #fafafa, 0 0 0 4px #161616;
+}
+
+.hotspot.is-selected .hotspot__ring {
+  width: 30px;
+  height: 30px;
+  background: #161616;
+  box-shadow: 0 0 0 2px rgba(242, 242, 242, 0.9), 0 2px 10px rgba(0, 0, 0, 0.6);
+}
+
+.hotspot.is-selected .hotspot__dot {
+  width: 7px;
+  height: 7px;
+  background: #f2f2f2;
+}
+
+/* ---- the bar, the directory, the compass ---- */
+
+.mapbar {
+  position: absolute;
+  left: 50%;
+  bottom: 22px;
+  z-index: 5;
+  display: flex;
+  transform: translateX(-50%);
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.45);
+}
+
+.mapbar button {
+  min-height: 48px;
+  border: 0;
+  cursor: pointer;
+}
+
+.mapbar__home {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  border-radius: var(--radius) 0 0 var(--radius);
+  background: #3a3a3a;
+  color: #f2f2f2;
+}
+
+.mapbar__home:disabled {
+  color: #9a9a9a;
+  cursor: default;
+}
+
+.mapbar__select {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  min-width: 240px;
+  max-width: min(360px, calc(100vw - 120px));
+  padding: 0 16px 0 18px;
+  border-radius: 0 var(--radius) var(--radius) 0;
+  background: var(--marble);
+  color: var(--ink);
+  font: 600 13px/1 var(--display);
+  letter-spacing: 0.1em;
+}
+
+.mapbar__select span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mapbar__select svg {
+  flex: none;
+  transition: transform 0.25s var(--ease);
+}
+
+.mapbar__select svg.is-open {
+  transform: rotate(180deg);
+}
+
+.directory {
+  position: absolute;
+  left: 50%;
+  bottom: 82px;
+  z-index: 6;
+  display: flex;
+  flex-direction: column;
+  width: min(440px, calc(100% - 24px));
+  max-height: min(62vh, 560px);
+  transform: translateX(-50%);
+  border-radius: var(--radius);
+  background: var(--marble);
+  color: var(--ink);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+  animation: map-rise 0.28s var(--ease) backwards;
+}
+
+@keyframes map-rise {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 10px);
+  }
+}
+
+.directory__head {
+  display: grid;
+  gap: 10px;
+  padding: 14px 14px 10px;
+  border-bottom: 1px solid var(--marble-line);
+}
+
+.directory__head input {
+  width: 100%;
+  min-height: 40px;
+  padding: 6px 10px;
+  border: 1px solid var(--marble-line);
+  border-radius: var(--radius);
+  background: #ffffff;
+  color: var(--ink);
+  font: 14px var(--sans);
+}
+
+.directory__filter {
+  display: flex;
+  gap: 4px;
+}
+
+.directory__filter button {
+  flex: 1;
+  min-height: 36px;
+  border: 1px solid var(--marble-line);
+  border-radius: var(--radius);
+  background: transparent;
+  color: var(--ink-soft);
+  font: 500 13px var(--sans);
+  cursor: pointer;
+}
+
+.directory__filter button.is-on {
+  border-color: var(--ink);
+  background: var(--ink);
+  color: var(--marble);
+}
+
+.directory__body {
+  overflow: auto;
+  padding: 4px 8px 12px;
+}
+
+.directory h2 {
+  margin: 14px 8px 4px;
+  font: 600 12px/1 var(--display);
+  letter-spacing: 0.12em;
+  color: var(--ink-soft);
+}
+
+.directory ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.directory li button {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-areas: 'mark name' 'mark meta';
+  gap: 0 12px;
+  align-items: center;
+  width: 100%;
+  min-height: 44px;
+  padding: 6px 8px;
+  border: 0;
+  border-radius: var(--radius);
+  background: transparent;
+  color: var(--ink);
+  text-align: left;
+  cursor: pointer;
+}
+
+.directory li button:hover,
+.directory li button[aria-current='true'] {
+  background: var(--marble-2);
+}
+
+.directory__mark {
+  grid-area: mark;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 1.5px solid var(--ink);
+}
+
+.directory__mark--machine {
+  border-radius: 2px;
+}
+
+.directory__mark.is-up {
+  background: var(--ink);
+}
+
+.directory__name {
+  grid-area: name;
+  font-size: 15px;
+  overflow-wrap: anywhere;
+}
+
+.directory__meta {
+  grid-area: meta;
+  font: 12px var(--mono);
+  color: var(--ink-soft);
+  overflow-wrap: anywhere;
+}
+
+.directory__empty {
+  margin: 12px 8px;
+  font-size: 14px;
+  color: var(--ink-soft);
+}
+
+.compass {
+  position: absolute;
+  left: 22px;
+  bottom: 22px;
+  z-index: 5;
+  display: grid;
+  place-items: center;
+  width: 60px;
+  height: 60px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(13, 13, 13, 0.55), rgba(13, 13, 13, 0) 72%);
+  color: #ededed;
+  cursor: pointer;
 }
 
 .map__tools {
   position: absolute;
-  top: 16px;
-  right: 16px;
+  right: 22px;
+  bottom: 22px;
+  z-index: 5;
   display: flex;
-  flex-wrap: wrap;
-  justify-content: flex-end;
-  align-items: center;
   gap: 8px;
-  max-width: calc(100% - 32px);
 }
 
-/* The map's controls are stone, not paper. */
-.map .btn {
+.map__tools .btn {
+  min-height: 44px;
   border-color: var(--stone-line);
-  background: var(--stone-2);
+  background: rgba(13, 13, 13, 0.82);
   color: var(--stone-ink);
 }
 
-.map .btn:hover:not(:disabled) {
-  border-color: var(--stone-soft);
+/* ---- a place ---- */
+
+.map__place {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 7;
+  width: min(460px, 38vw);
+  box-shadow: -10px 0 40px rgba(0, 0, 0, 0.45);
+  animation: map-panel 0.5s var(--ease) backwards;
 }
 
-.map .btn--ghost {
-  background: rgba(14, 14, 14, 0.7);
+@keyframes map-panel {
+  from {
+    transform: translateX(100%);
+  }
 }
 
-.map .segmented {
-  background: rgba(14, 14, 14, 0.8);
-  border-color: var(--stone-line);
+.place {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  height: 100%;
+  background: var(--marble);
+  color: var(--ink);
 }
 
-.map .segmented button {
-  color: var(--stone-soft);
+.place__bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 60px;
+  padding: 0 14px 0 28px;
+  background: #1c1c1c;
+  color: #e4e4e4;
+  font: 600 12px/1.2 var(--display);
+  letter-spacing: 0.12em;
 }
 
-.map .segmented button.is-on {
-  background: var(--stone-ink);
-  color: var(--stone);
+.place__close {
+  min-width: 44px;
+  min-height: 44px;
+  border: 0;
+  background: none;
+  color: #f2f2f2;
+  font-size: 26px;
+  line-height: 1;
+  cursor: pointer;
 }
+
+.place__body {
+  overflow: auto;
+  padding: 26px 28px 20px;
+}
+
+.place__portrait {
+  display: grid;
+  margin: 0 0 22px;
+  border-radius: var(--radius);
+  background: radial-gradient(ellipse at 50% 35%, #3a3a3a, #121212 75%);
+  overflow: hidden;
+}
+
+.place__portrait img {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 720 / 440;
+  object-fit: contain;
+}
+
+.place__portrait .place__seal {
+  width: 120px;
+  height: 120px;
+  margin: 30px auto;
+  filter: invert(1);
+}
+
+.place__portrait figcaption {
+  padding: 8px 12px;
+  background: rgba(13, 13, 13, 0.6);
+  color: #c8c8c8;
+  font-size: 12px;
+}
+
+.place h2 {
+  margin: 0;
+  overflow-wrap: anywhere;
+  font: 600 30px/1.15 var(--display);
+  letter-spacing: 0.04em;
+  color: var(--ink);
+}
+
+.place h2:focus {
+  outline: none;
+}
+
+.place__about {
+  margin: 12px 0 0;
+  font-size: 16px;
+  line-height: 1.6;
+  color: #2c2c2c;
+  overflow-wrap: anywhere;
+}
+
+.place__facts {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 10px 16px;
+  margin: 22px 0 0;
+  padding-top: 18px;
+  border-top: 1px solid var(--marble-line);
+  font-size: 14px;
+}
+
+.place__facts dt {
+  color: var(--ink-soft);
+}
+
+.place__facts dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.place__mono {
+  font: 13px var(--mono);
+}
+
+.place__dot {
+  display: inline-block;
+  width: 9px;
+  height: 9px;
+  margin-right: 8px;
+  border-radius: 50%;
+  border: 1.5px solid var(--ink);
+  vertical-align: middle;
+}
+
+.place__dot--up {
+  background: var(--ink);
+}
+
+.place__dot--unknown {
+  border-color: #8a8a8a;
+}
+
+.place__when {
+  color: var(--ink-soft);
+}
+
+.place__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 22px;
+}
+
+.place__primary,
+.place__secondary {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 16px;
+  border-radius: var(--radius);
+  font: 500 14px var(--sans);
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.place__primary {
+  border: 1px solid var(--ink);
+  background: var(--ink);
+  color: var(--marble);
+}
+
+.place__secondary {
+  border: 1px solid var(--marble-line);
+  background: transparent;
+  color: var(--ink);
+}
+
+.place__nav {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  border-top: 1px solid var(--marble-line);
+}
+
+.place__nav button {
+  min-height: 52px;
+  border: 0;
+  background: transparent;
+  color: var(--ink);
+  font: 600 12px/1 var(--display);
+  letter-spacing: 0.1em;
+  cursor: pointer;
+}
+
+.place__nav button:hover {
+  background: var(--marble-2);
+}
+
+.place__nav button + button {
+  border-left: 1px solid var(--marble-line);
+}
+
+/* The editor's actions inside the light panel. */
+.place .map-card__actions {
+  border-top-color: var(--marble-line);
+}
+
+.place .map-card__actions .btn {
+  border-color: var(--marble-line);
+  background: #ffffff;
+  color: var(--ink);
+}
+
+.place .map-card__hint {
+  color: var(--ink-soft);
+}
+
+.map-notice.map__unplaced {
+  top: auto;
+  bottom: 90px;
+}
+
+/* ---- the editor's dialogs, picker and form (on stone) ---- */
 
 .map-edit {
   display: inline-flex;
@@ -146,102 +835,21 @@
   color: var(--stone-ink);
 }
 
-.map__key {
-  position: absolute;
-  left: 20px;
-  bottom: 16px;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px 18px;
-  max-width: calc(100% - 40px);
-  padding: 8px 12px;
-  border: 1px solid var(--stone-line);
-  border-radius: var(--radius);
-  background: rgba(14, 14, 14, 0.78);
-  font-size: 12.5px;
-  color: var(--stone-soft);
-}
-
-.map__key > span {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.map__key-glyph {
-  display: inline-block;
-  width: 14px;
-  height: 11px;
-  border: 1px solid var(--stone-soft);
-}
-
-/* A pediment for the services, a flat roof for the works. */
-.map__key-glyph--service {
-  border: 0;
-  background: var(--stone-ink);
-  clip-path: polygon(50% 0, 100% 40%, 100% 100%, 0 100%, 0 40%);
-}
-
-.map__key-glyph--machine {
-  background: #8a8a8a;
-  border-color: #8a8a8a;
-}
-
-.map-dot {
-  display: inline-block;
-  flex: none;
-  width: 9px;
-  height: 9px;
-  border-radius: 50%;
-  border: 1px solid var(--stone-soft);
-  vertical-align: middle;
-}
-
-.map-dot--up {
-  background: var(--stone-ink);
-  border-color: var(--stone-ink);
-}
-
-.map-dot--down {
-  background: transparent;
-  border-color: #6a6a6a;
-  border-style: dashed;
-}
-
-.map-dot--unknown {
-  border-color: #5a5a5a;
-}
-
-.map__hover {
-  position: fixed;
-  z-index: 5;
-  padding: 4px 8px;
-  border: 1px solid var(--stone-line);
-  border-radius: var(--radius);
-  background: rgba(14, 14, 14, 0.9);
-  font: 600 13px/1.2 var(--display);
-  letter-spacing: 0.04em;
-  pointer-events: none;
-}
-
 .map__panel {
   position: absolute;
-  top: 64px;
-  bottom: 64px;
-  width: min(360px, calc(100% - 32px));
+  top: 16px;
+  bottom: 16px;
+  z-index: 8;
+  width: min(380px, calc(100% - 32px));
   overflow: auto;
   border: 1px solid var(--stone-line);
   border-radius: var(--radius);
-  background: rgba(20, 20, 20, 0.94);
+  background: rgba(20, 20, 20, 0.96);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
 }
 
 .map__panel--card {
   right: 16px;
-}
-
-.map__panel--list {
-  left: 16px;
-  top: 92px;
 }
 
 .map-card {
@@ -599,40 +1207,85 @@
   top: 90px;
 }
 
-/* Phones: the card and the list rise from the bottom. */
+
+/* With a place open beside the map, the controls keep to the map's side. */
+@media (min-width: 900px) {
+  .map:has(.map__place) .mapbar {
+    left: calc((100% - min(460px, 38vw)) / 2);
+  }
+
+  .map:has(.map__place) .map__tools {
+    right: calc(min(460px, 38vw) + 22px);
+  }
+
+  .map:has(.map__place) .map__tools .map-edit__why {
+    display: none;
+  }
+}
+
+/* Tablets: the editor's tools go to the top corner, clear of the bar. */
+@media (max-width: 1279px) {
+  .map__tools {
+    top: 14px;
+    bottom: auto;
+    align-items: flex-start;
+  }
+
+  .map__tools .map-edit__why {
+    max-width: 220px;
+  }
+}
+
+/* ---- phones and small tablets: the place rises from the bottom ---- */
+
 @media (max-width: 899px) {
+  .map__place {
+    top: auto;
+    left: 0;
+    width: auto;
+    height: 52%;
+    box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.45);
+    animation-name: map-sheet;
+  }
+
+  @keyframes map-sheet {
+    from {
+      transform: translateY(100%);
+    }
+  }
+
+  .place__bar {
+    min-height: 52px;
+    padding-left: 18px;
+  }
+
+  .place__body {
+    padding: 18px 18px 14px;
+  }
+
+  .place__portrait {
+    display: none;
+  }
+
+  .place h2 {
+    font-size: 24px;
+  }
+
+  /* While a place is open on a phone, its sheet carries the navigation. */
+  .map[data-phase='place'] .mapbar,
+  .map[data-phase='place'] .compass,
+  .map[data-phase='place'] .map__tools,
+  .map[data-phase='travelling'] .mapbar {
+    display: none;
+  }
+
   .map__panel {
     top: auto;
     bottom: 0;
     left: 0;
     right: 0;
     width: auto;
-    max-height: 62%;
-    border-radius: var(--radius) var(--radius) 0 0;
-  }
-
-  .map__panel--list {
-    top: auto;
-  }
-
-  .map__key {
-    display: none;
-  }
-
-  .map__title h1 {
-    font-size: 20px;
-  }
-
-  .map__tools {
-    top: auto;
-    bottom: 12px;
-    right: 12px;
-  }
-
-  .map .btn,
-  .map .segmented button,
-  .map-card__close {
-    min-height: 44px;
+    max-height: 70%;
   }
 
   .map-picker {
@@ -640,7 +1293,49 @@
   }
 }
 
-.map__unplaced {
-  top: auto;
-  bottom: 110px;
+@media (max-width: 719px) {
+  .mapbar {
+    bottom: 14px;
+  }
+
+  .mapbar__select {
+    min-width: 0;
+    width: calc(100vw - 150px);
+  }
+
+  .compass {
+    left: auto;
+    right: 12px;
+    bottom: 80px;
+    width: 48px;
+    height: 48px;
+  }
+
+  .compass svg {
+    width: 48px;
+    height: 48px;
+  }
+
+  .map__tools {
+    top: 12px;
+    right: 12px;
+    bottom: auto;
+  }
+
+  .map__tools .map-edit__why {
+    display: none;
+  }
+
+  .map-lesson span {
+    font-size: 28px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .map__place,
+  .directory,
+  .map-intro > *,
+  .map-lesson {
+    animation: none;
+  }
 }

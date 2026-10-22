@@ -115,7 +115,7 @@ export function App() {
           <Suspense fallback={<Loading what={route.page === 'home' ? 'the page' : `the ${route.page}`} />}>
             {route.page === 'home' && <HomePage />}
             {route.page === 'catalogue' && <CataloguePage />}
-            {route.page === 'map' && <MapPage />}
+            {route.page === 'map' && <MapPage arg={route.arg} />}
             {route.page === 'guide' && <GuidePage doc={route.arg} />}
             {route.page === 'downloads' && <DownloadsPage />}
           </Suspense>

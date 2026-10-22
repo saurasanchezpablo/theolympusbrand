@@ -7,24 +7,37 @@ header (**Map**).
 
 ## Looking around
 
-Drag to move across the island, scroll (or pinch) to come down closer,
-right-drag (or two fingers) to tilt. Hover a building to see its name; click
-it to open its card:
+The first time in a visit, the map opens above the clouds: **Explore the
+map** parts them and brings the island into view; **All places** goes
+straight to the list of every place. Then drag (or swipe) to move, scroll
+(or pinch) to come down closer, right-drag (or two fingers) to tilt; the
+map shows each gesture once.
 
-- its name, its seal or its own logo, what it is, and a line about it;
-- for a service, its address, with **Open**;
+Every building carries a mark: a **round** one for a service, a **square**
+one for a machine; a hollow dot means it does not answer. Hover or focus a
+mark to see its name; click it (or press Enter) to travel there. The camera
+comes down to the building and a panel opens beside it — at the bottom on a
+phone — with:
+
+- the building on its own, its name and a line about it;
+- for a service, its address, with **Open** and **Copy the address**;
 - for a machine, its address on the network, its host name, its system and its role;
-- whether it answers: a dot that says **Online** or **Offline**, and when it was last checked.
+- whether it answers: **Online** or **Offline**, and when it was last checked;
+- **Previous** and **Next** to go from place to place, and **The island**
+  (or ×, Escape, or the house button in the bar) to come back up.
 
-**Services** stand in temples, gates, halls, theatres, towers and monuments;
-**machines** in the house's works — rack halls, forges, workshops, granaries,
-watch towers. The key in the corner says which is which, and the filter shows
-only one or the other. **List** opens every building as a list, with a search
-box — the way to the cards from the keyboard or a screen reader.
+The bar at the bottom names where you are. Its selector opens the
+**directory**: every place, by kind, with a search box and a filter for
+services or machines — the way to every place from the keyboard or a screen
+reader. The compass in the corner turns with the view; click it to face
+north.
 
-On a phone, on a slow connection, or in a browser without WebGL, the map is a
-picture of the island from straight above, with the same list and cards.
-**Turn it in 3D** brings the island when you want it.
+The address follows: `#/map` is the island, `#/map/<id>` a place — the
+browser's back button returns, and a link to a place opens it directly.
+
+On a slow connection (saving data) or in a browser without WebGL, the map
+is a picture of the island from straight above. **Turn it in 3D** brings the
+island when you want it.
 
 ## Changing it
 
@@ -40,11 +53,11 @@ picture of the island from straight above, with the same list and cards.
   set it down: where it cannot stand — in the sea, on a cliff, too close to
   another building, off the island — the map says why. A terrace is levelled
   under it.
-- Its card opens as a form: the name, the address, the network address, a
+- A form opens: the name, the address, the network address, a
   logo (an SVG file), what kind of service it is; for a machine, its host
   name, system and role. **Save**.
 - A building on the map: drag it to move it, turn it with the handle, give it
-  another building, change its card, or **Delete** it.
+  another building, change its details, or **Delete** it — from its panel.
 - **Undo** (Ctrl+Z) takes back the last change.
 
 Each change is saved on the server at once. A new service, or a change to a
@@ -82,7 +95,7 @@ left, the map says which buildings it could not place.
 ## Online and offline
 
 The server pings each address on the map (a service's network address, or
-the host of its web address; a machine's address or host name) when a card
+the host of its web address; a machine's address or host name) when a place
 is open, and every quarter of a minute at most. It never pings anything that
 is not on the map. A machine that does not answer pings shows **Offline**
 even when it is up.
