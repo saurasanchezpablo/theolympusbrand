@@ -22,6 +22,7 @@ site-releases/
 
 # What is added from the map lives on the server only (OLYMPUS_DATA).
 data/
-# The map's list, picture and logos come from each server's own data (npm run map); its island is kept.
+# The map's list, picture and logos come from each server's own data (npm run map); its island and city are kept.
 assets/map/*
 !assets/map/terrain.bin
+!assets/map/city.json

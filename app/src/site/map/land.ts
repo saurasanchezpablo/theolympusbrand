@@ -63,7 +63,9 @@ tone = mix(tone, 0.2, 1.0 - smoothstep(0.2, 2.5, h));
 vec3 base = vec3(tone) * (0.7 + 0.6 * diffuseColor.r);
 float minor = line(h, 4.0, 1.1) * 0.45;
 float major = line(h, 20.0, 1.8);
-base = mix(base, vec3(0.42), clamp(minor + major, 0.0, 1.0) * step(0.3, h));
+// On steep faces the engraving fades: there the lines crowd into stripes that read as terraces.
+float steep = 1.0 - smoothstep(0.3, 0.62, slope) * 0.85;
+base = mix(base, vec3(0.42), clamp(minor * steep + major * mix(0.35, 1.0, steep), 0.0, 1.0) * step(0.3, h));
 // Shadows of the clouds passing over, soft and slow.
 vec2 c = vW.xz * 0.0065 + vec2(-uTime * 0.016, 0.0);
 float cloud = n2(c) * 0.6 + n2(c * 2.1 + 7.0) * 0.4;

@@ -22,7 +22,7 @@ import { dataLogo, loadMachines, loadPlaces, removeItem, saveMachine, savePlace,
 import { ID, SPEC_KEYS, isHost, validateSpec } from '../../../src/catalog/service.ts';
 import { validateMachine } from '../../../src/catalog/machine.ts';
 import { validatePlace } from '../../../src/map/places.ts';
-import { makeTerrain } from '../../../src/map/terrain.ts';
+import { island } from '../../../src/map/island.ts';
 import { mapData } from '../../../src/map/items.ts';
 import { building } from '../../../src/map/buildings/index.ts';
 import { importLogo } from '../../../src/geometry/logo.ts';
@@ -89,7 +89,7 @@ const send = (res: ServerResponse, status: number, value: unknown, headers: Reco
 export type EditorOptions = { port: number; host: string; delayScale?: number; statusTtl?: number; reachable?: (host: string) => Promise<boolean> };
 
 export async function createEditor(opts: EditorOptions): Promise<{ url: string; close: () => Promise<void> }> {
-  const terrain = makeTerrain();
+  const { plan } = island();
   const sessions = new Sessions();
   const throttle = new Throttle(opts.delayScale ?? 1);
   const ttl = opts.statusTtl ?? 15_000;
@@ -110,7 +110,7 @@ export async function createEditor(opts: EditorOptions): Promise<{ url: string; 
     const services = loadCatalog();
     const machines = loadMachines();
     const logos = new Set([...services, ...machines].filter((x) => x.logo && (dataLogo(x.id) || existsSync(join(CATALOG_DIR, x.logo)))).map((x) => x.id));
-    return { services, machines, data: mapData(services, machines, loadPlaces(), terrain, logos) };
+    return { services, machines, data: mapData(services, machines, loadPlaces(), plan, logos) };
   };
   const logoText = (id: string, logo: string | undefined) => {
     if (!logo) return null;

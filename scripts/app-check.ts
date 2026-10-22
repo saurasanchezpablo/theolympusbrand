@@ -20,6 +20,9 @@ import { markFor, modelFiles } from '../src/manufacturing/files.ts';
 import { suggestedParams } from '../src/manufacturing/products.ts';
 import { coinSvg } from '../src/integrations/kit.ts';
 import { baseMarks } from '../src/catalog/fileset.ts';
+import { island } from '../src/map/island.ts';
+import { standOn } from '../src/map/placement.ts';
+import { extentOf } from '../src/map/buildings/index.ts';
 import { buildSticker, stickerPdf, STICKER_DEFAULTS } from '../src/manufacturing/stickers.ts';
 import { Resvg } from '@resvg/resvg-js';
 import jsQRModule from 'jsqr';
@@ -477,7 +480,7 @@ try {
     await mp.getByRole('button', { name: 'Lighthouse' }).click();
     const box = (await mp.locator('.map__canvas').boundingBox())!;
     await mp.mouse.move(box.x + box.width * 0.985, box.y + box.height * 0.45, { steps: 3 });
-    await mp.locator('.map-placing__why', { hasText: /In the sea|Off the island/ }).waitFor();
+    await mp.locator('.map-placing__why', { hasText: /Choose a plot|Off the island/ }).waitFor();
     let placed = false;
     for (const [fx, fy] of [[0.35, 0.75], [0.3, 0.6], [0.6, 0.75], [0.25, 0.5], [0.7, 0.6], [0.45, 0.8]]) {
       await mp.mouse.move(box.x + box.width * fx, box.y + box.height * fy, { steps: 3 });
@@ -494,7 +497,15 @@ try {
     await mp.getByRole('button', { name: 'Save' }).click();
     await mp.locator('.place h2', { hasText: 'Uptime watch' }).waitFor({ timeout: 60_000 });
     assert.ok(existsSync(join(EDITOR_DATA, 'services/uptime-watch.json')), 'saved in the data folder');
-    assert.equal(JSON.parse(readFileSync(join(EDITOR_DATA, 'places.json'), 'utf8'))['uptime-watch'].building, 'lighthouse');
+    const saved = JSON.parse(readFileSync(join(EDITOR_DATA, 'places.json'), 'utf8'))['uptime-watch'];
+    assert.equal(saved.building, 'lighthouse');
+    assert.ok(
+      island().plan.lots.some((l) => {
+        const at = standOn(l, extentOf('lighthouse'), saved.rotation);
+        return at && Math.abs(at.x - saved.x) < 0.05 && Math.abs(at.z - saved.z) < 0.05;
+      }),
+      'set down on a plot, centred and turned to its street',
+    );
     assert.ok(!existsSync(join(ROOT, 'catalog/services/uptime-watch.json')), 'not in the repository');
     const before = JSON.parse(readFileSync(join(EDITOR_DATA, 'places.json'), 'utf8'))['uptime-watch'].rotation;
     await mp.getByRole('button', { name: 'Turn it left' }).click();
@@ -507,7 +518,7 @@ try {
     await mp.waitForFunction(() => !document.querySelector('.map-edit button:disabled'));
     assert.ok(existsSync(join(EDITOR_DATA, 'services/uptime-watch.json')), 'undo brings it back');
     await shot(mp, '18-map-editing');
-    step('map: editing — sign in, add a lighthouse where it may stand (the sea refused, with the reason), save to the data folder, turn, delete, undo');
+    step('map: editing — sign in, add a lighthouse on a plot (the sea refused, with the reason), save to the data folder, turn, delete, undo');
 
     // Without the edit service, the map still shows, and saving says why.
     editor?.kill();

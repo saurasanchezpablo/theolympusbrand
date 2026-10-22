@@ -1,6 +1,8 @@
 // The map's 3D scene (its own chunk, loaded only on #/map): the island of
-// engraved graphite with its forests and sea, a marble building for each
-// service and machine, a layer of cloud whose shadows drift over the land.
+// engraved graphite with its forests and sea, the city planned on it (its
+// streets, terraces, squares and houses, city-mesh.ts), a marble building in
+// its precinct for each service and machine, a layer of cloud whose shadows
+// drift over the land.
 //
 // The camera has three poses — the intro (straight down, above the clouds),
 // the overview (high above, a little tilted, the island filling the screen)
@@ -41,10 +43,14 @@ import {
 } from 'three';
 import { MapControls } from 'three/examples/jsm/controls/MapControls.js';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
-import { MAP, decodeTerrain, heightAt, withTerraces, type Terrain } from '../../../../src/map/terrain.ts';
+import { MAP, decodeTerrain, heightAt, type Terrain } from '../../../../src/map/terrain.ts';
 import { scatterTrees } from '../../../../src/map/vegetation.ts';
-import { canPlace, type Refusal } from '../../../../src/map/placement.ts';
-import { building } from '../../../../src/map/buildings/index.ts';
+import { placeAt, plotsOf, type Refusal } from '../../../../src/map/placement.ts';
+import { townArea, type CityPlan, type Lot } from '../../../../src/map/city.ts';
+import { fabric } from '../../../../src/map/fabric.ts';
+import { building, extentOf } from '../../../../src/map/buildings/index.ts';
+import { buildCity, buildFabric, cityTrees, type Fabric } from './city-mesh.ts';
+import { createPeople } from './people.ts';
 import { seeded } from '../../../../src/map/noise.ts';
 import type { MapEntry } from '../../../../src/map/items.ts';
 import { marbleMaterial } from './marble.ts';
@@ -79,9 +85,12 @@ export type MapScene = {
   north(): void;
   pick(clientX: number, clientY: number): string | null;
   groundAt(clientX: number, clientY: number): { x: number; z: number } | null;
-  ghost(type: string | null, at?: { x: number; z: number; rotation: number }, except?: string): { ok: true } | { ok: false; why: Refusal } | null;
+  /** The building being placed, snapped to the plot under the point: where it would stand, or why it cannot. */
+  ghost(type: string | null, at?: { x: number; z: number; rotation: number }, except?: string): { ok: true; place: { x: number; z: number; rotation: number } } | { ok: false; why: Refusal } | null;
   setPanning(on: boolean): void;
-  stats(): { triangles: number; calls: number; fps: number };
+  stats(): { triangles: number; calls: number; fps: number; people: number; peopleMs: number };
+  /** Test hook: put the camera at a pose (target x/z on the ground, distance, tilt from straight down, turn from north). */
+  look(p: { x: number; z: number; distance: number; polar: number; azimuth: number }): void;
   dispose(): void;
 };
 
@@ -111,7 +120,9 @@ function treeGeometries() {
   const pineNear = merge([0, 1, 2, 3].map((i): BufferGeometry => new ConeGeometry(1.0 - i * 0.2, 1.3, 7).translate(0, 1.0 + i * 0.75, 0)).concat([new CylinderGeometry(0.1, 0.13, 1.0, 5).translate(0, 0.5, 0)]));
   const broadFar = clean(new IcosahedronGeometry(1.15, 0).scale(1, 1.1, 1).translate(0, 1.7, 0));
   const pineFar = clean(new ConeGeometry(0.95, 3.6, 5).translate(0, 2.2, 0));
-  return { broadNear, broadFar, pineNear, pineFar };
+  // An olive of the groves: a short trunk, a low open crown.
+  const oliveFar = merge([new CylinderGeometry(0.1, 0.15, 0.9, 5).translate(0, 0.45, 0), new IcosahedronGeometry(0.85, 0).scale(1.15, 0.7, 1.15).translate(0, 1.35, 0)]);
+  return { broadNear, broadFar, pineNear, pineFar, oliveFar };
 }
 
 /** Soft puffs of cloud, grey, drawn once. */
@@ -138,9 +149,11 @@ function cloudTexture(): CanvasTexture {
 /** A camera pose: where it looks, how far, how tilted (from straight down), which way it faces. */
 type Pose = { target: Vector3; distance: number; polar: number; azimuth: number };
 
-export function createMapScene(canvas: HTMLCanvasElement, terrainBytes: ArrayBuffer, opts: { reducedMotion: boolean; lite: boolean }): MapScene {
+export function createMapScene(canvas: HTMLCanvasElement, terrainBytes: ArrayBuffer, plan: CityPlan, opts: { reducedMotion: boolean; lite: boolean }): MapScene {
   const base = decodeTerrain(new Uint8Array(terrainBytes));
-  let land: Terrain = base;
+  const land: Terrain = base;
+  const plots = plotsOf(plan);
+  const lotOf = (id: string): Lot | undefined => plots.byId.get(id);
   const still = opts.reducedMotion;
 
   const renderer = new WebGLRenderer({ canvas, antialias: !opts.lite, powerPreference: 'high-performance' });
@@ -188,13 +201,13 @@ export function createMapScene(canvas: HTMLCanvasElement, terrainBytes: ArrayBuf
   landMesh.receiveShadow = true;
   landMesh.castShadow = true;
   scene.add(landMesh);
-  const shape = () => {
+  {
     const p = landGeo.attributes.position;
     for (let i = 0; i < p.count; i++) p.setY(i, heightAt(land, p.getX(i), p.getZ(i)));
     p.needsUpdate = true;
     landGeo.computeVertexNormals();
     landGeo.computeBoundingSphere();
-  };
+  }
   const sea = new Mesh(new PlaneGeometry(3000, 3000), seaMaterial());
   sea.rotation.x = -Math.PI / 2;
   sea.position.y = MAP.sea;
@@ -209,11 +222,28 @@ export function createMapScene(canvas: HTMLCanvasElement, terrainBytes: ArrayBuf
   let tiles: Tile[] = [];
   const forest = new Group();
   scene.add(forest);
-  const plant = (sites: { x: number; z: number; r: number }[]) => {
+  const inTown = townArea(plan);
+  const oliveMat = new MeshStandardMaterial({ color: 0x8c8c8c, roughness: 0.95, flatShading: true });
+  const plant = () => {
+    const m = new Matrix4(),
+      q = new Quaternion(),
+      v = new Vector3(),
+      s = new Vector3(),
+      up = new Vector3(0, 1, 0);
     for (const t of tiles) for (const m of [...t.near, ...t.far]) m.dispose();
     forest.clear();
     tiles = [];
-    const { broad, pine } = scatterTrees(land, sites);
+    // The forests keep out of the town, with a margin of open ground round it; olive groves ring it beyond its wall.
+    const [bx0, bz0, bx1, bz1] = plan.bounds;
+    const belt = (x: number, z: number) => Math.hypot(Math.max(bx0 - x, 0, x - bx1), Math.max(bz0 - z, 0, z - bz1)) < 34;
+    const { broad, pine, olive } = scatterTrees(land, (x, z) => inTown(x, z, 4), belt);
+    if (olive.length) {
+      const mesh = new InstancedMesh(treeGeo.oliveFar, oliveMat, olive.length / 5);
+      for (let i = 0, k = 0; i < olive.length; i += 5, k++) mesh.setMatrixAt(k, m.compose(v.set(olive[i], olive[i + 1], olive[i + 2]), q.setFromAxisAngle(up, olive[i + 4]), s.setScalar(olive[i + 3])));
+      mesh.castShadow = mesh.receiveShadow = true;
+      mesh.computeBoundingSphere();
+      forest.add(mesh);
+    }
     const size = MAP.size / TILES;
     const buckets = Array.from({ length: TILES * TILES }, () => ({ broad: [] as number[], pine: [] as number[] }));
     const into = (arr: Float32Array, key: 'broad' | 'pine') => {
@@ -225,11 +255,6 @@ export function createMapScene(canvas: HTMLCanvasElement, terrainBytes: ArrayBuf
     };
     into(broad, 'broad');
     into(pine, 'pine');
-    const m = new Matrix4(),
-      q = new Quaternion(),
-      v = new Vector3(),
-      s = new Vector3(),
-      up = new Vector3(0, 1, 0);
     buckets.forEach((b, k) => {
       const tile: Tile = { centre: new Vector3(-MAP.size / 2 + ((k % TILES) + 0.5) * size, 0, -MAP.size / 2 + (Math.floor(k / TILES) + 0.5) * size), near: [], far: [] };
       for (const [arr, idx, near, far, mat] of [
@@ -256,6 +281,8 @@ export function createMapScene(canvas: HTMLCanvasElement, terrainBytes: ArrayBuf
     });
   };
 
+  plant();
+
   // ---- buildings ----
   const marble = marbleMaterial();
   const geoCache = new Map<string, BufferGeometry>();
@@ -269,6 +296,19 @@ export function createMapScene(canvas: HTMLCanvasElement, terrainBytes: ArrayBuf
     }
     return g;
   };
+  // ---- the city: its stone built once; its houses and precincts with the items ----
+  const trees = cityTrees();
+  const city = buildCity(plan, (type) => geometryOf(type, 'near'), S, trees, (x, z) => heightAt(land, x, z));
+  scene.add(city.group);
+  let houses: Fabric | null = null;
+
+  // The people: a crowd on the walkways and squares, fewer on a phone. (How long their step takes, for the page's numbers.)
+  let peopleMs = 0;
+  const people = createPeople(plan, { count: opts.lite ? 160 : 420, still: opts.reducedMotion });
+  scene.add(people.group);
+
+  /** Which plot each item stands on: plot id → item id. */
+  let taken = new Map<string, string>();
   type Placed = { entry: MapEntry; type: string; matrix: Matrix4; pos: Vector3; top: Vector3 };
   let placed: Placed[] = [];
   let groups = new Map<string, { near: InstancedMesh; far: InstancedMesh; members: Placed[] }>();
@@ -327,10 +367,14 @@ export function createMapScene(canvas: HTMLCanvasElement, terrainBytes: ArrayBuf
 
   const setItems = (items: readonly MapEntry[]) => {
     const kept = items.filter((e) => building(e.place.building));
-    const sites = kept.map((e) => ({ x: e.place.x, z: e.place.z, r: footprintOf(e.place.building) }));
-    land = withTerraces(base, sites);
-    shape();
-    plant(sites);
+    // The houses fill every plot no item takes; each item stands in its precinct.
+    taken = new Map(kept.map((e) => [e.lot, e.id]));
+    // A sports ground with a building on it is no longer a running track.
+    for (const [id, g] of city.fields) g.visible = !kept.some((e) => e.lot === id || e.lot.startsWith(`${id}:`));
+    houses?.dispose();
+    if (houses) scene.remove(houses.group);
+    houses = buildFabric(fabric(plan, taken), kept.map((e) => lotOf(e.lot)).filter((l): l is Lot => !!l), trees.olive);
+    scene.add(houses.group);
     for (const g of groups.values()) {
       g.near.dispose();
       g.far.dispose();
@@ -338,7 +382,7 @@ export function createMapScene(canvas: HTMLCanvasElement, terrainBytes: ArrayBuf
     town.clear();
     groups = new Map();
     placed = kept.map((entry) => {
-      const pos = new Vector3(entry.place.x, heightAt(land, entry.place.x, entry.place.z) - 0.05, entry.place.z);
+      const pos = new Vector3(entry.place.x, lotOf(entry.lot)?.ground ?? heightAt(land, entry.place.x, entry.place.z), entry.place.z);
       const matrix = new Matrix4().compose(pos, new Quaternion().setFromAxisAngle(new Vector3(0, 1, 0), entry.place.rotation), new Vector3(S, S, S));
       const geo = geometryOf(entry.place.building, 'far');
       geo.computeBoundingBox();
@@ -533,6 +577,18 @@ export function createMapScene(canvas: HTMLCanvasElement, terrainBytes: ArrayBuf
       }
       dirty = true;
     }
+    // The people walk while they can be seen — the camera close enough — for three minutes after the last touch.
+    const near = camera.position.distanceTo(controls.target) < 340;
+    if (people.group.visible !== near) {
+      people.setVisible(near);
+      dirty = true;
+    }
+    if (near && !still && now - lastInput < 180_000 && now - lastDraw > 33) {
+      const t0 = performance.now();
+      people.update(dt);
+      peopleMs = peopleMs * 0.9 + (performance.now() - t0) * 0.1;
+      dirty = true;
+    }
     if (!dirty) return;
     dirty = false;
     const d = camera.position.distanceTo(controls.target);
@@ -682,20 +738,31 @@ export function createMapScene(canvas: HTMLCanvasElement, terrainBytes: ArrayBuf
         ghostMesh.scale.setScalar(S);
         scene.add(ghostMesh);
       }
-      const others = placed.filter((p) => p.entry.id !== except).map((p) => ({ place: p.entry.place, footprint: footprintOf(p.type) }));
-      const verdict = canPlace(base, at, footprintOf(type), others);
-      ghostMesh.position.set(at.x, heightAt(land, at.x, at.z), at.z);
-      ghostMesh.rotation.y = at.rotation;
+      // Snapped to the plot under the pointer, turned to its street.
+      const verdict = placeAt(plots, at.x, at.z, extentOf(type), taken, { except, rotation: at.rotation });
+      if (verdict.ok) {
+        ghostMesh.position.set(verdict.place.x, verdict.lot.ground, verdict.place.z);
+        ghostMesh.rotation.y = verdict.place.rotation;
+      } else {
+        ghostMesh.position.set(at.x, heightAt(land, at.x, at.z), at.z);
+        ghostMesh.rotation.y = at.rotation;
+      }
       ghostMat.opacity = verdict.ok ? 0.75 : 0.3;
       ghostMat.color.setScalar(verdict.ok ? 1 : 0.35);
       wake();
-      return verdict;
+      return verdict.ok ? { ok: true, place: verdict.place } : verdict;
     },
     setPanning(on) {
       controls.enabled = on;
     },
+    look(p) {
+      orbit = false;
+      tween = null;
+      place({ target: new Vector3(p.x, heightAt(land, p.x, p.z), p.z), distance: p.distance, polar: p.polar, azimuth: p.azimuth });
+      wake();
+    },
     stats() {
-      return { triangles: renderer.info.render.triangles, calls: renderer.info.render.calls, fps: frames.length };
+      return { triangles: renderer.info.render.triangles, calls: renderer.info.render.calls, fps: frames.length, people: people.group.visible ? people.count : 0, peopleMs: Math.round(peopleMs * 100) / 100 };
     },
     dispose() {
       running = false;
@@ -703,6 +770,9 @@ export function createMapScene(canvas: HTMLCanvasElement, terrainBytes: ArrayBuf
       ro.disconnect();
       controls.dispose();
       for (const g of geoCache.values()) g.dispose();
+      city.dispose();
+      people.dispose();
+      houses?.dispose();
       landGeo.dispose();
       renderer.dispose();
     },

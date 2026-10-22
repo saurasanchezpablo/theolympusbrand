@@ -7,13 +7,13 @@ import assert from 'node:assert/strict';
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { loadCatalog } from '../src/node/catalog.ts';
-import { makeTerrain } from '../src/map/terrain.ts';
+import { island } from '../src/map/island.ts';
 import { mapData, ENTRY_KEYS } from '../src/map/items.ts';
 import { stillImage } from '../src/map/still.ts';
 import '../src/map/buildings/index.ts';
 
 const ROOT = new URL('..', import.meta.url).pathname;
-const t = makeTerrain();
+const { plan: t, land } = island();
 const services = loadCatalog(join(ROOT, 'catalog/services'));
 
 test('the data lists every service and machine with a place', () => {
@@ -35,10 +35,15 @@ test('the data lists every service and machine with a place', () => {
   assert.equal(jf.url, 'https://jellyfin.theolympus.cloud');
 });
 
-test('owner places win, and a building the catalogue does not have falls back', () => {
-  const d = mapData(services, [], { jellyfin: { building: 'theatre', x: 10, z: 12, rotation: 1 }, nextcloud: { building: 'no-such-building', x: 40, z: 40, rotation: 0 } }, t);
+test('owner places win — on the plot under them, turned to its street — and a building the catalogue does not have falls back', () => {
+  // A great altar dropped near the middle of a block: it stands on that block, centred, facing its street.
+  const block = t.lots.find((l) => l.part === 'whole' && l.district === 'town')!;
+  const [x0, z0, x1, z1] = block.rect;
+  const d = mapData(services, [], { jellyfin: { building: 'great-altar', x: (x0 + x1) / 2 + 1, z: (z0 + z1) / 2 - 2, rotation: 1 }, nextcloud: { building: 'no-such-building', x: 40, z: 40, rotation: 0 } }, t);
   const jf = d.items.find((e) => e.id === 'jellyfin')!;
-  assert.deepEqual(jf.place, { building: 'theatre', x: 10, z: 12, rotation: 1 });
+  assert.equal(jf.lot, block.id);
+  assert.equal(jf.place.building, 'great-altar');
+  assert.equal(jf.place.rotation, Math.round(block.facing * 1000) / 1000);
   assert.equal(jf.placed, 'owner');
   const auto = mapData(services, [], {}, t).items.find((e) => e.id === 'nextcloud')!;
   assert.equal(d.items.find((e) => e.id === 'nextcloud')!.place.building, auto.place.building, 'the building it would be given');
@@ -51,8 +56,8 @@ test('nothing beyond the card leaves the data folder', () => {
 
 test('the still picture is the same every time, one grey channel', () => {
   const d = mapData(services, [], {}, t);
-  const a = stillImage(t, d, 256);
-  const b = stillImage(t, d, 256);
+  const a = stillImage(land, t, d, 256);
+  const b = stillImage(land, t, d, 256);
   assert.equal(a.length, 256 * 256);
   assert.deepEqual(a, b);
   const values = new Set(a);
@@ -69,11 +74,9 @@ test('a machine read back from its card keeps everything it had, its logo too', 
 });
 
 test('items with no room left are reported, not dropped in silence', () => {
-  // A small island: room for only a few buildings.
-  const res = 65;
-  const heights = new Float32Array(res * res).fill(-5);
-  for (let j = 28; j <= 36; j++) for (let i = 28; i <= 36; i++) heights[j * res + i] = 3;
-  const tiny = { size: 500, res, heights };
+  // A town of one block: room for only a few buildings.
+  const block = t.lots.find((l) => l.part === 'whole' && l.district === 'works')!;
+  const tiny = { ...t, lots: t.lots.filter((l) => l.id === block.id || l.parent === block.id || l.parent?.startsWith(block.id + ':')) };
   const many = Array.from({ length: 30 }, (_, i) => ({ id: `m-${String(i).padStart(2, '0')}`, name: `M ${i}` }));
   const d = mapData([], many, {}, tiny);
   assert.ok(d.items.length > 0 && d.items.length < 30);

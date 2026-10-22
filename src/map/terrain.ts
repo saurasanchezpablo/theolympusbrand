@@ -14,27 +14,103 @@ export const MAP = { size: 500, res: 625, seed: 1337, sea: 0, scale: 1.4, buildi
 /** Heights on a res × res grid covering size × size map units, centred on the origin; row by row along z. */
 export type Terrain = { size: number; res: number; heights: Float32Array };
 
+/** Where the summit stands, north of the island's centre (before the island's scale); the coast is drawn as it was with the summit at its middle. */
+const SUMMIT_Z = 80;
+const COAST_SUMMIT_Z = 6;
+
 /** The land's height at a point, before any terrace: a domain-warped island, the massif, its ridges and hills. */
-function landHeight(n: ReturnType<typeof gradientNoise>, x: number, z: number): number {
+function landHeight(n: ReturnType<typeof gradientNoise>, x: number, z: number, summitZ = SUMMIT_Z): number {
   x /= MAP.scale;
   z /= MAP.scale;
   const wx = x + n.fbm(x * 0.008 + 11, z * 0.008 + 3, 4) * 40;
   const wz = z + n.fbm(x * 0.008 + 7, z * 0.008 + 19, 4) * 40;
   const r = Math.hypot(wx, wz * 1.15) / 150;
   const island = Math.max(0, 1 - r * r);
-  const massif = Math.exp(-((x - 4) ** 2 + (z + 6) ** 2) / (2 * 46 ** 2));
+  // The mountain stands on the island's north side, behind the town.
+  const massif = Math.exp(-((x - 4) ** 2 + (z + summitZ) ** 2) / (2 * (summitZ === SUMMIT_Z ? 33 : 40) ** 2));
   const range = n.ridged(wx * 0.011, wz * 0.011);
   const hills = n.fbm(wx * 0.03, wz * 0.03, 5) * 0.5 + 0.5;
   return island * (6 + hills * 10) + massif * (34 + range * 46) + island * range * 14 - 9;
 }
 
+/**
+ * Where the town lies: a rounded rectangle on the island's south side, under the
+ * summit. Inside, the rough land gives way to gentle slopes rising from the
+ * shore (the city grid is graded into them); the edge blends back.
+ */
+export const TOWN = { cx: 0, cz: 72, rx: 250, rz: 138, rise: 0.1, quay: 1.6 } as const;
+
+const edgeNoise = gradientNoise(MAP.seed + 7);
+/** How much of the town's gentle land a point takes: 1 inside, 0 outside, a band between whose edge wanders. */
+export function townWeight(x: number, z: number): number {
+  // A rounded rectangle more than an ellipse, so the town reaches into the corners of the coast.
+  const e = (Math.abs((x - TOWN.cx) / TOWN.rx) ** 3 + Math.abs((z - TOWN.cz) / TOWN.rz) ** 3) ** (1 / 3);
+  // The edge wanders, so the hills meet the town in spurs and coves, not along a ruled line.
+  const wander = edgeNoise.fbm(x * 0.012 + 3, z * 0.012 - 5, 3) * 0.16;
+  const k = Math.min(1, Math.max(0, (1 - e + wander) / 0.26));
+  return k * k * (3 - 2 * k);
+}
+
+/** For each grid point, how far it is from the sea, in map units (a chamfer distance). */
+function distanceFromSea(h: Float32Array, res: number, step: number): Float32Array {
+  const d = new Float32Array(res * res);
+  for (let i = 0; i < d.length; i++) d[i] = h[i] <= MAP.sea ? 0 : 1e9;
+  const a = step,
+    b = step * Math.SQRT2;
+  for (let j = 0; j < res; j++)
+    for (let i = 0; i < res; i++) {
+      const k = j * res + i;
+      if (i > 0) d[k] = Math.min(d[k], d[k - 1] + a);
+      if (j > 0) {
+        d[k] = Math.min(d[k], d[k - res] + a);
+        if (i > 0) d[k] = Math.min(d[k], d[k - res - 1] + b);
+        if (i < res - 1) d[k] = Math.min(d[k], d[k - res + 1] + b);
+      }
+    }
+  for (let j = res - 1; j >= 0; j--)
+    for (let i = res - 1; i >= 0; i--) {
+      const k = j * res + i;
+      if (i < res - 1) d[k] = Math.min(d[k], d[k + 1] + a);
+      if (j < res - 1) {
+        d[k] = Math.min(d[k], d[k + res] + a);
+        if (i < res - 1) d[k] = Math.min(d[k], d[k + res + 1] + b);
+        if (i > 0) d[k] = Math.min(d[k], d[k + res - 1] + b);
+      }
+    }
+  return d;
+}
+
+/** The island: rough land round the edges and on the mountain, gentle slopes under the town. Not yet graded for the city. */
 export function makeTerrain(): Terrain {
   const { size, res, seed } = MAP;
   const n = gradientNoise(seed);
   const heights = new Float32Array(res * res);
+  const step = size / (res - 1);
   for (let j = 0; j < res; j++) {
-    const z = -size / 2 + (size * j) / (res - 1);
-    for (let i = 0; i < res; i++) heights[j * res + i] = landHeight(n, -size / 2 + (size * i) / (res - 1), z);
+    const z = -size / 2 + step * j;
+    for (let i = 0; i < res; i++) heights[j * res + i] = landHeight(n, -size / 2 + step * i, z);
+  }
+  // The town's land: rising evenly from the coast — the island's coast as it is drawn with the summit at its middle.
+  // Within the town, the shallows are made ground behind its quay (water up to 5 deep).
+  const coast = new Float32Array(res * res);
+  for (let j = 0; j < res; j++) {
+    const z = -size / 2 + step * j;
+    for (let i = 0; i < res; i++) {
+      const x = -size / 2 + step * i;
+      coast[j * res + i] = landHeight(n, x, z, COAST_SUMMIT_Z) + 5 * townWeight(x, z);
+    }
+  }
+  const fromSea = distanceFromSea(coast, res, step);
+  for (let j = 0; j < res; j++) {
+    const z = -size / 2 + step * j;
+    for (let i = 0; i < res; i++) {
+      const k = j * res + i;
+      const w = townWeight(-size / 2 + step * i, z);
+      if (w <= 0 || coast[k] <= MAP.sea) continue;
+      // A quay where the town meets the sea: the land starts a step above the water.
+      const gentle = MAP.sea + TOWN.quay + fromSea[k] * TOWN.rise;
+      heights[k] = heights[k] + (gentle - heights[k]) * w;
+    }
   }
   return { size, res, heights };
 }

@@ -1,9 +1,45 @@
 # 13 — The map
 
-The map is the house seen from above: Mount Olympus rising from a dark sea,
-in engraved graphite stone, its forests and contours, and on its slopes a
-marble building for every service and every machine. Open it from the site's
-header (**Map**).
+The map is the house seen from above: an island in a dark sea, Mount Olympus
+rising on its north side in engraved graphite stone, and under it a city
+laid out as the ancient planned cities were. Every service and every machine
+is a marble building in its own walled precinct in that city. Open it from
+the site's header (**Map**).
+
+## The city
+
+- **Streets of three ranks.** The *sacred way* runs north from the harbour
+  through the agora to the sanctuary, and the *main street* crosses it at the
+  agora; both are paved in great pale slabs. Streets come every few blocks,
+  and lanes of small dark setts run between them. Every street has a raised
+  walkway on each side, and stepping stones cross the roadway at the corners.
+- **Blocks on terraces.** The town steps up the hill block by block. Where a
+  terrace meets a street at a different height, its retaining wall shows.
+- **Places.** The *agora*, where the avenues cross, is the city's market
+  square: stoas, stalls, statues, a fountain and benches. The *sanctuary*,
+  at the top of the sacred way under the mountain, holds five precincts for
+  temples round a court lined with cypresses. A *grove* of olive trees has a
+  fountain at its heart, two *sports grounds* have a running track and banks
+  for onlookers, and the *works quarter* lies by the harbour.
+- **The wall.** A wall with towers surrounds the town. Gates open where the
+  avenues leave it, and roads run on from them to the sea. The south road
+  ends at the harbour's mole and its lighthouse. Olive groves ring the town
+  outside the wall, and forest covers the mountain.
+- **Houses.** Every plot no service or machine takes is filled by the city's
+  own houses: two courtyard houses to a quarter block, here and there a
+  two-storey house, a house round a peristyle, a garden, an orchard,
+  workshops in the works quarter. A building that leaves a plot gives it
+  back to the houses.
+- **People.** People walk the walkways and cross at the stepping stones.
+  They go to the agora, the sanctuary, the grove or along the streets, stand
+  about a while in the squares, and set off again; some walk in pairs. They
+  are drawn only when the view is close enough to see them, and stop three
+  minutes after you last touch the map. With reduced motion they stand
+  still.
+
+The city is the same every time: it is planned from the island when the
+site is built (`assets/map/city.json`, beside the island's
+`assets/map/terrain.bin`).
 
 ## Looking around
 
@@ -49,15 +85,18 @@ island when you want it.
   colonnades, council and assembly halls, libraries, markets, baths, theatres,
   a stadium, towers, a lighthouse, an aqueduct, monuments, houses) and eleven
   for machines. The ones that suit what you are adding come first; any
-  building can stand for anything. Choose one, then click on the island to
-  set it down: where it cannot stand — in the sea, on a cliff, too close to
-  another building, off the island — the map says why. A terrace is levelled
-  under it.
+  building can stand for anything. Choose one, then click a plot to set it
+  down. It stands on the smallest plot under the pointer that takes it (a
+  quarter of a block, a half, a whole block, a precinct of the sanctuary, a
+  sports ground for a stadium), centred and facing that plot's street. Where
+  it cannot stand, the map says why: not on a plot (a street, the sea,
+  outside the town), another building there, or too big for this plot.
 - A form opens: the name, the address, the network address, a
   logo (an SVG file), what kind of service it is; for a machine, its host
   name, system and role. **Save**.
-- A building on the map: drag it to move it, turn it with the handle, give it
-  another building, change its details, or **Delete** it — from its panel.
+- A building on the map: drag it to another plot, turn it a quarter at a time
+  (towards a side street when it fits that way), give it another building,
+  change its details, or **Delete** it — from its panel.
 - **Undo** (Ctrl+Z) takes back the last change.
 
 Each change is saved on the server at once. A new service, or a change to a
@@ -88,9 +127,13 @@ does not builds the house's catalogue alone, so nothing from a data folder
 can be committed by mistake. **Back it up**
 with the rest of the server's data. A service you add with
 `npm run service -- add` (into `catalog/`) appears on the map too: the map
-finds it a spot the first time it is shown and keeps it there until you move
-it, so adding a service never moves the others. If the island has no room
-left, the map says which buildings it could not place.
+finds it a plot the first time it is shown, and keeps it there until you
+move it, so adding a service never moves the others. Temples and shrines go
+to the sanctuary first, machines to the works quarter, and everything else
+to the plots nearest the agora. The city has room for about a hundred and
+fifty buildings. If it is full, the map says which buildings it could not
+place. A place saved before the city existed keeps its building on the
+nearest free plot that takes it.
 
 ## Online and offline
 

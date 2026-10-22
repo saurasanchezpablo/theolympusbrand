@@ -88,13 +88,14 @@ export function MapPage({ arg }: { arg?: string }) {
   useEffect(() => {
     if (!want3d || !data || !canvas.current || scene) return;
     let gone = false;
-    Promise.all([import('./map-scene.ts'), api.loadTerrain()])
-      .then(([m, terrain]) => {
+    Promise.all([import('./map-scene.ts'), api.loadTerrain(), api.loadCity()])
+      .then(([m, terrain, city]) => {
         if (gone || !canvas.current) return;
-        const s = m.createMapScene(canvas.current, terrain, { reducedMotion: reducedMotion(), lite: phone() });
+        const s = m.createMapScene(canvas.current, terrain, city, { reducedMotion: reducedMotion(), lite: phone() });
         s.setItems(data.items);
         s.onLearn((what) => setLesson((l) => (what === 'move' && l === 'move' ? 'zoom' : what === 'zoom' && l === 'zoom' ? null : l)));
         (window as Window & { olympusMapStats?: () => ReturnType<MapScene['stats']> }).olympusMapStats = () => s.stats();
+        (window as Window & { olympusMapLook?: MapScene['look'] }).olympusMapLook = (p) => s.look(p);
         const firstVisit = !seen() && !chosen;
         if (firstVisit) s.intro();
         setScene(s);

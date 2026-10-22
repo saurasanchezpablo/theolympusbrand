@@ -30,7 +30,8 @@ if (await page.locator('[data-phase="intro"]').count()) {
   await page.getByRole('button', { name: 'Explore the map' }).click();
   await page.waitForSelector('[data-phase="overview"]', { timeout: 60_000 });
 }
-await page.waitForTimeout(1500);
+// A software renderer draws a frame or two a second: wait for the page's state to reach the picture.
+await page.waitForTimeout(4000);
 await shot('2-overview');
 // A place, chosen on the map.
 const ring = page.locator('.hotspot:not([data-off="true"])').first();

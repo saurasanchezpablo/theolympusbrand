@@ -15,8 +15,9 @@ import { BuildingPicker } from './BuildingPicker.tsx';
 import * as api from './map-api.ts';
 import type { MapScene } from './map-scene.ts';
 
-const WHY: Record<string, string> = { sea: 'In the sea', cliff: 'Too steep here', crowded: 'Too close to another building', outside: 'Off the island' };
-const TURN = Math.PI / 12;
+const WHY: Record<string, string> = { 'no-plot': 'Choose a plot beside a street', taken: 'Another building stands here', 'too-big': 'Too big for this plot — try a whole block' };
+// A building turns a quarter at a time: to its street, or to the streets beside.
+const TURN = Math.PI / 2;
 const slug = (s: string) => s.normalize('NFKD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
 const norm = (r: number) => ((r % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2);
 
@@ -51,7 +52,7 @@ export function useMapEditor({ live, data, scene, selected, onSelect, reload }: 
   const [busy, setBusy] = useState(false);
   const undo = useRef<Step[]>([]);
   const redo = useRef<Step[]>([]);
-  const drag = useRef<null | { id: string; type: string; rotation: number; ok: boolean; at: { x: number; z: number } | null }>(null);
+  const drag = useRef<null | { id: string; type: string; rotation: number; ok: boolean; at: { x: number; z: number; rotation?: number } | null }>(null);
   const placeAt = useRef<{ x: number; z: number } | null>(null);
   const editing = !!session?.editing;
 
@@ -245,13 +246,14 @@ export function useMapEditor({ live, data, scene, selected, onSelect, reload }: 
       if (!at) {
         s.ghost(null);
         setVerdict('Off the island');
-        return { ok: false, at: null };
+        return { ok: false, at: null, pointer: null };
       }
       const v = s.ghost(type, { ...at, rotation }, except);
       setVerdict(v && !v.ok ? WHY[v.why] : '');
-      return { ok: !!v?.ok, at };
+      // Where it would stand: snapped to the plot, turned to its street.
+      return { ok: !!v?.ok, at: v?.ok ? v.place : null, pointer: at };
     };
-    if (placing) placeAt.current = ghostAt(placing.type, placing.rotation).at;
+    if (placing) placeAt.current = ghostAt(placing.type, placing.rotation).pointer;
     else if (drag.current) {
       const r = ghostAt(drag.current.type, drag.current.rotation, drag.current.id);
       drag.current.ok = r.ok;
@@ -265,7 +267,7 @@ export function useMapEditor({ live, data, scene, selected, onSelect, reload }: 
       const v = at && s?.ghost(placing.type, { ...at, rotation: placing.rotation });
       if (!at || !v || !v.ok) return true;
       s?.ghost(null);
-      setDraft({ kind: placing.kind, place: { building: placing.type, x: Math.round(at.x * 100) / 100, z: Math.round(at.z * 100) / 100, rotation: placing.rotation }, fields: placing.kind === 'service' ? { category: 'other' } : {} });
+      setDraft({ kind: placing.kind, place: { building: placing.type, ...v.place }, fields: placing.kind === 'service' ? { category: 'other' } : {} });
       setPlacing(null);
       setVerdict('');
       return true;
@@ -278,7 +280,7 @@ export function useMapEditor({ live, data, scene, selected, onSelect, reload }: 
       setVerdict('');
       const e = data?.items.find((x) => x.id === d.id);
       if (e && d.ok && d.at) {
-        const after = { ...e.place, x: Math.round(d.at.x * 100) / 100, z: Math.round(d.at.z * 100) / 100 };
+        const after = { ...e.place, ...d.at };
         void run(placeStep(e.id, e.placed === 'owner' ? e.place : null, after, `${e.name} moved`), `${e.name} is moved`, false);
       }
       return true;

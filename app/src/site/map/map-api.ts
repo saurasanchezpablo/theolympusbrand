@@ -3,6 +3,7 @@
 // the session, and the writes — each sent with the page's token.
 
 import type { MapData } from '../../../../src/map/items.ts';
+import type { CityPlan } from '../../../../src/map/city.ts';
 import type { ServiceSpec } from '../../../../src/catalog/service.ts';
 import type { MachineSpec } from '../../../../src/catalog/machine.ts';
 import type { Place } from '../../../../src/map/places.ts';
@@ -44,6 +45,13 @@ export async function loadTerrain(): Promise<ArrayBuffer> {
   const r = await fetch(fileUrl('assets/map/terrain.bin'));
   if (!r.ok) throw new Error(`the island could not be loaded (${r.status})`);
   return r.arrayBuffer();
+}
+
+/** The city planned on the island: streets, plots, squares, walkways, furniture. */
+export async function loadCity(): Promise<CityPlan> {
+  const r = await fetch(fileUrl('assets/map/city.json'));
+  if (!r.ok) throw new Error(`the city could not be loaded (${r.status})`);
+  return (await r.json()) as CityPlan;
 }
 
 export async function loadStatus(): Promise<Status | null> {
