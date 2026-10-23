@@ -4,7 +4,9 @@ import { designFile, libraryFile, nextVersion, parseDesigns, withLogoField, type
 import { readShareCode, shareCode } from '../../src/catalog/share.ts';
 import type { MarkKey } from '../../src/catalog/fileset.ts';
 import type { Mark } from '../../src/geometry/crest.ts';
-import { HOUSE, loadLibrary, newKey, nowIso, saveLibrary, useHouse, type Saved } from './library.ts';
+import { HOUSE, houseIsLive, loadLibrary, newKey, nowIso, reloadHouse, saveLibrary, useHouse, type Saved } from './library.ts';
+import * as houseApi from './site/map/map-api.ts';
+import type { Place } from '../../src/map/places.ts';
 import { MASTER, draftOf, letteringIssues, marksFor, newDraft, printFor, readLogo, renderableService, specIssues, type Draft } from './model.ts';
 import { DEFAULT_SETTINGS, defaults, type ParamKey, type Params, type PrintSettings, type ProductId } from '../../src/manufacturing/products.ts';
 import type { Subject } from '../../src/manufacturing/files.ts';
@@ -86,6 +88,49 @@ export default function Atelier({ active }: { active: boolean }) {
     setToast(msg);
     window.setTimeout(() => setToast((t) => (t === msg ? null : t)), 3200);
   }, []);
+
+  // ---- taking a house design away from the house (the server's own catalogue), and bringing it back ----
+  const [signingIn, setSigningIn] = useState<Design | null>(null);
+  const [password, setPassword] = useState('');
+  const [signError, setSignError] = useState<string | null>(null);
+  const [removed, setRemoved] = useState<{ design: Design; place: Place | null } | null>(null);
+  const removeFromHouse = async (d: Design) => {
+    const id = d.spec.id;
+    // Where it stood on the map, when the owner put it there: Undo puts it back.
+    const place = await fetch('api/map', { cache: 'no-store' })
+      .then((r) => r.json() as Promise<{ items?: { id: string; placed: string; place: Place }[] }>)
+      .then((m) => m.items?.find((e) => e.id === id && e.placed === 'owner')?.place ?? null)
+      .catch(() => null);
+    await houseApi.removeItem('service', id);
+    if (current.kind === 'house' && current.id === id) openMaster();
+    await reloadHouse();
+    setRemoved({ design: d, place });
+    window.setTimeout(() => setRemoved((r) => (r?.design === d ? null : r)), 15_000);
+  };
+  const onRemoveHouse = async (id: string) => {
+    const d = HOUSE.find((x) => x.spec.id === id);
+    if (!d || !window.confirm(`Remove “${d.spec.name}” from the house? It goes from the map, the catalogue and everything made for it. Undo brings it back.`)) return;
+    const s = await houseApi.session().catch(() => ({ editing: false }));
+    if (!s.editing) {
+      setSignError(null);
+      setSigningIn(d);
+      return;
+    }
+    await removeFromHouse(d).catch((e: Error) => say(`Could not remove “${d.spec.name}”: ${e.message}`));
+  };
+  const undoRemove = async () => {
+    const r = removed;
+    if (!r) return;
+    setRemoved(null);
+    try {
+      await houseApi.saveService(r.design.spec, r.design.logoSvg);
+      if (r.place) await houseApi.savePlace(r.design.spec.id, r.place);
+      await reloadHouse();
+      say(`“${r.design.spec.name}” is back in the house.`);
+    } catch (e) {
+      say(`Could not bring “${r.design.spec.name}” back: ${(e as Error).message}`);
+    }
+  };
 
   const persist = useCallback(
     (next: Saved) => {
@@ -476,6 +521,7 @@ export default function Atelier({ active }: { active: boolean }) {
         onDuplicate={onDuplicate}
         onExport={(e) => exportDesign(e.design)}
         onDelete={onDelete}
+        onRemoveHouse={houseIsLive() ? (id) => void onRemoveHouse(id) : undefined}
         onClose={() => setDrawer(false)}
         actions={
           <>
@@ -588,6 +634,47 @@ export default function Atelier({ active }: { active: boolean }) {
         <div className="toast" role="status">
           {toast}
         </div>
+      )}
+      {removed && !toast && (
+        <div className="toast toast--action" role="status">
+          Removed “{removed.design.spec.name}” from the house.
+          <button type="button" className="btn btn--sm" onClick={() => void undoRemove()}>
+            Undo
+          </button>
+        </div>
+      )}
+      {signingIn && (
+        <form
+          className="toast toast--form"
+          aria-labelledby="house-sign-in"
+          onSubmit={async (e) => {
+            e.preventDefault();
+            const d = signingIn;
+            try {
+              await houseApi.login(password);
+              setSigningIn(null);
+              setPassword('');
+              await removeFromHouse(d);
+            } catch (err) {
+              setSignError((err as Error).message);
+            }
+          }}
+        >
+          <p id="house-sign-in">Changing the house needs its password.</p>
+          <label>
+            <span>The house’s password</span>
+            <input className="input" type="password" autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} autoFocus />
+          </label>
+          {signError && <p className="notes notes--error">{signError}</p>}
+          <span className="toast__actions">
+            <button type="submit" className="btn btn--sm">
+              Sign in and remove
+            </button>
+            <button type="button" className="btn btn--ghost btn--sm" onClick={() => (setSigningIn(null), setPassword(''))}>
+              Cancel
+            </button>
+          </span>
+        </form>
       )}
     </div>
   );

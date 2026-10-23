@@ -28,6 +28,9 @@ export const HOUSE: Design[] = Object.entries(specFiles)
 
 const houseListeners = new Set<() => void>();
 let serverHouse: Promise<void> | null = null;
+let fromServer = false;
+/** Whether the house is the server's own (the site is served by the house's server, with its edit API): then it can be changed. */
+export const houseIsLive = (): boolean => fromServer;
 
 function loadServerHouse(): Promise<void> {
   serverHouse ??= fetch('api/catalog', { cache: 'no-store', signal: AbortSignal.timeout(4000) })
@@ -44,21 +47,33 @@ function loadServerHouse(): Promise<void> {
         }
       }
       HOUSE.splice(0, HOUSE.length, ...designs.sort((a, b) => a.spec.name.localeCompare(b.spec.name)));
+      fromServer = true;
       for (const f of houseListeners) f();
     })
     .catch(() => undefined);
   return serverHouse;
 }
 
-/** The house catalogue, refreshed from the server when it has one. */
+/** Read the server's catalogue again (after a change to it here, or on the map). */
+export function reloadHouse(): Promise<void> {
+  serverHouse = null;
+  return loadServerHouse();
+}
+
+/** The house catalogue, refreshed from the server when it has one — and again whenever the Atelier or the catalogue is come back to, so a service added on the map is there. */
 export function useHouse(): Design[] {
   const [house, setHouse] = useState<Design[]>(() => [...HOUSE]);
   useEffect(() => {
     const f = () => setHouse([...HOUSE]);
     houseListeners.add(f);
     void loadServerHouse().then(f);
+    const back = () => {
+      if (/^#\/(atelier|catalogue)/.test(location.hash)) void reloadHouse();
+    };
+    window.addEventListener('hashchange', back);
     return () => {
       houseListeners.delete(f);
+      window.removeEventListener('hashchange', back);
     };
   }, []);
   return house;

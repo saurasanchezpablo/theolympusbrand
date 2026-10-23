@@ -4,10 +4,8 @@ import { Hero } from './Hero.tsx';
 import type { SceneHandle } from './medallion-scene.ts';
 import './home.css';
 
-type Service = { id: string; name: string; category: string; patron: { god: string } | { monogram: string } | { logo: true; letter: string }; title?: string | null; url?: string | null };
+import { bandName, deityCard, type HomeService as Service } from './deity.ts';
 
-const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
-const godOf = (s: Service) => ('god' in s.patron ? cap(s.patron.god) : 'monogram' in s.patron ? `Monogram ${s.patron.monogram}` : 'Its own logo');
 const host = (s: Service) => (s.url ?? `https://${s.id}.theolympus.cloud`).replace(/^https?:\/\//, '');
 const seal = (s: Service) => fileUrl(`assets/services/${s.id}/svg/the-olympus-${s.id}-seal.svg`);
 
@@ -142,9 +140,9 @@ function Passage({ count }: { count?: number }) {
   );
 }
 
-/** The gods' names, moving: decoration — the names themselves are listed in the pantheon below. */
+/** The gods' names (a service's own, where no god stands for it), moving: decoration — the names themselves are listed in the pantheon below. */
 function Band({ services }: { services: Service[] }) {
-  const names = services.map(godOf);
+  const names = services.map(bandName);
   const row = (outline: boolean) => (
     <div className={`band__row${outline ? ' band__row--outline' : ''}`}>
       {[0, 1].map((copy) => (
@@ -233,20 +231,23 @@ function Pantheon({ services }: { services: Service[] }) {
         </div>
         <div className="pantheon__viewport">
           <ol className="pantheon__track">
-            {services.map((s, i) => (
-              <li key={s.id} className="deity">
-                <a href="#/catalogue" onPointerMove={tilt} onPointerLeave={rest}>
-                  <span className="deity__index">
-                    {String(i + 1).padStart(2, '0')} / {String(services.length).padStart(2, '0')}
-                  </span>
-                  <img className="deity__seal" src={seal(s)} alt="" width="220" height="220" loading="lazy" />
-                  <span className="deity__god">{godOf(s)}</span>
-                  {s.title && <span className="deity__title">{s.title}</span>}
-                  <span className="deity__service">{s.name}</span>
-                  <span className="deity__host">{host(s)}</span>
-                </a>
-              </li>
-            ))}
+            {services.map((s, i) => {
+              const card = deityCard(s);
+              return (
+                <li key={s.id} className="deity">
+                  <a href="#/catalogue" onPointerMove={tilt} onPointerLeave={rest}>
+                    <span className="deity__index">
+                      {String(i + 1).padStart(2, '0')} / {String(services.length).padStart(2, '0')}
+                    </span>
+                    <img className="deity__seal" src={seal(s)} alt="" width="220" height="220" loading="lazy" />
+                    <span className="deity__god">{card.heading}</span>
+                    {card.under && <span className="deity__title">{card.under}</span>}
+                    <span className="deity__service">{card.service}</span>
+                    <span className="deity__host">{host(s)}</span>
+                  </a>
+                </li>
+              );
+            })}
           </ol>
         </div>
       </section>

@@ -1017,6 +1017,38 @@ p.notes {
   box-shadow: var(--shadow);
 }
 
+/* A message with its action (Undo), and the house's sign-in. */
+.toast--action {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.toast--form {
+  display: grid;
+  gap: 10px;
+  width: min(360px, calc(100vw - 32px));
+}
+
+.toast--form p {
+  margin: 0;
+}
+
+.toast--form label {
+  display: grid;
+  gap: 4px;
+}
+
+.toast--form .input {
+  background: var(--paper);
+  color: var(--charcoal);
+}
+
+.toast__actions {
+  display: flex;
+  gap: 8px;
+}
+
 /* ---------------------------------------------------------------- */
 /* 3D print                                                           */
 /* ---------------------------------------------------------------- */

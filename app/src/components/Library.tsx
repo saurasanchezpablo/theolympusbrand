@@ -19,6 +19,8 @@ type Props = {
   onDuplicate: (e: Entry) => void;
   onExport: (e: Entry) => void;
   onDelete: (key: string) => void;
+  /** Take a house design (its service) away from the house: only where the house is the server's own. */
+  onRemoveHouse?: (id: string) => void;
   /** New, import, export — the library's own actions. */
   actions?: ReactNode;
   /** Where the library is a drawer: how to close it. */
@@ -27,7 +29,7 @@ type Props = {
 
 const masterSeal = () => productionSvg(MASTER.marks().seal, { ground: 'transparent' });
 
-export function Library({ house, mine, current, storageAvailable, onOpenMaster, onOpen, onDuplicate, onExport, onDelete, actions, onClose }: Props) {
+export function Library({ house, mine, current, storageAvailable, onOpenMaster, onOpen, onDuplicate, onExport, onDelete, onRemoveHouse, actions, onClose }: Props) {
   const [query, setQuery] = useState('');
   const [scope, setScope] = useState<'all' | 'house' | 'mine'>('all');
   const [category, setCategory] = useState('');
@@ -122,6 +124,11 @@ export function Library({ house, mine, current, storageAvailable, onOpenMaster, 
                 </button>
                 {e.kind === 'mine' && (
                   <button type="button" className="icon-btn icon-btn--danger" onClick={() => onDelete(e.key)} title="Delete from my designs" aria-label={`Delete ${s.name}`}>
+                    <Icon name="trash" />
+                  </button>
+                )}
+                {e.kind === 'house' && onRemoveHouse && (
+                  <button type="button" className="icon-btn icon-btn--danger" onClick={() => onRemoveHouse(e.id)} title="Remove from the house — the service with it" aria-label={`Remove ${s.name} from the house`}>
                     <Icon name="trash" />
                   </button>
                 )}

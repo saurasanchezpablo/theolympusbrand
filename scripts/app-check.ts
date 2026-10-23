@@ -277,6 +277,23 @@ try {
   await page.getByRole('radio', { name: 'Black marble' }).click();
   step('duplicate a house design into my designs');
 
+  // A house design removed from the house (the service with it), after signing in; Undo brings it back.
+  const houseCount = async () => Number((await page.getByRole('radio', { name: /^House · \d+$/ }).textContent())?.match(/\d+/)?.[0]);
+  const houseBefore = await houseCount();
+  await page.getByRole('button', { name: /^Backup / }).hover();
+  page.once('dialog', (d) => d.accept());
+  await page.getByRole('button', { name: 'Remove Backup from the house' }).click();
+  await page.getByLabel('The house’s password').fill(EDITOR_PASSWORD);
+  await page.getByRole('button', { name: 'Sign in and remove' }).click();
+  await page.getByText('Removed “Backup” from the house.').waitFor({ timeout: 20_000 });
+  assert.deepEqual(JSON.parse(readFileSync(join(EDITOR_DATA, 'removed.json'), 'utf8')), ['backup']);
+  await page.waitForFunction((n) => /House · (\d+)/.exec(document.body.innerText)?.[1] === String(n - 1), houseBefore);
+  await page.locator('.toast--action').getByRole('button', { name: 'Undo' }).click();
+  await page.getByText('“Backup” is back in the house.').waitFor({ timeout: 20_000 });
+  assert.ok(!existsSync(join(EDITOR_DATA, 'removed.json')), 'no longer removed');
+  assert.equal(await houseCount(), houseBefore);
+  step('a house design removed from the house (signed in), and brought back');
+
   // 3D print: the website's STL is the same mesh the command line writes.
   await page.getByRole('button', { name: /^Jellyfin Apollo · media/ }).click();
   await page.getByRole('radio', { name: '3D print' }).click();

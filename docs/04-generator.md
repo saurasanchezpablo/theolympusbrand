@@ -18,7 +18,7 @@ logic and no account: open it from any static host, or run
 
 | Area | What it does |
 |---|---|
-| **Designs** (left) | The master, the house catalogue (`catalog/services/`, read-only) and your designs, with **New design**, **Import** and **Export library** at the top. Search by name, god, category or description; filter by origin and category. Hover a row to duplicate it, download its design file, or delete it (your designs only). |
+| **Designs** (left) | The master, the house catalogue and your designs, with **New design**, **Import** and **Export library** at the top. The house is your server's own services when the site is served by the house's server (`npm start`) — the repository's `catalog/` with what you added, changed or removed on the map — and the repository's catalogue elsewhere. Search by name, god, category or description; filter by origin and category. Hover a row to duplicate it, download its design file, or delete it: your designs from this browser; a house design (on your server) from the house — its service with it, from the map, the catalogue and everything made for it, after the house's password; **Undo** brings it back, where it stood. |
 | **Canvas** (centre) | Live preview. **View**: crest, emblem, seal, horizontal and vertical lockups, a sheet of small sizes (16–64 px seals, emblems, crest), **Sticker** ([die-cut stickers](06-stickers.md)) and **3D print** ([printable models](05-3d-printing.md)). **Edition**: fine or print. **Surface**: flat vector, white marble, black marble, engraved. **Background**: light, dark or transparent. |
 | **Configuration** (right) | Name and identifier, category, patron, logo slot, lockup caption. Below it, the exports. The bar at the bottom saves. |
 
