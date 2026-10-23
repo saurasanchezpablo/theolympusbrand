@@ -1,6 +1,6 @@
 // The map page's link to the server: the map itself (live from the edit
-// service when it runs, else the list built with the site), the online marks,
-// the session, and the writes — each sent with the page's token.
+// service when it runs, else the list built with the site), the session, and
+// the writes — each sent with the page's token.
 
 import type { MapData } from '../../../../src/map/items.ts';
 import type { CityPlan } from '../../../../src/map/city.ts';
@@ -9,7 +9,6 @@ import type { MachineSpec } from '../../../../src/catalog/machine.ts';
 import type { Place } from '../../../../src/map/places.ts';
 import { fileUrl } from '../files.ts';
 
-export type Status = { checked: string; items: Record<string, 'up' | 'down' | 'unknown'> };
 export type Session = { editing: boolean; csrf?: string; setup?: string };
 /** What the server's builds are doing; `published` is the last saved change the served site includes. */
 export type Build = { state: 'static' | 'starting' | 'building' | 'ok' | 'failed'; at?: string; error?: string; requested?: number; published?: number };
@@ -53,16 +52,6 @@ export async function loadCity(): Promise<CityPlan> {
   const r = await fetch(fileUrl('assets/map/city.json'));
   if (!r.ok) throw new Error(`the city could not be loaded (${r.status})`);
   return (await r.json()) as CityPlan;
-}
-
-export async function loadStatus(): Promise<Status | null> {
-  try {
-    const r = await fetch('api/status', { cache: 'no-store', signal: AbortSignal.timeout(20_000) });
-    const s = r.ok ? ((await r.json()) as Status | { editor: false }) : null;
-    return s && 'items' in s ? s : null;
-  } catch {
-    return null;
-  }
 }
 
 export async function buildState(): Promise<Build | null> {

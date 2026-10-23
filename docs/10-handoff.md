@@ -96,8 +96,7 @@ it is documented too.
 - **The deployed site** has been built and served in CI, not yet on the
   server.
 - **The server in Docker** — the image (one service: the site, the map's
-  API, the rebuilds) and its ping from inside the container have not been
-  run here (no room for Docker images on this machine); CI builds and runs
+  API, the rebuilds) has not been run here (no room for Docker images on this machine); CI builds and runs
   it. The server itself is tested on its own (`tests/serve.test.ts`,
   `tests/rebuild.test.ts`) and through the site in the browser checks.
 - **The map's speed on a real GPU** — measured here only in software

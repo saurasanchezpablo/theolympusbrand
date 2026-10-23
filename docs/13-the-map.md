@@ -50,7 +50,7 @@ straight to the list of every place. Then drag (or swipe) to move, scroll
 map shows each gesture once.
 
 Every building carries a mark: a **round** one for a service, a **square**
-one for a machine; a hollow dot means it does not answer. Hover or focus a
+one for a machine. Hover or focus a
 mark to see its name; click it (or press Enter) to travel there. The camera
 comes down to the building and a panel opens beside it — at the bottom on a
 phone — with:
@@ -58,7 +58,6 @@ phone — with:
 - the building on its own, its name and a line about it;
 - for a service, its address, with **Open** and **Copy the address**;
 - for a machine, its address on the network, its host name, its system and its role;
-- whether it answers: **Online** or **Offline**, and when it was last checked;
 - **Previous** and **Next** to go from place to place, and **The island**
   (or ×, Escape, or the house button in the bar) to come back up.
 
@@ -78,7 +77,7 @@ island when you want it.
 ## Changing it
 
 **Edit** asks for the house's password (set on the server, see
-[the site on your server](07-self-hosting.md#the-maps-edit-service)). Then:
+[the site on your server](07-self-hosting.md)). Then:
 
 - **Add** opens the catalogue of buildings — more than fifty for services
   (temples of the three orders, round temples, treasuries, altars, gates,
@@ -91,9 +90,20 @@ island when you want it.
   sports ground for a stadium), centred and facing that plot's street. Where
   it cannot stand, the map says why: not on a plot (a street, the sea,
   outside the town), another building there, or too big for this plot.
-- A form opens: the name, the address, the network address, a
-  logo (an SVG file), what kind of service it is; for a machine, its host
-  name, system and role. **Save**.
+- A form opens: the name, the address, a logo (an SVG file), what kind of
+  service it is; for a machine, its network address, host name, system and
+  role. **Save**.
+- A service's building: **Link a design** gives it one of the designs saved
+  in this browser's [Atelier](04-generator.md). The design's name, patron
+  (god or monogram), logo and caption become the service's — on the map and
+  in everything the house makes for it (its seal, dashboard icons, theme
+  kit, screens), rebuilt and published as any other change. The building
+  keeps its place and its id; an address or a line about it that the design
+  does not have is kept. The panel then names the design and its version.
+  Designs live in the browser that made them, so a design changed later in
+  the Atelier does not reach the map by itself: the panel says when this
+  browser has a newer version, and **Update from the design** applies it.
+  A design linked from another browser is shown as such.
 - A building on the map: drag it to another plot, turn it a quarter at a time
   (towards a side street when it fits that way), give it another building,
   change its details, or **Delete** it — from its panel.
@@ -144,14 +154,6 @@ to the plots nearest the agora. The city has room for about a hundred and
 fifty buildings. If it is full, the map says which buildings it could not
 place. A place saved before the city existed keeps its building on the
 nearest free plot that takes it.
-
-## Online and offline
-
-The server pings each address on the map (a service's network address, or
-the host of its web address; a machine's address or host name) when a place
-is open, and every quarter of a minute at most. It never pings anything that
-is not on the map. A machine that does not answer pings shows **Offline**
-even when it is up.
 
 ## When something is wrong
 

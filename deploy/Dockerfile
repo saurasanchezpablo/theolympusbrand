@@ -12,9 +12,9 @@
 # (what the map adds, the password): keep it, back it up.
 
 FROM node:24-bookworm-slim
-# ping, for the map's "online" marks (unprivileged ICMP: no added capability needed); git, to follow the repository (docker-compose.auto.yml).
+# git, to follow the repository (docker-compose.auto.yml).
 RUN apt-get update \
- && apt-get install -y --no-install-recommends iputils-ping git ca-certificates \
+ && apt-get install -y --no-install-recommends git ca-certificates \
  && rm -rf /var/lib/apt/lists/*
 WORKDIR /repo
 RUN chown node:node /repo && mkdir -p /var/lib/olympus/data /var/lib/olympus/site && chown -R node:node /var/lib/olympus

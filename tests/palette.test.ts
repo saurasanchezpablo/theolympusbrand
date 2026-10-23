@@ -31,7 +31,6 @@ const MAY_USE_PIGMENTS = [
   'src/integrations/themes/home-assistant.ts', // status colours
   'src/integrations/themes/nextcloud.ts',
   'src/integrations/themes/proxmox.ts',
-  'app/src/site/map/MapPage.tsx', // the map's online and offline marks
 ];
 
 test('palette tokens are neutral greys', () => {

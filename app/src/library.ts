@@ -68,40 +68,7 @@ export function useHouse(): Design[] {
 /* My designs — this browser only                                     */
 /* ---------------------------------------------------------------- */
 
-const KEY = 'the-olympus/library/v1';
-
-export type Saved = Record<string, Design>;
-
-export type Storage = { designs: Saved; available: boolean };
-
-/** Read the saved library. Storage can be unavailable (private windows, blocked site data). */
-export function loadLibrary(): Storage {
-  try {
-    const raw = localStorage.getItem(KEY);
-    const parsed = raw ? (JSON.parse(raw) as { designs?: Saved }) : {};
-    const designs: Saved = {};
-    for (const [k, d] of Object.entries(parsed.designs ?? {})) {
-      try {
-        designs[k] = { ...d, spec: validateSpec(d.spec, k) };
-      } catch {
-        /* skip a damaged entry rather than lose the whole library */
-      }
-    }
-    return { designs, available: true };
-  } catch {
-    return { designs: {}, available: false };
-  }
-}
-
-/** Persist the library; returns false when the browser refuses (quota, privacy mode). */
-export function saveLibrary(designs: Saved): boolean {
-  try {
-    localStorage.setItem(KEY, JSON.stringify({ designs }));
-    return true;
-  } catch {
-    return false;
-  }
-}
+export { loadLibrary, saveLibrary, type Saved, type Storage } from './designs.ts';
 
 export const newKey = (): string => (crypto.randomUUID ? crypto.randomUUID() : `${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`);
 

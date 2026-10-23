@@ -7,7 +7,7 @@ import { useEffect, useRef } from 'react';
 import type { MapEntry } from '../../../../src/map/items.ts';
 import type { MapScene } from './map-scene.ts';
 
-export function Hotspots({ items, scene, selected, status, hidden, onChoose }: { items: readonly MapEntry[]; scene: MapScene | null; selected: string | null; status: Record<string, 'up' | 'down' | 'unknown'>; hidden: boolean; onChoose: (id: string) => void }) {
+export function Hotspots({ items, scene, selected, hidden, onChoose }: { items: readonly MapEntry[]; scene: MapScene | null; selected: string | null; hidden: boolean; onChoose: (id: string) => void }) {
   const els = useRef(new Map<string, HTMLButtonElement>());
   useEffect(() => {
     if (!scene) return;
@@ -30,8 +30,6 @@ export function Hotspots({ items, scene, selected, status, hidden, onChoose }: {
   return (
     <div className="hotspots" data-hidden={hidden ? 'true' : undefined} aria-hidden={hidden ? 'true' : undefined}>
       {items.map((e) => {
-        const s = status[e.id];
-        const word = s === 'up' ? ', online' : s === 'down' ? ', offline' : '';
         return (
           <button
             key={e.id}
@@ -40,11 +38,11 @@ export function Hotspots({ items, scene, selected, status, hidden, onChoose }: {
               else els.current.delete(e.id);
             }}
             type="button"
-            className={`hotspot hotspot--${e.kind}${selected === e.id ? ' is-selected' : ''}${s ? ` is-${s}` : ''}`}
+            className={`hotspot hotspot--${e.kind}${selected === e.id ? ' is-selected' : ''}`}
             data-id={e.id}
             data-off="true"
             tabIndex={hidden ? -1 : 0}
-            aria-label={`${e.name}, ${e.kind === 'machine' ? 'machine' : 'service'}${word}`}
+            aria-label={`${e.name}, ${e.kind === 'machine' ? 'machine' : 'service'}`}
             aria-pressed={selected === e.id}
             onClick={() => onChoose(e.id)}
           >

@@ -11,7 +11,6 @@ const label = (c: string) => c[0].toUpperCase() + c.slice(1);
 export function Directory({
   items,
   unplaced,
-  status,
   selected,
   filter,
   onFilter,
@@ -20,7 +19,6 @@ export function Directory({
 }: {
   items: readonly MapEntry[];
   unplaced: readonly { id: string; name: string }[];
-  status: Record<string, 'up' | 'down' | 'unknown'>;
   selected: string | null;
   filter: Filter;
   onFilter: (f: Filter) => void;
@@ -66,10 +64,9 @@ export function Directory({
               {list.map((e) => (
                 <li key={e.id}>
                   <button type="button" aria-current={selected === e.id ? 'true' : undefined} onClick={() => onChoose(e.id)}>
-                    <span className={`directory__mark directory__mark--${e.kind} is-${status[e.id] ?? 'unknown'}`} aria-hidden="true" />
+                    <span className={`directory__mark directory__mark--${e.kind}`} aria-hidden="true" />
                     <span className="directory__name">{e.name}</span>
                     <span className="directory__meta">{e.url?.replace(/^https?:\/\//, '') ?? e.ip ?? e.hostname ?? ''}</span>
-                    {status[e.id] && status[e.id] !== 'unknown' && <span className="visually-hidden">{status[e.id] === 'up' ? ', online' : ', offline'}</span>}
                   </button>
                 </li>
               ))}

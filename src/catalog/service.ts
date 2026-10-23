@@ -25,8 +25,8 @@ export type ServiceSpec = {
   logo?: string;
   caption?: string;
   url?: string;
-  /** Its address on the network, for the map's online check: an IPv4 or IPv6 address, or a host name. */
-  ip?: string;
+  /** The Atelier design it was made from, linked on the map: that browser's key for it and the version linked ("<key>@<version>"). */
+  design?: string;
   /** The application the service runs (a theme kit's id, such as "nextcloud"): its kit is made from this service. */
   app?: string;
   description?: string;
@@ -43,9 +43,13 @@ export const slugify = (name: string): string =>
     .replace(/^-+|-+$/g, '');
 
 export const ID = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
-export const SPEC_KEYS = ['id', 'name', 'category', 'god', 'monogram', 'logo', 'caption', 'url', 'ip', 'app', 'description'] as const;
+export const SPEC_KEYS = ['id', 'name', 'category', 'god', 'monogram', 'logo', 'caption', 'url', 'app', 'description', 'design'] as const;
+/** Fields the house no longer keeps: a file that still has one loads, without it. */
+const RETIRED = new Set(['ip']);
+/** A design link: the browser's key for the design (letters, digits, hyphens) and the version linked. */
+export const DESIGN_LINK = /^([A-Za-z0-9-]{1,64})@([1-9][0-9]{0,5})$/;
 
-/** A host to check: an IPv4 or IPv6 address, or a host name — never anything a command could read as an option or a word. */
+/** A host name or an IPv4 or IPv6 address — never anything a command could read as an option or a word. */
 export const isHost = (v: unknown): v is string => typeof v === 'string' && v.length <= 253 && (/^[A-Za-z0-9][A-Za-z0-9.-]*$/.test(v) || /^[0-9a-fA-F:]{2,39}$/.test(v));
 const KEYS = new Set<string>(SPEC_KEYS);
 
@@ -54,7 +58,7 @@ export function validateSpec(raw: unknown, where = 'service'): ServiceSpec {
   const errors: string[] = [];
   if (typeof raw !== 'object' || raw === null || Array.isArray(raw)) throw new Error(`${where}: expected a JSON object`);
   const o = raw as Record<string, unknown>;
-  for (const k of Object.keys(o)) if (!KEYS.has(k)) errors.push(`unknown field "${k}"`);
+  for (const k of Object.keys(o)) if (!KEYS.has(k) && !RETIRED.has(k)) errors.push(`unknown field "${k}"`);
   if (typeof o.id !== 'string' || !ID.test(o.id)) errors.push('"id" must be kebab-case (a-z, 0-9, hyphens)');
   // Free text goes into scripts, stylesheets and pages: one line, no control characters, a sensible length.
   const text = (v: unknown, max: number) => typeof v === 'string' && v.trim().length > 0 && v.length <= max && !/[\u0000-\u001f\u007f-\u009f]/.test(v);
@@ -67,11 +71,11 @@ export function validateSpec(raw: unknown, where = 'service'): ServiceSpec {
   if (o.caption !== undefined && !text(o.caption, 48)) errors.push('"caption" must be one line of at most 48 characters, without control characters');
   // Addresses: the characters of a URL, but none that quote or substitute in a shell, a stylesheet or a page.
   if (o.url !== undefined && (typeof o.url !== 'string' || !/^https?:\/\/[A-Za-z0-9._~:/?#@!&()*+,;=%-]+$/.test(o.url) || o.url.length > 120)) errors.push('"url" must be an http(s) address of at most 120 characters, without quotes, spaces, $, <, > or backslashes');
-  if (o.ip !== undefined && !isHost(o.ip)) errors.push('"ip" must be an IPv4 or IPv6 address, or a host name');
+  if (o.design !== undefined && (typeof o.design !== 'string' || !DESIGN_LINK.test(o.design))) errors.push('"design" must be a design link such as "3f2a…@4"');
   if (o.app !== undefined && (typeof o.app !== 'string' || !ID.test(o.app))) errors.push('"app" must be an application id in kebab-case, such as "nextcloud"');
   if (o.description !== undefined && !(o.description === '' || text(o.description, 120))) errors.push('"description" must be one line of at most 120 characters, without control characters');
   if (errors.length) throw new Error(`${where}:\n  - ${errors.join('\n  - ')}`);
-  return o as unknown as ServiceSpec;
+  return Object.fromEntries(Object.entries(o).filter(([k]) => !RETIRED.has(k))) as unknown as ServiceSpec;
 }
 
 /** Resolve a spec into a buildable service: its patron, monogram letter and lockup caption. */

@@ -1,7 +1,6 @@
 // The map's edit service: reading is open, writing needs the password and the
 // page's token; whatever it is given is checked as the command line checks
-// it; it writes only into the data folder, one write at a time; and it pings
-// only what is on the map.
+// it; it writes only into the data folder, one write at a time.
 
 import { test, before, after } from 'node:test';
 import assert from 'node:assert/strict';
@@ -21,7 +20,7 @@ const LOGO = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10"><path 
 
 before(async () => {
   setPassword('olympus-test-password');
-  const ed = await createEditor({ port: 0, host: '127.0.0.1', delayScale: 0.001, statusTtl: 0 });
+  const ed = await createEditor({ port: 0, host: '127.0.0.1', delayScale: 0.001 });
   base = ed.url;
   close = ed.close;
 });
@@ -40,7 +39,7 @@ test('reading needs no password', async () => {
   assert.equal(map.items.length, 16);
   const cat = (await (await fetch(`${base}/api/catalog`)).json()) as { services: { id: string }[] };
   assert.equal(cat.services.length, 16);
-  assert.equal((await fetch(`${base}/api/status`)).status, 200);
+  assert.notEqual((await fetch(`${base}/api/status`)).status, 200, 'nothing is pinged');
   assert.deepEqual(await (await fetch(`${base}/api/session`)).json(), { editing: false });
 });
 
@@ -69,7 +68,7 @@ test('a wrong password is refused, and slowed', async () => {
 
 test('services and machines are saved, checked as the command line checks them', async () => {
   const s = await login();
-  const ok = await write('PUT', '/api/services/pihole', { spec: { id: 'pihole', name: 'Pi-hole', category: 'networking', ip: '10.0.0.53' }, logoSvg: LOGO }, s);
+  const ok = await write('PUT', '/api/services/pihole', { spec: { id: 'pihole', name: 'Pi-hole', category: 'networking' }, logoSvg: LOGO }, s);
   assert.equal(ok.status, 200, await ok.text());
   const map = (await (await fetch(`${base}/api/map`)).json()) as { items: { id: string; logo?: string }[] };
   assert.ok(map.items.some((e) => e.id === 'pihole'));
@@ -116,21 +115,21 @@ test('two saves at once both land', async () => {
   for (const id of ids) assert.equal(places[id].building, 'tholos', id);
 });
 
-test('ping is only for what is on the map', async () => {
+test('a service linked to a design keeps the link, and the map says which', async () => {
   const s = await login();
-  await write('PUT', '/api/machines/here', { spec: { id: 'here', name: 'Here', ip: '127.0.0.1' } }, s);
-  await write('PUT', '/api/machines/nowhere', { spec: { id: 'nowhere', name: 'Nowhere', ip: '192.0.2.1' } }, s);
-  const t0 = Date.now();
-  const st = (await (await fetch(`${base}/api/status?host=127.0.0.1`)).json()) as { items: Record<string, string> };
-  assert.equal(st.items.here, 'up');
-  assert.equal(st.items.nowhere, 'down');
-  assert.ok(Date.now() - t0 < 8000);
-  assert.ok(!('127.0.0.1' in st.items), 'no host parameter is honoured');
-  assert.equal(st.items.web, undefined, 'items without an address are not checked');
+  const spec = { id: 'nextcloud', name: 'The Cloud', category: 'storage', god: 'hermes', design: 'k-1@3' };
+  assert.equal((await write('PUT', '/api/services/nextcloud', { spec, logoSvg: LOGO }, s)).status, 200);
+  const saved = JSON.parse(readFileSync(join(DATA, 'services/nextcloud.json'), 'utf8'));
+  assert.equal(saved.design, 'k-1@3');
+  const map = (await (await fetch(`${base}/api/map`)).json()) as { items: { id: string; name: string; design?: string }[] };
+  const e = map.items.find((x) => x.id === 'nextcloud');
+  assert.equal(e?.name, 'The Cloud');
+  assert.equal(e?.design, 'k-1@3');
+  assert.equal((await write('PUT', '/api/services/nextcloud', { spec: { ...spec, design: '../x@1' } }, s)).status, 400, 'a damaged link is refused');
 });
 
 test('guesses sent all at once still wait their turn, and the service keeps answering meanwhile', async () => {
-  const ed = await createEditor({ port: 0, host: '127.0.0.1', delayScale: 0.01, statusTtl: 0 });
+  const ed = await createEditor({ port: 0, host: '127.0.0.1', delayScale: 0.01 });
   try {
     const guess = () => fetch(`${ed.url}/api/login`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ password: 'nope' }) });
     const t0 = Date.now();
@@ -177,23 +176,3 @@ test('a logo is always the item’s own file, and may not reach out through styl
   checkLogo('<svg xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="g"/></defs><path fill="url(#g)" d="M0 0H1V1Z"/></svg>');
 });
 
-test('status checks asked for at the same time share one round of pings', async () => {
-  let pings = 0;
-  const ed = await createEditor({ port: 0, host: '127.0.0.1', statusTtl: 0, reachable: async () => (pings++, await new Promise((r) => setTimeout(r, 200)), true) });
-  try {
-    const hosts = ((await (await fetch(`${ed.url}/api/map`)).json()) as { items: { ip?: string; url?: string; hostname?: string }[] }).items.filter((e) => e.ip || e.url || e.hostname).length;
-    await Promise.all(Array.from({ length: 5 }, () => fetch(`${ed.url}/api/status`)));
-    assert.equal(pings, hosts, `${pings} pings for ${hosts} addresses`);
-  } finally {
-    await ed.close();
-  }
-});
-
-test('a ping that is not allowed to run means "ask the ports", not "offline"', async () => {
-  const { pingVerdict } = await import('../scripts/lib/editor/ping.ts');
-  assert.equal(pingVerdict(null, ''), true);
-  assert.equal(pingVerdict(Object.assign(new Error('x'), { code: 1 }), ''), false, 'no answer');
-  assert.equal(pingVerdict(Object.assign(new Error('x'), { code: 'ENOENT' }), ''), null, 'no ping command');
-  assert.equal(pingVerdict(Object.assign(new Error('x'), { code: 2 }), 'ping: socket: Operation not permitted'), null, 'no right to ping');
-  assert.equal(pingVerdict(Object.assign(new Error('x'), { code: 2 }), 'ping: nas.lan: Name or service not known'), false, 'a name that does not resolve');
-});

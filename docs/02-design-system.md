@@ -121,12 +121,11 @@ They are used in:
 - the terminal colour schemes, as the six ANSI colours;
 - the shell prompts, where the branch is gold and a failure rosso antico;
 - the status colours of the theme kits that let a theme set them (Proxmox VE,
-  Home Assistant, Nextcloud);
-- the map's online and offline marks.
+  Home Assistant, Nextcloud).
 
 The test suite also names the files allowed to use the pigments. The marks,
 wallpapers, boot screens and the site stay grey. Where colour marks a state,
-a sign marks it as well (✕ for a failure, a hollow ring for offline), so
+a sign marks it as well (✕ for a failure), so
 the meaning never rests on colour alone.
 
 ## 5. Typography

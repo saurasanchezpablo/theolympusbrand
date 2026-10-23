@@ -8,19 +8,12 @@ import type { MapEntry } from '../../../../src/map/items.ts';
 import { building } from '../../../../src/map/buildings/index.ts';
 import { copyText } from '../Command.tsx';
 
-const ago = (iso: string | undefined) => {
-  if (!iso) return '';
-  const s = Math.max(0, Math.round((Date.now() - Date.parse(iso)) / 1000));
-  return s < 60 ? `${s} s ago` : `${Math.round(s / 60)} min ago`;
-};
 const label = (category: string | undefined) => (category ? category[0].toUpperCase() + category.slice(1) : '');
 
 export function LocationPanel({
   entry,
   index,
   count,
-  state,
-  checked,
   portrait,
   onPrev,
   onNext,
@@ -30,8 +23,6 @@ export function LocationPanel({
   entry: MapEntry;
   index: number;
   count: number;
-  state?: 'up' | 'down' | 'unknown';
-  checked?: string;
   portrait: string | null;
   onPrev: () => void;
   onNext: () => void;
@@ -92,16 +83,6 @@ export function LocationPanel({
             <>
               <dt>Role</dt>
               <dd>{entry.role}</dd>
-            </>
-          )}
-          {(entry.ip || entry.hostname || entry.url) && (
-            <>
-              <dt>Answers</dt>
-              <dd>
-                <span className={`place__dot place__dot--${state ?? 'unknown'}`} aria-hidden="true" />
-                {state === 'up' ? 'Online' : state === 'down' ? 'Offline' : 'Not checked'}
-                {checked && state && state !== 'unknown' && <span className="place__when"> · checked {ago(checked)}</span>}
-              </dd>
             </>
           )}
         </dl>

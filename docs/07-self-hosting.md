@@ -122,8 +122,7 @@ The site is then on port **8080** of the server. Two volumes keep its state:
 published releases, rebuilt from the image and the data if lost). A new
 container — after `docker compose up --build`, say — serves the release in
 the volume at once and rebuilds it for the new image. The container drops
-every capability and cannot gain new ones; the map's online marks use
-unprivileged ICMP, which Docker allows by default.
+every capability and cannot gain new ones.
 
 `password --stdin` takes the password from the first line piped in, for a
 secrets file or a setup script.

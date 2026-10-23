@@ -457,15 +457,15 @@ try {
     const signIn = await fetch(`${api}/login`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ password: EDITOR_PASSWORD }) });
     const cookie = (signIn.headers.get('set-cookie') ?? '').split(';')[0];
     const { csrf } = (await signIn.json()) as { csrf: string };
-    const put = await fetch(`${api}/services/odd`, { method: 'PUT', headers: { 'content-type': 'application/json', cookie, 'x-olympus-csrf': csrf }, body: JSON.stringify({ spec: { id: 'odd', name: '<b>x</b>', category: 'other', ip: '127.0.0.1' } }) });
+    const put = await fetch(`${api}/services/odd`, { method: 'PUT', headers: { 'content-type': 'application/json', cookie, 'x-olympus-csrf': csrf }, body: JSON.stringify({ spec: { id: 'odd', name: '<b>x</b>', category: 'other' } }) });
     assert.equal(put.status, 200);
     await mp.goto(`${URL_}#/map/odd`);
     await mp.reload();
     await mp.locator('.place h2').waitFor({ timeout: 180_000 });
     assert.equal(await mp.locator('.place h2').textContent(), '<b>x</b>');
     assert.equal(await mp.locator('.place h2 b').count(), 0, 'no markup from the data');
-    await mp.locator('.place', { hasText: 'Online' }).waitFor({ timeout: 20_000 });
-    step('map: names from the server are shown as text; an address on the map is pinged (online)');
+    assert.equal(await mp.locator('.place', { hasText: /Online|Offline|Not checked/ }).count(), 0, 'nothing is pinged');
+    step('map: names from the server are shown as text; nothing is pinged');
 
     // Editing: sign in, add a lighthouse, a refused spot says why, save, turn, delete. From the whole island's view.
     await mp.goto(`${URL_}#/map`);
@@ -518,6 +518,35 @@ try {
     assert.ok(existsSync(join(EDITOR_DATA, 'services/uptime-watch.json')), 'undo brings it back');
     await shot(mp, '18-map-editing');
     step('map: editing — sign in, add a lighthouse on a plot (the sea refused, with the reason), save to the data folder, turn, delete, undo');
+
+    // A design saved in this browser's Atelier becomes a service's identity; a newer version of it is offered as an update.
+    const libraryWith = (version: number) =>
+      JSON.stringify({ designs: { 'check-design': { spec: { id: 'my-cloud', name: 'My cloud', category: 'storage', god: 'hermes', caption: 'Kept in the clouds' }, version, created: '2026-10-23T10:00:00.000Z', updated: `2026-10-23T10:0${version}:00.000Z` } } });
+    await mp.evaluate((v) => localStorage.setItem('the-olympus/library/v1', v), libraryWith(2));
+    await mp.goto(`${URL_}#/map/nextcloud`);
+    await mp.reload();
+    await mp.locator('.place h2', { hasText: 'Nextcloud' }).waitFor({ timeout: 180_000 });
+    await mp.getByRole('button', { name: 'Link a design' }).click();
+    await mp.getByRole('button', { name: /My cloud/ }).click();
+    await mp.locator('.map-notice', { hasText: 'My cloud wears its design (version 2).' }).waitFor({ timeout: 20_000 });
+    const linked = JSON.parse(readFileSync(join(EDITOR_DATA, 'services/nextcloud.json'), 'utf8'));
+    assert.deepEqual(
+      { name: linked.name, category: linked.category, god: linked.god, caption: linked.caption, design: linked.design },
+      { name: 'My cloud', category: 'storage', god: 'hermes', caption: 'Kept in the clouds', design: 'check-design@2' },
+    );
+    assert.ok(linked.url, 'the address the design lacks is kept');
+    await mp.locator('.place h2', { hasText: 'My cloud' }).waitFor();
+    await mp.getByText('Its design: My cloud, version 2.').waitFor();
+    await mp.evaluate((v) => localStorage.setItem('the-olympus/library/v1', v), libraryWith(3));
+    await mp.reload();
+    await mp.locator('.place h2', { hasText: 'My cloud' }).waitFor({ timeout: 180_000 });
+    await mp.getByRole('button', { name: 'Update from the design' }).click();
+    await mp.locator('.map-notice', { hasText: 'version 3' }).waitFor({ timeout: 20_000 });
+    assert.equal(JSON.parse(readFileSync(join(EDITOR_DATA, 'services/nextcloud.json'), 'utf8')).design, 'check-design@3');
+    await shot(mp, '18b-map-design');
+    step('map: a design from the Atelier linked to a building becomes its service; a newer version is offered and applied');
+    await mp.goto(`${URL_}#/map`);
+    await mp.locator('[data-phase="overview"]').waitFor({ timeout: 180_000 });
 
     // A copy of the site on a plain web server (no edit API: /api/ answers {"editor":false}): the map still shows, and saving says why.
     await mapCtx.route('**/api/**', (route) => route.fulfill({ status: 200, contentType: 'application/json', body: '{"editor":false}' }));

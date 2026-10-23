@@ -5,7 +5,7 @@
 // own server (scripts/serve.ts) mounts it under /api/ and is told of every
 // change, so the house is rebuilt for it at once.
 //
-//   GET    /api/map /api/catalog /api/session /api/status
+//   GET    /api/map /api/catalog /api/session
 //   POST   /api/login /api/logout
 //   PUT    /api/services/<id>   { spec, logoSvg? }
 //   PUT    /api/machines/<id>   { spec, logoSvg? }
@@ -20,7 +20,7 @@ import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { loadCatalog, CATALOG_DIR, LOGO_MAX_BYTES } from '../../../src/node/catalog.ts';
 import { dataLogo, loadMachines, loadPlaces, removeItem, saveMachine, savePlace, saveService } from '../../../src/node/data.ts';
-import { ID, SPEC_KEYS, isHost, validateSpec } from '../../../src/catalog/service.ts';
+import { ID, SPEC_KEYS, validateSpec } from '../../../src/catalog/service.ts';
 import { validateMachine } from '../../../src/catalog/machine.ts';
 import { validatePlace } from '../../../src/map/places.ts';
 import { island } from '../../../src/node/island.ts';
@@ -28,7 +28,6 @@ import { mapData, sealPath } from '../../../src/map/items.ts';
 import { building } from '../../../src/map/buildings/index.ts';
 import { importLogo } from '../../../src/geometry/logo.ts';
 import { Sessions, Throttle, checkPassword, hasPassword, setPassword } from './auth.ts';
-import { reachable } from './ping.ts';
 
 export { setPassword, hasPassword };
 
@@ -91,8 +90,6 @@ const send = (res: ServerResponse, status: number, value: unknown, headers: Reco
 
 export type ApiOptions = {
   delayScale?: number;
-  statusTtl?: number;
-  reachable?: (host: string) => Promise<boolean>;
   /** Told of each saved change (what changed); its answer — the change's number — goes back to the page, which waits for that change to be published. */
   onChange?: (what: 'place' | 'service' | 'machine' | 'removed') => number | undefined;
   /** The folder of the site being served (its files under files/), to offer only seals that are there; else the repository's own. */
@@ -106,7 +103,6 @@ export function createEditorApi(opts: ApiOptions = {}): EditorApi {
   const { plan } = island();
   const sessions = new Sessions();
   const throttle = new Throttle(opts.delayScale ?? 1);
-  const ttl = opts.statusTtl ?? 15_000;
   let queue: Promise<unknown> = Promise.resolve();
   /** Writes happen one after the other: no two writes of places.json overlap. */
   const serial = <T>(fn: () => T): Promise<T> => {
@@ -114,11 +110,6 @@ export function createEditorApi(opts: ApiOptions = {}): EditorApi {
     queue = next.catch(() => undefined);
     return next;
   };
-  type StatusValue = { checked: string; items: Record<string, 'up' | 'down' | 'unknown'> };
-  let status: { at: number; value: StatusValue } | null = null;
-  /** One round of pings at a time: requests that arrive meanwhile wait for it. */
-  let checking: Promise<StatusValue> | null = null;
-  const reach = opts.reachable ?? reachable;
 
   const live = () => {
     const services = loadCatalog();
@@ -161,32 +152,6 @@ export function createEditorApi(opts: ApiOptions = {}): EditorApi {
     if (method === 'GET' && path === '/api/session') {
       const s = sessions.get(cookieOf(req));
       return send(res, 200, s ? { editing: true, csrf: s.csrf } : { editing: false, ...(hasPassword() ? {} : { setup: 'npm run editor -- password' }) });
-    }
-    if (method === 'GET' && path === '/api/status') {
-      if (status && Date.now() - status.at <= ttl) return send(res, 200, status.value);
-      checking ??= (async () => {
-        const { data } = live();
-        const items: Record<string, 'up' | 'down' | 'unknown'> = {};
-        await Promise.all(
-          data.items.map(async (e) => {
-            let host = e.ip ?? e.hostname;
-            if (!host && e.url) {
-              try {
-                host = new URL(e.url).hostname;
-              } catch {
-                host = undefined;
-              }
-            }
-            if (!host || !isHost(host)) return;
-            items[e.id] = (await reach(host)) ? 'up' : 'down';
-          }),
-        );
-        status = { at: Date.now(), value: { checked: new Date().toISOString(), items } };
-        return status.value;
-      })().finally(() => {
-        checking = null;
-      });
-      return send(res, 200, await checking);
     }
     // A write (signing in included) must come from this site: a page elsewhere is refused, whatever cookies the browser holds.
     if (method !== 'GET' && method !== 'HEAD' && typeof req.headers.origin === 'string') {

@@ -15,6 +15,7 @@ export type MapEntry = {
   name: string;
   description?: string;
   url?: string;
+  /** A machine's network address and host name, shown in its panel. */
   ip?: string;
   hostname?: string;
   os?: string;
@@ -25,6 +26,8 @@ export type MapEntry = {
   seal?: string;
   /** Its own logo, a path on the site. */
   logo?: string;
+  /** A service's Atelier design, when one is linked ("<key>@<version>"). */
+  design?: string;
   place: Place;
   /** The plot it stands on. */
   lot: string;
@@ -36,7 +39,7 @@ export type MapData = { version: 1; items: MapEntry[]; unplaced: { id: string; k
 /** Where a service's seal is on the site. */
 export const sealPath = (id: string) => `files/assets/services/${id}/svg/the-olympus-${id}-seal.svg`;
 
-export const ENTRY_KEYS = ['id', 'kind', 'name', 'description', 'url', 'ip', 'hostname', 'os', 'role', 'category', 'app', 'seal', 'logo', 'place', 'lot', 'placed'] as const;
+export const ENTRY_KEYS = ['id', 'kind', 'name', 'description', 'url', 'ip', 'hostname', 'os', 'role', 'category', 'app', 'seal', 'logo', 'design', 'place', 'lot', 'placed'] as const;
 
 const hash = (s: string) => {
   let h = 2166136261;
@@ -57,7 +60,7 @@ const clean = <T extends object>(o: T): T => Object.fromEntries(Object.entries(o
 /** `sealed`: whether a service's seal is on the site yet (a service just added has none until the site is rebuilt); every one by default. */
 export function mapData(services: readonly Service[], machines: readonly MachineSpec[], places: Places, plan: CityPlan, logos: ReadonlySet<string> = new Set(), sealed: (id: string) => boolean = () => true): MapData {
   const base = [
-    ...services.map((s) => ({ id: s.id, kind: 'service' as const, entry: { name: s.name, description: s.description, url: s.url, ip: s.ip, category: s.category, app: s.app, seal: sealed(s.id) ? sealPath(s.id) : undefined } })),
+    ...services.map((s) => ({ id: s.id, kind: 'service' as const, entry: { name: s.name, description: s.description, url: s.url, category: s.category, app: s.app, design: s.design, seal: sealed(s.id) ? sealPath(s.id) : undefined } })),
     ...machines.map((m) => ({ id: m.id, kind: 'machine' as const, entry: { name: m.name, description: m.description, ip: m.ip, hostname: m.hostname, os: m.os, role: m.role } })),
   ].sort((a, b) => (a.id < b.id ? -1 : 1));
   // The owner's places, where their building still exists.

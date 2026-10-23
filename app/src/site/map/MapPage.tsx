@@ -20,7 +20,6 @@ import { Hotspots } from './Hotspots.tsx';
 import { LocationPanel } from './LocationPanel.tsx';
 import { Compass, Directory, MapBar } from './MapNav.tsx';
 import { portrait } from './thumbs.ts';
-import { STATUS } from '../../../../src/brand/pigments.ts';
 import * as api from './map-api.ts';
 import type { MapScene, Filter } from './map-scene.ts';
 import './map.css';
@@ -38,8 +37,6 @@ const hasWebGL = () => {
   }
 };
 const SEEN = 'olympus-map-seen';
-/** The two colours the map shows: online and offline, in the pigments' tones for the marble they sit on. */
-const STATES = { '--state-up': STATUS.ok.light, '--state-down': STATUS.error.light } as React.CSSProperties;
 const seen = () => {
   try {
     return !!sessionStorage.getItem(SEEN);
@@ -70,7 +67,6 @@ export function MapPage({ arg }: { arg?: string }) {
   const [scene, setScene] = useState<MapScene | null>(null);
   const [filter, setFilter] = useState<Filter>('all');
   const [directory, setDirectory] = useState(false);
-  const [status, setStatus] = useState<api.Status | null>(null);
   const [lesson, setLesson] = useState<'move' | 'zoom' | null>(null);
   const [pictured, setPictured] = useState<string | null>(null);
   const canvas = useRef<HTMLCanvasElement>(null);
@@ -148,18 +144,6 @@ export function MapPage({ arg }: { arg?: string }) {
     return () => window.clearTimeout(t);
   }, [placeEntry?.place.building, want3d]);
 
-  // Online marks: on arrival, then every 15 s while a place is open (a minute otherwise).
-  useEffect(() => {
-    if (!live) return;
-    let stop = false;
-    const look = () => api.loadStatus().then((s) => !stop && s && setStatus(s));
-    look();
-    const t = window.setInterval(() => !document.hidden && look(), chosen ? 15_000 : 60_000);
-    return () => {
-      stop = true;
-      window.clearInterval(t);
-    };
-  }, [live, chosen]);
 
   const enter = async (thenDirectory = false) => {
     markSeen();
@@ -201,7 +185,7 @@ export function MapPage({ arg }: { arg?: string }) {
   const showUi = phase !== 'intro' && phase !== 'entering' && phase !== 'loading';
 
   return (
-    <div className="map" data-map={phase === 'still' ? 'still' : phase === 'loading' ? 'loading' : 'ready'} data-phase={phase} style={STATES}>
+    <div className="map" data-map={phase === 'still' ? 'still' : phase === 'loading' ? 'loading' : 'ready'} data-phase={phase}>
       {inScene ? (
         <canvas
           ref={canvas}
@@ -233,7 +217,7 @@ export function MapPage({ arg }: { arg?: string }) {
       )}
       <div className="map__veil" aria-hidden="true" />
 
-      {inScene && <Hotspots items={items} scene={scene} selected={chosen} status={status?.items ?? {}} hidden={!showUi} onChoose={go} />}
+      {inScene && <Hotspots items={items} scene={scene} selected={chosen} hidden={!showUi} onChoose={go} />}
 
       {phase === 'loading' && (
         <p className="map__loading" role="status">
@@ -273,13 +257,13 @@ export function MapPage({ arg }: { arg?: string }) {
           {inScene && <Compass scene={scene} />}
           <MapBar current={placeEntry ? placeEntry.name : 'The island'} open={directory} atHome={!placeEntry && phase === 'overview'} onHome={() => (setDirectory(false), go(null))} onToggle={() => setDirectory((o) => !o)} />
           <div className="map__tools">{editor.tools}</div>
-          {directory && data && <Directory items={items} unplaced={data.unplaced ?? []} status={status?.items ?? {}} selected={chosen} filter={filter} onFilter={setFilter} onChoose={(id) => (setDirectory(false), go(id))} onClose={() => setDirectory(false)} />}
+          {directory && data && <Directory items={items} unplaced={data.unplaced ?? []} selected={chosen} filter={filter} onFilter={setFilter} onChoose={(id) => (setDirectory(false), go(id))} onClose={() => setDirectory(false)} />}
         </>
       )}
 
       {placeEntry && showUi && (
         <div className="map__place">
-          <LocationPanel entry={placeEntry} index={index} count={ordered.length} state={status?.items[placeEntry.id]} checked={status?.checked} portrait={pictured} onPrev={() => step(-1)} onNext={() => step(1)} onBack={() => go(null)}>
+          <LocationPanel entry={placeEntry} index={index} count={ordered.length} portrait={pictured} onPrev={() => step(-1)} onNext={() => step(1)} onBack={() => go(null)}>
             {editor.cardActions(placeEntry)}
           </LocationPanel>
         </div>

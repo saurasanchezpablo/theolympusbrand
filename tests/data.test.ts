@@ -29,10 +29,9 @@ test('an empty data folder changes nothing', () => {
 });
 
 test('a service saved from the browser joins the catalogue; the repository is untouched', () => {
-  saveService({ id: 'pihole', name: 'Pi-hole', category: 'networking', ip: '10.0.0.53', logo: 'logos/pihole.svg' }, LOGO);
+  saveService({ id: 'pihole', name: 'Pi-hole', category: 'networking', logo: 'logos/pihole.svg' }, LOGO);
   const s = loadCatalog().find((x) => x.id === 'pihole');
   assert.ok(s, 'in the catalogue');
-  assert.equal(s.ip, '10.0.0.53');
   assert.ok(logoOf(s), 'its logo is read from the data folder');
   assert.ok(existsSync(join(process.env.OLYMPUS_DATA!, 'services/pihole.json')));
   assert.equal(execFileSync('git', ['status', '--porcelain', 'catalog/'], { cwd: ROOT, encoding: 'utf8' }), '');
@@ -75,12 +74,17 @@ test('machines and places round-trip and are validated', () => {
   assert.deepEqual(loadMachines(), []);
 });
 
-test('ip is validated', () => {
+test('a network address is no longer kept: a file that has one still loads, without it', () => {
   const base = { id: 'x', name: 'X', category: 'networking' };
-  assert.equal(validateSpec({ ...base, ip: '10.0.0.1' }).ip, '10.0.0.1');
-  assert.equal(validateSpec({ ...base, ip: 'fd00::1' }).ip, 'fd00::1');
-  assert.equal(validateSpec({ ...base, ip: 'nas.lan' }).ip, 'nas.lan');
-  for (const ip of ['10.0.0.1; rm -rf /', '$(id)', 'a b', '']) assert.throws(() => validateSpec({ ...base, ip }), ip);
+  const spec = validateSpec({ ...base, ip: '10.0.0.1' });
+  assert.ok(!('ip' in spec));
+  assert.deepEqual(spec, base);
+});
+
+test('a design link names the design and its version, nothing else', () => {
+  const base = { id: 'x', name: 'X', category: 'networking' };
+  assert.equal(validateSpec({ ...base, design: '3f2a9c1e-77b0-4c1d-9a7e-1b2c3d4e5f60@4' }).design, '3f2a9c1e-77b0-4c1d-9a7e-1b2c3d4e5f60@4');
+  for (const design of ['abc', 'abc@0', 'abc@x', '../x@1', 'a b@1', '$(id)@1', '', 'a@1@2']) assert.throws(() => validateSpec({ ...base, design }), design);
 });
 
 test('writes stay inside the data folder', () => {

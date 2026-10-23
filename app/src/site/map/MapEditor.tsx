@@ -1,12 +1,15 @@
 // Editing the map, with the house's password: add a building for a service or
-// a machine, set it down where it may stand, fill in its card; move, turn,
-// change or remove what is there; undo. Every change is saved on the server
+// a machine, set it down where it may stand, fill in its card, give a service
+// one of this browser's Atelier designs as its identity; move, turn, change or
+// remove what is there; undo. Every change is saved on the server
 // at once, and the page says when the house has been rebuilt for it.
 
 import { useCallback, useEffect, useRef, useState, type MutableRefObject, type ReactNode } from 'react';
 import type { MapData, MapEntry } from '../../../../src/map/items.ts';
 import type { Place } from '../../../../src/map/places.ts';
-import type { ServiceSpec } from '../../../../src/catalog/service.ts';
+import { DESIGN_LINK, type ServiceSpec } from '../../../../src/catalog/service.ts';
+import type { Design } from '../../../../src/catalog/design.ts';
+import { loadLibrary } from '../../designs.ts';
 import type { MachineSpec } from '../../../../src/catalog/machine.ts';
 import { CATEGORIES } from '../../../../src/catalog/categories.ts';
 import { building } from '../../../../src/map/buildings/index.ts';
@@ -20,6 +23,32 @@ const WHY: Record<string, string> = { 'no-plot': 'Choose a plot beside a street'
 const TURN = Math.PI / 2;
 const slug = (s: string) => s.normalize('NFKD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
 const norm = (r: number) => ((r % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2);
+
+/** The service a design makes for a building: the design's identity, under the building's id; an address and notes the design lacks are kept. */
+export function linkedSpec(id: string, key: string, d: Design, old: ServiceSpec | null): ServiceSpec {
+  const ds = d.spec;
+  const spec: Record<string, unknown> = {
+    id,
+    name: ds.name,
+    category: ds.category,
+    god: ds.god,
+    monogram: ds.monogram,
+    caption: ds.caption,
+    logo: d.logoSvg ? `logos/${id}.svg` : undefined,
+    url: ds.url ?? old?.url,
+    app: ds.app ?? old?.app,
+    description: ds.description || old?.description,
+    design: `${key}@${d.version}`,
+  };
+  return Object.fromEntries(Object.entries(spec).filter(([, v]) => v !== undefined && v !== '')) as ServiceSpec;
+}
+
+/** What this browser knows of a service's linked design: none, one it does not have, or one it has (newer or not). */
+function linkState(e: MapEntry): { key: string; version: number; design: Design | null } | null {
+  const m = e.design?.match(DESIGN_LINK);
+  if (!m) return null;
+  return { key: m[1], version: Number(m[2]), design: loadLibrary().designs[m[1]] ?? null };
+}
 
 type Draft = { kind: 'service' | 'machine'; id?: string; place: Place; fields: Record<string, string>; logoSvg?: string; logoName?: string };
 type Step = { label: string; undo: () => Promise<unknown>; redo: () => Promise<unknown> };
@@ -48,6 +77,7 @@ export function useMapEditor({ live, data, scene, selected, onSelect, reload }: 
   const [placing, setPlacing] = useState<null | { type: string; kind: 'service' | 'machine'; rotation: number }>(null);
   const [verdict, setVerdict] = useState<string>('');
   const [draft, setDraft] = useState<Draft | null>(null);
+  const [linking, setLinking] = useState<MapEntry | null>(null);
   const [rebuild, setRebuild] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const undo = useRef<Step[]>([]);
@@ -185,8 +215,8 @@ export function useMapEditor({ live, data, scene, selected, onSelect, reload }: 
     if (draft.id) previous = await specOf(data.items.find((x) => x.id === draft.id)!);
     if (draft.kind === 'service') {
       const old = (previous?.spec ?? {}) as ServiceSpec;
-      const rest = Object.fromEntries(Object.entries(old).filter(([k]) => !['name', 'category', 'url', 'ip', 'description'].includes(k)));
-      spec = { ...rest, id, ...pick(['name', 'category', 'url', 'ip', 'description']) } as ServiceSpec;
+      const rest = Object.fromEntries(Object.entries(old).filter(([k]) => !['name', 'category', 'url', 'description'].includes(k)));
+      spec = { ...rest, id, ...pick(['name', 'category', 'url', 'description']) } as ServiceSpec;
     } else {
       spec = { ...((previous?.spec as MachineSpec)?.logo ? { logo: (previous!.spec as MachineSpec).logo } : {}), id, ...pick(['name', 'ip', 'hostname', 'os', 'role', 'description']) } as MachineSpec;
     }
@@ -210,6 +240,22 @@ export function useMapEditor({ live, data, scene, selected, onSelect, reload }: 
     await run(step, isNew ? `${name} is on the map` : `${name} is saved`);
     setDraft(null);
     onSelect(theId);
+  };
+
+  /** Give a service a design from this browser's Atelier: its name, patron, logo and caption become the service's, and the house is rebuilt for it. */
+  const link = async (e: MapEntry, key: string, d: Design) => {
+    let before: { spec: ServiceSpec | MachineSpec; logoSvg?: string };
+    try {
+      before = await specOf(e);
+    } catch (err) {
+      return setMessage((err as Error).message);
+    }
+    const spec = linkedSpec(e.id, key, d, before.spec as ServiceSpec);
+    setLinking(null);
+    await run(
+      { label: `${e.name} given the design ${d.spec.name}`, redo: () => api.saveService(spec, d.logoSvg), undo: () => api.saveService(before.spec as ServiceSpec, before.logoSvg) },
+      `${spec.name} wears its design (version ${d.version})`,
+    );
   };
 
   const remove = async (e: MapEntry) => {
@@ -416,6 +462,46 @@ export function useMapEditor({ live, data, scene, selected, onSelect, reload }: 
           {verdict && <span className="map-placing__why"> · {verdict}</span>}
         </div>
       )}
+      {linking && (
+        <div className="map__panel map__panel--card">
+          <section className="map-card map-form" aria-labelledby="map-link-title">
+            <h2 id="map-link-title">A design for {linking.name}</h2>
+            <p className="map-card__kind">Its name, patron, logo and caption become the service’s, here and in everything the house makes for it.</p>
+            {(() => {
+              const lib = loadLibrary();
+              const designs = Object.entries(lib.designs).sort(([, a], [, b]) => (a.updated < b.updated ? 1 : -1));
+              if (!lib.available) return <p className="notes notes--error">This browser does not let the site read its saved designs.</p>;
+              if (!designs.length)
+                return (
+                  <p className="notes">
+                    No designs are saved in this browser yet. <a href="#/atelier">Make one in the Atelier</a>, save it, and come back.
+                  </p>
+                );
+              const current = linkState(linking);
+              return (
+                <ul className="map-designs">
+                  {designs.map(([key, d]) => (
+                    <li key={key}>
+                      <button type="button" className="map-designs__pick" disabled={busy} aria-current={current?.key === key ? 'true' : undefined} onClick={() => void link(linking, key, d)}>
+                        <span className="map-designs__name">{d.spec.name}</span>
+                        <span className="map-designs__meta">
+                          version {d.version} · {d.spec.category}
+                          {current?.key === key ? ' · linked now' : ''}
+                        </span>
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              );
+            })()}
+            <div className="map-form__actions">
+              <button type="button" className="btn btn--ghost btn--sm" onClick={() => setLinking(null)}>
+                Cancel
+              </button>
+            </div>
+          </section>
+        </div>
+      )}
       {draft && (
         <div className="map__panel map__panel--card">
           <section className="map-card map-form" aria-labelledby="map-form-title">
@@ -441,7 +527,6 @@ export function useMapEditor({ live, data, scene, selected, onSelect, reload }: 
                     </select>
                   </label>
                   {field('url', 'Address', { type: 'url', hint: 'https://…' })}
-                  {field('ip', 'Network address', { hint: 'for the online mark' })}
                 </>
               ) : (
                 <>
@@ -507,6 +592,7 @@ export function useMapEditor({ live, data, scene, selected, onSelect, reload }: 
             try {
               const { spec } = await specOf(e);
               const fields = Object.fromEntries(Object.entries(spec).filter(([, v]) => typeof v === 'string')) as Record<string, string>;
+              setLinking(null);
               setDraft({ kind: e.kind, id: e.id, place: e.place, fields });
             } catch (err) {
               setMessage((err as Error).message);
@@ -515,6 +601,11 @@ export function useMapEditor({ live, data, scene, selected, onSelect, reload }: 
         >
           Change its card
         </button>
+        {e.kind === 'service' && (
+          <button type="button" className="btn btn--ghost btn--sm" disabled={busy} onClick={() => (setDraft(null), setLinking(e))}>
+            {e.design ? 'Change its design' : 'Link a design'}
+          </button>
+        )}
         <button type="button" className="btn btn--ghost btn--sm" disabled={busy} onClick={() => setPicking({ mode: 'swap', kind: e.kind })}>
           Change the building
         </button>
@@ -528,6 +619,25 @@ export function useMapEditor({ live, data, scene, selected, onSelect, reload }: 
           Delete
         </button>
         <p className="map-card__hint">Drag the building to move it.</p>
+        {e.kind === 'service' &&
+          (() => {
+            const l = linkState(e);
+            if (!l) return null;
+            if (!l.design) return <p className="map-card__hint">Its design was linked from another browser.</p>;
+            const d = l.design;
+            return d.version > l.version ? (
+              <p className="map-card__hint">
+                Its design, {d.spec.name}, has changed since (version {l.version} → {d.version}).{' '}
+                <button type="button" className="btn btn--sm" disabled={busy} onClick={() => void link(e, l.key, d)}>
+                  Update from the design
+                </button>
+              </p>
+            ) : (
+              <p className="map-card__hint">
+                Its design: {d.spec.name}, version {l.version}.
+              </p>
+            );
+          })()}
       </div>
     ) : null;
 
