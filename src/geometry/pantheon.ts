@@ -101,23 +101,43 @@ function logoSymbol(d: string): string {
 /** A patron as files record it: a logo by name only (its drawing is the service's logo file). */
 export const patronRecord = (p: Patron): { god: GodId } | { monogram: string } | { logo: true; letter: string } => ('logo' in p ? { logo: true, letter: p.letter } : p);
 
-const printsAsLogo = new Map<string, boolean>();
-/** Whether a logo patron keeps its shape in the print edition's bay (checked as the print gate checks a glyph); else the initial is cut. */
-export function patronPrintsAsLogo(p: Patron): boolean {
-  if (!('logo' in p)) return false;
-  let ok = printsAsLogo.get(p.logo);
-  if (ok === undefined) {
-    ok = isClean(problemsAt(union(flatten(logoSymbol(p.logo))), PRINT_MIN_UNITS, { topology: true }));
-    if (printsAsLogo.size > 64) printsAsLogo.clear();
-    printsAsLogo.set(p.logo, ok);
+/** How much a logo may be thickened for print, in steps, up to the monograms' own growth. */
+const LOGO_GROWS = [0, 0.4, 0.8, 1.2, 1.6, 2.0, BOLD_GROW];
+const printable = new Map<string, { d: string; ok: boolean }>();
+/**
+ * A logo, placed where it is printed, thickened just enough to keep its shape
+ * on the nozzle — the least growth that passes the strict print check, its
+ * counters re-cut as the monograms' are — checked with what it is cut
+ * beside (`around`: the slot's ring), as the print gate checks it. When no
+ * growth passes, its own shape: the print check then asks for a larger print.
+ */
+export function printableLogo(placed: string, around = ''): { d: string; ok: boolean } {
+  const key = `${placed}|${around}`;
+  let out = printable.get(key);
+  if (!out) {
+    const rings = union(flatten(placed));
+    const others = around ? flatten(around) : [];
+    const counters = offset(rings.filter((r) => signedArea(r) < 0).map((r) => [...r].reverse()), -BOLD_CHOKE);
+    out = { d: ringsPath(rings), ok: false };
+    for (const g of LOGO_GROWS) {
+      const cand = g ? difference(offset(rings, g), counters) : rings;
+      if (isClean(problemsAt(others.length ? union([...cand, ...others]) : cand, PRINT_MIN_UNITS, { topology: true }))) {
+        out = { d: ringsPath(cand), ok: true };
+        break;
+      }
+    }
+    if (printable.size > 64) printable.clear();
+    printable.set(key, out);
   }
-  return ok;
+  return out;
 }
+
 
 /** The patron's symbol in bay space (x 237–275, y 198–304). Zeus has none. */
 export function patronSymbol(p: Patron, detail: SymbolDetail): string | null {
   if ('monogram' in p) return monogramSymbol(p.monogram, detail);
-  if ('logo' in p) return detail === 'bold' && !patronPrintsAsLogo(p) ? monogramSymbol(p.letter, 'bold') : logoSymbol(p.logo);
+  // In print, the crest thickens it where it is placed (see crest.ts): here it is the logo as drawn.
+  if ('logo' in p) return logoSymbol(p.logo);
   const s = GODS[p.god].symbol;
   return s ? SYMBOLS[s](detail) : null;
 }

@@ -42,9 +42,10 @@ while you read other pages, so nothing in progress is lost.
    one (step 5).
 5. Optionally put an **application logo** in the logo slot (an SVG file).
    Chosen as the patron too, it stands in the temple's bay and on the seal
-   as well. Print editions cut it in the bay only if it keeps its shape on a
-   0.4 mm nozzle; otherwise they carry the initial, and the patron's note
-   says so.
+   as well — and in the print editions, in the bay and the medallion,
+   thickened just enough to hold on a 0.4 mm nozzle. When its finest details
+   cannot hold even then, the patron's note gives the smallest print size
+   that keeps them.
 6. Optionally change the **caption**, the lockup's second line.
 7. **Save** (or Ctrl+S). Each save increments the design's version.
 8. **Export** — or **share** it as a link.

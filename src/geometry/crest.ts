@@ -16,7 +16,7 @@ import { flatten, union, difference, intersection, offset, ringsPath, noSpecks }
 import { lineText, type FontRole } from './fonts.ts';
 import { keyBand, beadAndReel } from './border.ts';
 import { laurelBranch, engravedClouds, type LaurelStyle, type CloudBank } from './ornament.ts';
-import { patronSymbol, sealGlyph, type Patron } from './pantheon.ts';
+import { patronSymbol, printableLogo, sealGlyph, type Patron } from './pantheon.ts';
 import { BORDER, type BorderRhythms } from '../brand/identity.ts';
 
 /* ---------------------------------------------------------------- */
@@ -170,8 +170,14 @@ function cella(P: Profile, patron: Patron): string | null {
   if (!symbol) return null;
   const [b0, b1] = centralBay(P);
   const k = (b1 - b0) / 38;
-  return transformPath(symbol, k, (b0 + b1) / 2 - C * k, 251 - 251 * k);
+  const placed = transformPath(symbol, k, (b0 + b1) / 2 - C * k, 251 - 251 * k);
+  // A logo is thickened for the nozzle at the size it is cut.
+  return 'logo' in patron && P.medal.mode === 'bold' ? printableLogo(placed).d : placed;
 }
+
+/** Where a logo patron stands in the print slot: inside the ring, with room left for thickening and the gap to the ring. */
+const printSlotLogo = (P: Profile, logo: string) => fitInto(logo, P.medal.r - 5 - 6, C, P.medal.cy);
+
 
 /** The temple-server in its own coordinates (bottom step at y = 334). */
 function temple(P: Profile, patron: Patron): string {
@@ -277,8 +283,9 @@ function fitInto(d: string, r: number, cx: number, cy: number): string {
 /**
  * The logo slot. Fine: the patron's seal, or an external logo (path data, any
  * scale) fitted to the safe area inside the ring. Print: a heavy ring around a
- * bold temple glyph for every crest — at this size no seal, logo or letter
- * keeps its shape on a 0.4 mm nozzle; the cella carries the patron instead.
+ * bold temple glyph — at this size no god's seal or letter keeps its shape on
+ * a 0.4 mm nozzle, and the cella carries the patron instead — except for a
+ * service whose own logo is its patron: its logo, thickened for the nozzle.
  */
 function medallion(P: Profile, patron: Patron, mode: MedalMode, logo?: string): string {
   const { r, cy } = P.medal;
@@ -291,6 +298,7 @@ function medallion(P: Profile, patron: Patron, mode: MedalMode, logo?: string): 
     const k = r / RIM;
     return transformPath(sealGlyph(patron), k, C - C * k, cy - C * k);
   }
+  if ('logo' in patron) return ring + printableLogo(printSlotLogo(P, patron.logo), ring).d;
   // A bold temple glyph (drawn for r = 28), every part ≥ the print minimum.
   const g = r / 28;
   let d = ring;

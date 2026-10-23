@@ -2,9 +2,9 @@ import { useRef, useState } from 'react';
 import { productionSvg } from '../../../src/render/svg.ts';
 import { slugify, type Service, type ServiceSpec } from '../../../src/catalog/service.ts';
 import { withLogoField } from '../../../src/catalog/design.ts';
-import { CATEGORIES, GODS, initialOf, patronPrintsAsLogo, type Category, type GodId } from '../../../src/geometry/pantheon.ts';
+import { CATEGORIES, GODS, initialOf, type Category, type GodId } from '../../../src/geometry/pantheon.ts';
 import { THEME_KITS } from '../../../src/integrations/themes/index.ts';
-import { CATEGORY_LIST, GOD_LIST, defaultGodOf, sealFor, title, type Draft, type Logo } from '../model.ts';
+import { CATEGORY_LIST, GOD_LIST, defaultGodOf, printFor, sealFor, title, type Draft, type Logo } from '../model.ts';
 import { Field, Notes, Section, SvgImage } from './ui.tsx';
 import { Icon } from './Library.tsx';
 
@@ -146,7 +146,10 @@ export function Config({ draft, service, logo, issues, warnings, onChange }: Pro
               <strong>{title(GODS[service.patron.god].name)}</strong>, {GODS[service.patron.god].title.charAt(0).toLowerCase() + GODS[service.patron.god].title.slice(1)}. In the bay: {GODS[service.patron.god].attribute.toLowerCase()}.
             </>
           ) : 'logo' in service.patron ? (
-            <>Your logo stands in the bay, on the seal and in the logo slot. Print editions cut it only if it keeps its shape at 0.4 mm{patronPrintsAsLogo(service.patron) ? ' — it does' : <> — it does not, so they carry the initial, {service.letter}</>}.</>
+            <>
+              Your logo stands in the bay, on the seal and in the logo slot. Print editions cut it too, thickened just enough for a 0.4 mm nozzle
+              {printFor(service.patron).ok ? '.' : ` — its finest details need a print of at least Ø ${printFor(service.patron).minDiameterMM} mm.`}
+            </>
           ) : (
             <>The service’s initial stands in the bay, cut heavy enough to print.</>
           )}
@@ -168,7 +171,7 @@ export function Config({ draft, service, logo, issues, warnings, onChange }: Pro
       </Section>
 
       <Section title="Logo slot">
-        <p className="field__hint">The medallion on the clouds. Fine edition only — print editions always carry the temple glyph, since no logo keeps its shape at that size.</p>
+        <p className="field__hint">The medallion on the clouds. Print editions carry the temple glyph there — or, when your logo is the patron, your logo, thickened for the nozzle.</p>
         <div className="slot">
           <div className="slot__preview">
             {logo && 'd' in logo ? (

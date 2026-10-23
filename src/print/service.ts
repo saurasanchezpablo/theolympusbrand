@@ -18,6 +18,9 @@ export const SHARED_PRINT_MIN_UNITS = 3.77;
 
 export type PrintReport = { ok: boolean; minUnits: number; minDiameterMM: number };
 
+/** Whether a service's own logo, as its patron, holds in the print edition at the usual sizes (thickened as needed); false: it needs a larger print. */
+export const patronPrintsAsLogo = (patron: Patron): boolean => 'logo' in patron && checkPrint(patron).ok;
+
 /**
  * Check what varies per service — the patron in the cella and the logo slot —
  * strictly (a glyph must keep its shape), then combine with the shared parts.

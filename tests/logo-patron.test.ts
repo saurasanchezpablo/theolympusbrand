@@ -1,5 +1,5 @@
 // A service's own logo as its patron: in the temple's bay, in the logo slot
-// and in its seal; in print, only if it keeps its shape — else the initial.
+// and in its seal — in the print editions too, thickened as the nozzle needs.
 
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
@@ -9,10 +9,11 @@ import { join } from 'node:path';
 import './helpers.ts';
 import { variableParts, seal } from '../src/geometry/crest.ts';
 import { importLogo } from '../src/geometry/logo.ts';
-import { patronPrintsAsLogo } from '../src/geometry/pantheon.ts';
 import { resolve, validateSpec, withLogo } from '../src/catalog/service.ts';
+import { checkPrint, patronPrintsAsLogo } from '../src/print/service.ts';
 
 const BOLD = importLogo('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><path d="M10 10H90V90H10Z"/></svg>').d;
+const MEDIUM = importLogo('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><path d="M0 0H100V1.5H0Z M0 49H100V50.5H0Z M0 98.5H100V100H0Z"/></svg>').d;
 const FINE = importLogo('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><path d="M0 0H100V0.6H0Z M0 20H100V20.6H0Z M0 40H100V40.6H0Z M0 60H100V60.6H0Z M0 80H100V80.6H0Z M0 99.4H100V100H0Z"/></svg>').d;
 
 test('the logo stands in the bay of the fine crest, and in its logo slot', () => {
@@ -23,12 +24,22 @@ test('the logo stands in the bay of the fine crest, and in its logo slot', () =>
   assert.notEqual(logo.medal, letter.medal, 'the slot carries the logo too');
 });
 
-test('in print, a logo that keeps its shape is cut; one too fine gives way to the initial', () => {
+test('in print, the logo stays the logo: thickened only as much as the nozzle needs, never the initial', () => {
+  const letter = variableParts({ detail: 'print', patron: { monogram: 'Q' } });
+  const bold = variableParts({ detail: 'print', patron: { logo: BOLD, letter: 'Q' } });
+  const fine = variableParts({ detail: 'print', patron: { logo: FINE, letter: 'Q' } });
+  for (const v of [bold, fine]) {
+    assert.notEqual(v.cella, letter.cella, 'the bay is not the initial');
+    assert.notEqual(v.medal, letter.medal, 'the slot carries the logo, not the temple glyph');
+  }
+  // A logo heavy enough is cut as drawn; a thin one is thickened until it holds.
   assert.equal(patronPrintsAsLogo({ logo: BOLD, letter: 'Q' }), true);
+  assert.equal(patronPrintsAsLogo({ logo: MEDIUM, letter: 'Q' }), true);
+  assert.ok(checkPrint({ logo: MEDIUM, letter: 'Q' }).ok, 'thickened, its print edition passes the gate');
+  // Hairlines this close cannot both thicken and stay apart: still the logo, and the gate asks for a larger print.
   assert.equal(patronPrintsAsLogo({ logo: FINE, letter: 'Q' }), false);
-  const letter = variableParts({ detail: 'print', patron: { monogram: 'Q' } }).cella;
-  assert.notEqual(variableParts({ detail: 'print', patron: { logo: BOLD, letter: 'Q' } }).cella, letter);
-  assert.equal(variableParts({ detail: 'print', patron: { logo: FINE, letter: 'Q' } }).cella, letter);
+  const fineReport = checkPrint({ logo: FINE, letter: 'Q' });
+  assert.ok(!fineReport.ok && fineReport.minDiameterMM > checkPrint({ logo: BOLD, letter: 'Q' }).minDiameterMM);
 });
 
 test('the seal carries the logo', () => {

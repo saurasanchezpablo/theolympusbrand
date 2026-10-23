@@ -208,11 +208,11 @@ try {
   const sealBefore = await page.locator('.slot__preview img, .patron.is-on img').first().getAttribute('src');
   await patrons.getByRole('radio', { name: 'Your logo' }).click();
   assert.equal(await patrons.getByRole('radio', { name: 'Your logo' }).getAttribute('aria-checked'), 'true');
-  await page.getByText(/Your logo stands in the bay, on the seal and in the logo slot\. Print editions cut it only if it keeps its shape at 0\.4 mm — it does/).waitFor();
+  await page.getByText(/Your logo stands in the bay, on the seal and in the logo slot\. Print editions cut it too, thickened just enough for a 0\.4 mm nozzle\./).waitFor();
   assert.notEqual(await page.locator('.patron.is-on img').getAttribute('src'), sealBefore, 'the seal is the logo now');
   assert.equal(await page.getByRole('alert').filter({ hasText: /logo/ }).count(), 0, 'no problem reported');
   await patrons.locator(`[title="${before}"]`).click();
-  step('your logo as the patron: in the bay and on the seal; whether it prints, said');
+  step('your logo as the patron: in the bay and on the seal, and in print thickened for the nozzle');
 
   // The application it runs: its theme kit comes in the asset pack.
   await page.getByLabel('Application').selectOption('vaultwarden');

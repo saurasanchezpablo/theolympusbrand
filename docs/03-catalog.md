@@ -85,16 +85,18 @@ be written by hand:
 (`--logo` copies the file there). Every filled shape becomes one ink and
 white fills become cut-outs; strokes, text, images and opacity are reported
 as warnings, because they cannot be engraved — convert them to filled
-outlines first. The logo appears only in the fine edition. In the print
-edition the logo slot always carries the bold temple glyph: at that size no
-logo or letter keeps its shape on a 0.4 mm nozzle, and the god in the cella
-already identifies the service.
+outlines first. In the slot, the logo appears only in the fine edition: the
+print edition's slot carries the bold temple glyph, since at that size no
+seal or letter keeps its shape on a 0.4 mm nozzle and the god in the cella
+already identifies the service — unless the logo is the patron (below).
 
 With `"god": "logo"` the service's own logo is its patron as well: it stands
 in the temple's bay of the fine crest and the emblem, and in the seal (and
-so in favicons and dashboard icons). The print editions cut it in the bay
-only when it passes the same strict check as the god symbols at 3.6 units;
-a finer logo gives way to the service's initial there.
+so in favicons and dashboard icons). The print editions carry it too, in the
+bay and in the medallion, thickened by the least amount (up to the
+monograms' own growth) that passes the same strict check as the god symbols
+at 3.6 units. A logo whose details cannot hold even then keeps its own
+shape, and the print check raises the smallest print diameter to suit.
 
 ## What gets built
 
