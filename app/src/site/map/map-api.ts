@@ -47,11 +47,29 @@ export async function loadTerrain(): Promise<ArrayBuffer> {
   return r.arrayBuffer();
 }
 
-/** The city planned on the island: streets, plots, squares, walkways, furniture. */
-export async function loadCity(): Promise<CityPlan> {
-  const r = await fetch(fileUrl('assets/map/city.json'));
+/** A short fingerprint of a text (FNV-1a and its length): which city the page is showing. */
+const versionOf = (text: string) => {
+  let h = 0x811c9dc5;
+  for (let i = 0; i < text.length; i++) h = Math.imul(h ^ text.charCodeAt(i), 0x01000193);
+  return `${(h >>> 0).toString(36)}-${text.length.toString(36)}`;
+};
+
+/** The city planned on the island — streets, plots, squares, walkways, furniture — and which version of it this is (it grows with the buildings). */
+export async function loadCity(): Promise<{ plan: CityPlan; version: string }> {
+  const r = await fetch(fileUrl('assets/map/city.json'), { cache: 'no-cache' });
   if (!r.ok) throw new Error(`the city could not be loaded (${r.status})`);
-  return (await r.json()) as CityPlan;
+  const text = await r.text();
+  return { plan: JSON.parse(text) as CityPlan, version: versionOf(text) };
+}
+
+/** Which version of the city the site serves now (null when it cannot be read). */
+export async function cityVersion(): Promise<string | null> {
+  try {
+    const r = await fetch(fileUrl('assets/map/city.json'), { cache: 'no-cache' });
+    return r.ok ? versionOf(await r.text()) : null;
+  } catch {
+    return null;
+  }
 }
 
 export async function buildState(): Promise<Build | null> {

@@ -23,8 +23,8 @@ import { dataLogo, loadMachines, loadPlaces, removeItem, saveMachine, savePlace,
 import { ID, SPEC_KEYS, validateSpec } from '../../../src/catalog/service.ts';
 import { validateMachine } from '../../../src/catalog/machine.ts';
 import { validatePlace } from '../../../src/map/places.ts';
-import { island } from '../../../src/node/island.ts';
-import { mapData, sealPath } from '../../../src/map/items.ts';
+import { island, roughLand } from '../../../src/node/island.ts';
+import { mapData, sealPath, townExtent } from '../../../src/map/items.ts';
 import { building } from '../../../src/map/buildings/index.ts';
 import { importLogo } from '../../../src/geometry/logo.ts';
 import { Sessions, Throttle, checkPassword, hasPassword, setPassword } from './auth.ts';
@@ -100,7 +100,6 @@ export type EditorApi = { handle: (req: IncomingMessage, res: ServerResponse) =>
 
 /** The API, as a handler for /api/… requests: any server can mount it. */
 export function createEditorApi(opts: ApiOptions = {}): EditorApi {
-  const { plan } = island();
   const sessions = new Sessions();
   const throttle = new Throttle(opts.delayScale ?? 1);
   let queue: Promise<unknown> = Promise.resolve();
@@ -117,7 +116,10 @@ export function createEditorApi(opts: ApiOptions = {}): EditorApi {
     const logos = new Set([...services, ...machines].filter((x) => x.logo && (dataLogo(x.id) || existsSync(join(CATALOG_DIR, x.logo)))).map((x) => x.id));
     const site = opts.site?.();
     const sealed = (id: string) => existsSync(site ? join(site, sealPath(id)) : join(REPO, sealPath(id).replace(/^files\//, '')));
-    return { services, machines, data: mapData(services, machines, loadPlaces(), plan, logos, sealed) };
+    // The town as the map's build grows it for these buildings: the same plots the published city has, once rebuilt.
+    const places = loadPlaces();
+    const { plan } = island(townExtent(roughLand(), services, machines, places));
+    return { services, machines, data: mapData(services, machines, places, plan, logos, sealed) };
   };
   const logoText = (id: string, logo: string | undefined) => {
     if (!logo) return null;

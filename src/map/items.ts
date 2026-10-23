@@ -8,6 +8,8 @@ import type { Place, Places } from './places.ts';
 import type { CityPlan } from './city.ts';
 import { autoPlace } from './placement.ts';
 import { BUILDINGS, DEFAULT_BUILDING, building, buildingInfo } from './buildings/index.ts';
+import { extentFor, ownedLots } from './world.ts';
+import type { Terrain } from './terrain.ts';
 
 export type MapEntry = {
   id: string;
@@ -59,6 +61,19 @@ const clean = <T extends object>(o: T): T => Object.fromEntries(Object.entries(o
 /** Everything on the map. `logos` names which items have a logo published for the map (assets/map/logos/<id>.svg). */
 /** `sealed`: whether a service's seal is on the site yet (a service just added has none until the site is rebuilt); every one by default. */
 export function mapData(services: readonly Service[], machines: readonly MachineSpec[], places: Places, plan: CityPlan, logos: ReadonlySet<string> = new Set(), sealed: (id: string) => boolean = () => true): MapData {
+  const { base, want, fixed } = wanted(services, machines, places, sealed);
+  const { places: placed, lots, unplaced } = autoPlace(plan, want, fixed, buildingInfo);
+  return {
+    version: 1,
+    unplaced: base.filter((it) => unplaced.includes(it.id)).map((it) => ({ id: it.id, kind: it.kind, name: it.entry.name })),
+    items: base
+      .filter((it) => placed[it.id])
+      .map((it) => clean({ id: it.id, kind: it.kind, ...it.entry, logo: logos.has(it.id) ? `files/assets/map/logos/${it.id}.svg` : undefined, place: placed[it.id], lot: lots[it.id], placed: places[it.id] ? ('owner' as const) : ('auto' as const) }) as MapEntry),
+  };
+}
+
+/** What each item asks of the map: its building (the owner's, else one that suits it), and the owner's places that still stand. */
+function wanted(services: readonly Service[], machines: readonly MachineSpec[], places: Places, sealed: (id: string) => boolean = () => true) {
   const base = [
     ...services.map((s) => ({ id: s.id, kind: 'service' as const, entry: { name: s.name, description: s.description, url: s.url, category: s.category, app: s.app, design: s.design, seal: sealed(s.id) ? sealPath(s.id) : undefined } })),
     ...machines.map((m) => ({ id: m.id, kind: 'machine' as const, entry: { name: m.name, description: m.description, ip: m.ip, hostname: m.hostname, os: m.os, role: m.role } })),
@@ -72,14 +87,13 @@ export function mapData(services: readonly Service[], machines: readonly Machine
   const want = base.map((it) => ({ id: it.id, kind: it.kind, building: places[it.id] && building(places[it.id].building) ? places[it.id].building : suggestedBuilding(it.kind, it.id, 'category' in it.entry ? it.entry.category : undefined) }));
   // A place whose building is gone keeps its spot with the suggested building.
   for (const it of base) if (places[it.id] && !fixed[it.id]) fixed[it.id] = { ...places[it.id], building: want.find((w) => w.id === it.id)!.building };
-  const { places: placed, lots, unplaced } = autoPlace(plan, want, fixed, buildingInfo);
-  return {
-    version: 1,
-    unplaced: base.filter((it) => unplaced.includes(it.id)).map((it) => ({ id: it.id, kind: it.kind, name: it.entry.name })),
-    items: base
-      .filter((it) => placed[it.id])
-      .map((it) => clean({ id: it.id, kind: it.kind, ...it.entry, logo: logos.has(it.id) ? `files/assets/map/logos/${it.id}.svg` : undefined, place: placed[it.id], lot: lots[it.id], placed: places[it.id] ? ('owner' as const) : ('auto' as const) }) as MapEntry),
-  };
+  return { base, want, fixed };
+}
+
+/** How many blocks of the town these items call for (world.ts): the city the map is drawn with. */
+export function townExtent(land: Terrain, services: readonly Service[], machines: readonly MachineSpec[], places: Places): number {
+  const { want, fixed } = wanted(services, machines, places);
+  return extentFor(land, want, fixed, buildingInfo, ownedLots(land, want, fixed, buildingInfo));
 }
 
 /** A machine as the server keeps it, read back from its entry on the map (its logo, when it shows one, is logos/<id>.svg). */

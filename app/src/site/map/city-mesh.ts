@@ -12,6 +12,7 @@ import { BoxGeometry, BufferAttribute, BufferGeometry, Color, ConeGeometry, Cyli
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import type { CityPlan, Lot, Rect } from '../../../../src/map/city.ts';
 import type { House } from '../../../../src/map/fabric.ts';
+import { windy } from './wind.ts';
 
 // ---- the stone: one shader, several cuts ----
 
@@ -412,9 +413,9 @@ export function buildCity(plan: CityPlan, fixture: (type: string) => BufferGeome
   instanced(basin, marbleBench, plan.furniture.fountains);
   instanced(new CylinderGeometry(1.95, 1.95, 0.05, 28).translate(0, 0.44, 0), water, plan.furniture.fountains);
   // Trees: plane trees on the avenues and the agora, cypresses in the sanctuary, olives in the grove.
-  const leaf = new MeshStandardMaterial({ color: 0x7a7a7a, roughness: 0.95, flatShading: true });
-  const cypressLeaf = new MeshStandardMaterial({ color: 0x3e3e3e, roughness: 0.95, flatShading: true });
-  const oliveLeaf = new MeshStandardMaterial({ color: 0x969696, roughness: 0.95, flatShading: true });
+  const leaf = windy(new MeshStandardMaterial({ color: 0x7a7a7a, roughness: 0.95, flatShading: true }));
+  const cypressLeaf = windy(new MeshStandardMaterial({ color: 0x3e3e3e, roughness: 0.95, flatShading: true }));
+  const oliveLeaf = windy(new MeshStandardMaterial({ color: 0x969696, roughness: 0.95, flatShading: true }));
   mats.push(leaf, cypressLeaf, oliveLeaf);
   const tr = plan.furniture.trees;
   const turn = (p: number[]) => ((p[0] * 7.13 + p[2] * 3.7) % 6.28) as number;
@@ -665,7 +666,7 @@ export function buildFabric(houses: readonly House[], precincts: readonly Lot[],
             : [],
   );
   if (gardenTrees.length) {
-    const leaf = new MeshStandardMaterial({ color: 0x8a8a8a, roughness: 0.95, flatShading: true });
+    const leaf = windy(new MeshStandardMaterial({ color: 0x8a8a8a, roughness: 0.95, flatShading: true }));
     mats.push(leaf);
     const mesh = new InstancedMesh(gardenTree, leaf, gardenTrees.length);
     gardenTrees.forEach((p, k) => mesh.setMatrixAt(k, new Matrix4().compose(new Vector3(p[0], p[1], p[2]), new Quaternion(), new Vector3(0.7, 0.7, 0.7))));

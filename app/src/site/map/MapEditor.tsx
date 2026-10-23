@@ -68,7 +68,7 @@ export type MapEditor = {
   busy: boolean;
 };
 
-export function useMapEditor({ live, data, scene, selected, onSelect, reload }: { live: boolean; data: MapData | null; scene: MutableRefObject<MapScene | null>; selected: MapEntry | null; onSelect: (id: string | null) => void; reload: () => Promise<MapData> }): MapEditor {
+export function useMapEditor({ live, data, scene, selected, onSelect, reload, onPublished }: { live: boolean; data: MapData | null; scene: MutableRefObject<MapScene | null>; selected: MapEntry | null; onSelect: (id: string | null) => void; reload: () => Promise<MapData>; onPublished?: () => void }): MapEditor {
   const [session, setSession] = useState<api.Session | null>(null);
   const [signIn, setSignIn] = useState(false);
   const [password, setPassword] = useState('');
@@ -97,14 +97,17 @@ export function useMapEditor({ live, data, scene, selected, onSelect, reload }: 
     const look = async () => {
       const b = await api.buildState();
       if (!b || b.state === 'static' || typeof b.published !== 'number') return setRebuild(`${what}: saved.`);
-      if (b.published >= change) return setRebuild(`${what}: saved and published.`);
+      if (b.published >= change) {
+        onPublished?.();
+        return setRebuild(`${what}: saved and published.`);
+      }
       if (b.state === 'failed')
         return setRebuild(`${what}: saved on the server, but the site could not be rebuilt (${b.error?.split('\n')[0] ?? 'see the server’s log'}). The published site is unchanged.`);
       if (Date.now() - since < 10 * 60_000) window.setTimeout(look, 1500);
       else setRebuild(`${what}: saved on the server; the site is still being rebuilt.`);
     };
     window.setTimeout(look, 1000);
-  }, []);
+  }, [onPublished]);
 
   const run = useCallback(
     async (step: Step, what: string) => {

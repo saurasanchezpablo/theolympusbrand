@@ -201,7 +201,8 @@ export function createRebuilder(opts: RebuilderOptions): Rebuilder {
     building = true;
     // What this build includes: every request made until now.
     const includes = current.requested;
-    const why = reasons.splice(0);
+    // Each reason once, however many changes gave it.
+    const why = [...new Set(reasons.splice(0))];
     const t0 = Date.now();
     const release = new Date().toISOString().replace(/[-:]/g, '').replace(/\..*/, '').replace('T', '-') + `-${includes}`;
     const dir = join(out, 'releases', release);

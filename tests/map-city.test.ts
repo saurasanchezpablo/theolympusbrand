@@ -21,11 +21,16 @@ const band = (p: CityPlan, s: CityPlan['streets'][number]): Rect => {
 const onStreet = (x: number, z: number, m = 0) => plan.streets.some((s) => inRect(band(plan, s), x, z, m));
 const onSquare = (x: number, z: number, m = 0) => plan.squares.some((q) => inRect(q.rect, x, z, m));
 
-test('the same city every time, and the one the site ships (assets/map/city.json)', () => {
+test('the same city every time, and the one the site ships (assets/map/city.json): grown for the catalogue\'s buildings', async () => {
   const again = planCity(makeTerrain());
   assert.deepEqual(again, plan);
+  delete process.env.OLYMPUS_DATA;
+  const { loadCatalog } = await import('../src/node/catalog.ts');
+  const { townExtent } = await import('../src/map/items.ts');
+  const { roughLand } = await import('../src/map/island.ts');
+  const grown = island(townExtent(roughLand(), loadCatalog(), [], {})).plan;
   const shipped = JSON.parse(readFileSync(new URL('../assets/map/city.json', import.meta.url), 'utf8'));
-  assert.deepEqual(shipped, JSON.parse(JSON.stringify(plan)), 'run `npm run map` after an intended change to the city');
+  assert.deepEqual(shipped, JSON.parse(JSON.stringify(grown)), 'run `npm run map` after an intended change to the city');
 });
 
 test('a city: an agora, a sanctuary, a grove, sports grounds, a works quarter, streets of three ranks', () => {

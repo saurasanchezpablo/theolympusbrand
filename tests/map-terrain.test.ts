@@ -44,8 +44,12 @@ test('encoding round-trips', () => {
   assert.throws(() => decodeTerrain(new Uint8Array([1, 2, 3])));
 });
 
-test('the island is the one the site ships (assets/map/terrain.bin)', async () => {
+test('the island is the one the site ships (assets/map/terrain.bin): graded to the town the catalogue\'s buildings call for', async () => {
   const { readFileSync } = await import('node:fs');
+  delete process.env.OLYMPUS_DATA;
+  const { loadCatalog } = await import('../src/node/catalog.ts');
+  const { townExtent } = await import('../src/map/items.ts');
+  const { roughLand } = await import('../src/map/island.ts');
   const shipped = readFileSync(new URL('../assets/map/terrain.bin', import.meta.url));
-  assert.ok(Buffer.from(encodeTerrain(island().land)).equals(shipped), 'run `npm run map` after an intended change to the land or the city');
+  assert.ok(Buffer.from(encodeTerrain(island(townExtent(roughLand(), loadCatalog(), [], {})).land)).equals(shipped), 'run `npm run map` after an intended change to the land or the city');
 });

@@ -55,6 +55,7 @@ import { seeded } from '../../../../src/map/noise.ts';
 import type { MapEntry } from '../../../../src/map/items.ts';
 import { marbleMaterial } from './marble.ts';
 import { landMaterial, seaMaterial } from './land.ts';
+import { WIND, windy } from './wind.ts';
 
 export type Filter = 'all' | 'service' | 'machine';
 /** Where a building is on the screen, in CSS pixels from the canvas's top left. */
@@ -92,6 +93,8 @@ export type MapScene = {
   stats(): { triangles: number; calls: number; fps: number; frames: number; people: number; peopleMs: number; startup: Record<string, number> };
   /** Test hook: put the camera at a pose (target x/z on the ground, distance, tilt from straight down, turn from north). */
   look(p: { x: number; z: number; distance: number; polar: number; azimuth: number }): void;
+  /** Where the camera is, as `look` takes it: to come back to the same view in a new scene. */
+  pose(): { x: number; z: number; distance: number; polar: number; azimuth: number };
   dispose(): void;
 };
 
@@ -239,14 +242,14 @@ export function createMapScene(canvas: HTMLCanvasElement, terrainBytes: ArrayBuf
 
   // ---- forests ----
   const treeGeo = treeGeometries();
-  const broadMat = new MeshStandardMaterial({ color: 0x5a5a5a, roughness: 0.95, flatShading: true });
-  const pineMat = new MeshStandardMaterial({ color: 0x383838, roughness: 0.95, flatShading: true });
+  const broadMat = windy(new MeshStandardMaterial({ color: 0x5a5a5a, roughness: 0.95, flatShading: true }));
+  const pineMat = windy(new MeshStandardMaterial({ color: 0x383838, roughness: 0.95, flatShading: true }));
   type Tile = { centre: Vector3; near: InstancedMesh[]; far: InstancedMesh[] };
   let tiles: Tile[] = [];
   const forest = new Group();
   scene.add(forest);
   const inTown = townArea(plan);
-  const oliveMat = new MeshStandardMaterial({ color: 0x8c8c8c, roughness: 0.95, flatShading: true });
+  const oliveMat = windy(new MeshStandardMaterial({ color: 0x8c8c8c, roughness: 0.95, flatShading: true }));
   const plant = () => {
     const m = new Matrix4(),
       q = new Quaternion(),
@@ -328,9 +331,10 @@ export function createMapScene(canvas: HTMLCanvasElement, terrainBytes: ArrayBuf
   scene.add(city.group);
   let houses: Fabric | null = null;
 
-  // The people: a crowd on the walkways and squares, fewer on a phone. (How long their step takes, for the page's numbers.)
+  // The people: as many as the town is large (four or so to a block), fewer on a phone. (How long their step takes, for the page's numbers.)
   let peopleMs = 0;
-  const people = createPeople(plan, { count: opts.lite ? 160 : 420, still: opts.reducedMotion });
+  const blocks = plan.lots.filter((l) => l.part === 'whole').length;
+  const people = createPeople(plan, { count: Math.round(Math.min(420, Math.max(60, blocks * 4)) * (opts.lite ? 0.4 : 1)), still: opts.reducedMotion });
   lap('people');
   scene.add(people.group);
 
@@ -403,6 +407,8 @@ export function createMapScene(canvas: HTMLCanvasElement, terrainBytes: ArrayBuf
     if (houses) scene.remove(houses.group);
     houses = buildFabric(fabric(plan, taken), kept.map((e) => lotOf(e.lot)).filter((l): l is Lot => !!l), trees.olive);
     scene.add(houses.group);
+    // The people go to the buildings' doors.
+    people.setItems(kept);
     for (const g of groups.values()) {
       g.near.dispose();
       g.far.dispose();
@@ -615,6 +621,8 @@ export function createMapScene(canvas: HTMLCanvasElement, terrainBytes: ArrayBuf
     if (near && !still && now - lastInput < 180_000 && now - lastDraw > 33) {
       const t0 = performance.now();
       people.update(dt);
+      // The breeze in the trees moves while the people do.
+      WIND.value += dt;
       peopleMs = peopleMs * 0.9 + (performance.now() - t0) * 0.1;
       dirty = true;
     }
@@ -792,6 +800,10 @@ export function createMapScene(canvas: HTMLCanvasElement, terrainBytes: ArrayBuf
       tween = null;
       place({ target: new Vector3(p.x, heightAt(land, p.x, p.z), p.z), distance: p.distance, polar: p.polar, azimuth: p.azimuth });
       wake();
+    },
+    pose() {
+      const p = poseOf();
+      return { x: p.target.x, z: p.target.z, distance: p.distance, polar: p.polar, azimuth: p.azimuth };
     },
     stats() {
       return { triangles: renderer.info.render.triangles, calls: renderer.info.render.calls, fps: frames.length, frames: renderer.info.render.frame, people: people.group.visible ? people.count : 0, peopleMs: Math.round(peopleMs * 100) / 100, startup: { ...startup } };

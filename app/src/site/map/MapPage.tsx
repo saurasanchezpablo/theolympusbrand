@@ -72,6 +72,20 @@ export function MapPage({ arg }: { arg?: string }) {
   const canvas = useRef<HTMLCanvasElement>(null);
   const sceneRef = useRef<MapScene | null>(null);
   sceneRef.current = scene;
+  // The city the scene shows (it grows with the buildings); a new one is drawn where the camera was.
+  const [world, setWorld] = useState(0);
+  const cityShown = useRef<string | null>(null);
+  const keepPose = useRef<ReturnType<MapScene['pose']> | null>(null);
+  /** After a change is published: if the city grew or shrank for it, the scene is drawn again with the new one. */
+  const published = useCallback(async () => {
+    const v = await api.cityVersion();
+    const s = sceneRef.current;
+    if (!v || !s || v === cityShown.current) return;
+    keepPose.current = s.pose();
+    s.dispose();
+    setScene(null);
+    setWorld((w) => w + 1);
+  }, []);
 
   const reload = useCallback(async () => {
     const m = await api.loadMap();
@@ -90,12 +104,17 @@ export function MapPage({ arg }: { arg?: string }) {
     Promise.all([import('./map-scene.ts'), api.loadTerrain(), api.loadCity()])
       .then(([m, terrain, city]) => {
         if (gone || !canvas.current) return;
-        const s = m.createMapScene(canvas.current, terrain, city, { reducedMotion: reducedMotion(), lite: phone() });
+        cityShown.current = city.version;
+        const s = m.createMapScene(canvas.current, terrain, city.plan, { reducedMotion: reducedMotion(), lite: phone() });
         s.setItems(data.items);
         s.onLearn((what) => setLesson((l) => (what === 'move' && l === 'move' ? 'zoom' : what === 'zoom' && l === 'zoom' ? null : l)));
         (window as Window & { olympusMapStats?: () => ReturnType<MapScene['stats']> }).olympusMapStats = () => s.stats();
         (window as Window & { olympusMapLook?: MapScene['look'] }).olympusMapLook = (p) => s.look(p);
-        const firstVisit = !seen() && !chosen;
+        // Drawn again for a city that changed: the same view, no entrance.
+        const again = keepPose.current;
+        keepPose.current = null;
+        if (again) s.look(again);
+        const firstVisit = !again && !seen() && !chosen;
         if (firstVisit) s.intro();
         setScene(s);
         setPhase(firstVisit ? 'intro' : chosen ? 'travelling' : 'overview');
@@ -108,7 +127,7 @@ export function MapPage({ arg }: { arg?: string }) {
     return () => {
       gone = true;
     };
-  }, [want3d, data !== null]);
+  }, [want3d, data !== null, world]);
   useEffect(() => () => sceneRef.current?.dispose(), []);
   useEffect(() => {
     if (data) scene?.setItems(data.items);
@@ -173,7 +192,7 @@ export function MapPage({ arg }: { arg?: string }) {
     return () => window.removeEventListener('keydown', key);
   }, [placeEntry?.id, directory]);
 
-  const editor = useMapEditor({ live, data, scene: sceneRef, selected: placeEntry, onSelect: go, reload });
+  const editor = useMapEditor({ live, data, scene: sceneRef, selected: placeEntry, onSelect: go, reload, onPublished: published });
   const items = data?.items ?? [];
   const ordered = useMemo(() => [...items].sort((a, b) => (a.kind === b.kind ? a.name.localeCompare(b.name) : a.kind === 'service' ? -1 : 1)), [items]);
   const index = placeEntry ? ordered.findIndex((e) => e.id === placeEntry.id) : -1;

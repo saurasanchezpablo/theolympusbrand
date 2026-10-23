@@ -30,16 +30,32 @@ the site's header (**Map**).
   two-storey house, a house round a peristyle, a garden, an orchard,
   workshops in the works quarter. A building that leaves a plot gives it
   back to the houses.
-- **People.** People walk the walkways and cross at the stepping stones.
-  They go to the agora, the sanctuary, the grove or along the streets, stand
-  about a while in the squares, and set off again; some walk in pairs. They
-  are drawn only when the view is close enough to see them, and stop three
-  minutes after you last touch the map. With reduced motion they stand
-  still.
+- **People.** People walk the walkways, keeping to their side, and cross at
+  the stepping stones, waiting when two are already crossing. Each has
+  somewhere to go: on errands from one building's door to another's, to see
+  a temple or the sanctuary, to stroll in the grove or across the agora, or
+  to stand about a square; some walk in pairs or threes. They slow behind
+  someone slower, keep right when someone comes the other way, step round
+  people standing, and go round the fountains. There are about four to a
+  block of the town. They are drawn only when the view is close enough to
+  see them, and stop three minutes after you last touch the map. With
+  reduced motion they stand still.
+- **Trees in the breeze.** While the people move, the trees' crowns sway a
+  little.
 
-The city is the same every time: it is planned from the island when the
-site is built (`assets/map/city.json`, beside the island's
-`assets/map/terrain.bin`).
+**The town grows with its buildings.** A map with a few buildings has a
+compact town round the agora and up the sacred way; as buildings are added,
+the town takes more blocks — always the next ones in a fixed order, filling
+out round what is there — and its wall, gates and roads move outward with
+it; the grove and the sports grounds join when the town reaches them. A
+building never moves because the town grew: every plot keeps its place and
+its name, and a block with a building on it is never taken away. Removing
+buildings lets the town shrink back from its outer, empty blocks. The town
+can grow to about a hundred and fifty buildings, the island's gentle land.
+
+The city is the same for the same buildings: it is planned when the map is
+built (`assets/map/city.json`, beside the island's `assets/map/terrain.bin`)
+and again on the server whenever its buildings change.
 
 ## Looking around
 

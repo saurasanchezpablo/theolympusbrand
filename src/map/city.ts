@@ -100,7 +100,29 @@ function blockRect(i: number, j: number): Rect {
 const key = (i: number, j: number) => `${i}:${j}`;
 const inRect = (r: Rect, x: number, z: number, m = 0) => x >= r[0] - m && x <= r[2] + m && z >= r[1] - m && z <= r[3] + m;
 
-export function planCity(land: Terrain): CityPlan {
+/**
+ * Where the town can be, and in what order it grows: every block it could
+ * ever have (wholly on the town's gentle land, above the sea, joined to the
+ * agora), the squares among them, and the order the town takes them in — the
+ * core first (the agora, and the sacred way up to the sanctuary), then always
+ * a block touching the town — one it holds on more sides sooner (it fills
+ * out), else the nearest the agora, a little sooner along the avenues (a town
+ * grows along its main streets). A square's cells join
+ * together. Fixed by the land alone: a town of n blocks is the first n.
+ */
+export type Growth = { order: string[]; core: number; squares: { kind: Square['kind']; side?: number; cells: [number, number][] }[] };
+
+const grown = new WeakMap<Terrain, Growth>();
+export function growthOf(land: Terrain): Growth {
+  let g = grown.get(land);
+  if (!g) {
+    g = growthPlan(land);
+    grown.set(land, g);
+  }
+  return g;
+}
+
+function growthPlan(land: Terrain): Growth {
   // ---- which blocks: wholly on the town's gentle land, above the sea ----
   const ok = new Set<string>();
   for (let j = -GRID.nj; j < GRID.nj; j++)
@@ -127,7 +149,7 @@ export function planCity(land: Terrain): CityPlan {
   const has = (i: number, j: number) => blocks.has(key(i, j));
 
   // ---- the squares: the agora where the avenues cross, the sanctuary at the top of the sacred way, the grove to the west ----
-  const squareCells: { kind: Square['kind']; cells: [number, number][] }[] = [];
+  const squareCells: Growth['squares'] = [];
   const agora: [number, number][] = [[-1, -1], [0, -1], [-1, 0], [0, 0]];
   if (!agora.every(([i, j]) => has(i, j))) throw new Error('no room for the agora');
   squareCells.push({ kind: 'agora', cells: agora });
@@ -174,12 +196,81 @@ export function planCity(land: Terrain): CityPlan {
       }
     }
     if (pick) {
-      squareCells.push({ kind: 'field', cells: pick });
+      squareCells.push({ kind: 'field', side, cells: pick });
       for (const [i, j] of pick) used.add(key(i, j));
     }
   }
+
+  // ---- the order the town grows in ----
+  const groupOf = new Map<string, number>();
+  squareCells.forEach((s, n) => s.cells.forEach(([i, j]) => groupOf.set(key(i, j), n)));
+  const unit = (k: string): string[] => (groupOf.has(k) ? squareCells[groupOf.get(k)!].cells.map(([i, j]) => key(i, j)) : [k]);
+  const score = (k: string) => {
+    const [i, j] = k.split(':').map(Number);
+    const cx = (lineX(i) + lineX(i + 1)) / 2,
+      cz = (lineZ(j) + lineZ(j + 1)) / 2;
+    // Along an avenue (the blocks either side of the sacred way and of the main street) the town reaches further.
+    const onAvenue = i === -1 || i === 0 || j === -1 || j === 0;
+    // A little further for ground that climbs.
+    const ys = [[i, j], [i + 1, j], [i, j + 1], [i + 1, j + 1]].map(([p, q]) => heightAt(land, lineX(p), lineZ(q)));
+    const climb = Math.max(...ys) - Math.min(...ys);
+    return Math.hypot(cx - GRID.x0, (cz - GRID.z0) * 1.15) * (onAvenue ? 0.9 : 1) + climb * 1.5;
+  };
+  const order: string[] = [];
+  const inTown = new Set<string>();
+  const take = (k: string) => {
+    for (const c of unit(k))
+      if (!inTown.has(c)) {
+        inTown.add(c);
+        order.push(c);
+      }
+  };
+  // The core: the agora, the sacred way's two columns up to the sanctuary, the sanctuary.
+  for (const [i, j] of agora) take(key(i, j));
+  const sanct = squareCells.find((q) => q.kind === 'sanctuary');
+  if (sanct) {
+    const top = Math.min(...sanct.cells.map(([, j]) => j));
+    for (let j = -2; j > top; j--) for (const i of [-1, 0]) if (blocks.has(key(i, j))) take(key(i, j));
+    take(key(sanct.cells[0][0], sanct.cells[0][1]));
+  }
+  const core = order.length;
+  const scores = new Map([...blocks].map((k) => [k, score(k)]));
+  while (inTown.size < blocks.size) {
+    let best: string | null = null;
+    let bestScore = Infinity;
+    for (const k of inTown) {
+      const [i, j] = k.split(':').map(Number);
+      for (const n of [key(i + 1, j), key(i - 1, j), key(i, j + 1), key(i, j - 1)]) {
+        if (!blocks.has(n) || inTown.has(n)) continue;
+        // A square joins as one: its score is its best cell's. A block the town already holds on more sides comes sooner: the town fills out rather than reaching.
+        const [ni, nj] = n.split(':').map(Number);
+        const held = [key(ni + 1, nj), key(ni - 1, nj), key(ni, nj + 1), key(ni, nj - 1)].filter((m) => inTown.has(m)).length;
+        const sc = Math.min(...unit(n).map((c) => scores.get(c)!)) - (held - 1) * 14;
+        if (sc < bestScore || (sc === bestScore && n < best!)) {
+          bestScore = sc;
+          best = n;
+        }
+      }
+    }
+    if (!best) break;
+    take(best);
+  }
+  return { order, core, squares: squareCells };
+}
+
+/** Every block the island's town can have: the extent of the full town. */
+export const fullExtent = (land: Terrain): number => growthOf(land).order.length;
+
+/** The city on the land, grown to `extent` blocks (the full town without one). */
+export function planCity(land: Terrain, extent?: number): CityPlan {
+  const growth = growthOf(land);
+  const n = Math.max(growth.core, Math.min(extent ?? growth.order.length, growth.order.length));
+  const blocks = new Set(growth.order.slice(0, n));
+  const has = (i: number, j: number) => blocks.has(key(i, j));
+  // The squares the town has reached (a square's cells join together).
+  const squareCells = growth.squares.filter((q) => q.cells.every(([i, j]) => has(i, j)));
   const squareOf = new Map<string, number>();
-  squareCells.forEach((s, n) => s.cells.forEach(([i, j]) => squareOf.set(key(i, j), n)));
+  squareCells.forEach((sq, k) => sq.cells.forEach(([i, j]) => squareOf.set(key(i, j), k)));
 
   // ---- the crossings and their heights ----
   const nodes: Node[] = [];
@@ -296,9 +387,11 @@ export function planCity(land: Terrain): CityPlan {
       lots.push({ id: `${id}:${q}`, part: 'quarter', district, rect: r as unknown as Rect, facing: f, ground, parent: `${id}:${half}` });
   }
   // The sports grounds: one long plot each, for a stadium, or its two halves for others.
-  squares.filter((q) => q.kind === 'field').forEach((q, n) => {
+  // Named by side, whether or not the town has reached the other: f0 the west field, f1 the east.
+  squares.forEach((q, n) => {
+    if (q.kind !== 'field') return;
     const [x0, z0, x1, z1] = q.rect;
-    const id = `f${n}`;
+    const id = `f${(squareCells[n].side ?? -1) < 0 ? 0 : 1}`;
     const xm = r2((x0 + x1) / 2);
     lots.push({ id, part: 'field', district: 'field', rect: [r2(x0 + 1), r2(z0 + 1), r2(x1 - 1), r2(z1 - 1)], facing: 0, ground: q.level });
     lots.push({ id: `${id}:w`, part: 'whole', district: 'field', rect: [r2(x0 + 1), r2(z0 + 1), r2(xm - 0.5), r2(z1 - 1)], facing: 0, ground: q.level, parent: id });
