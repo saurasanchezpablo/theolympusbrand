@@ -5,7 +5,7 @@ import { crest, emblem, seal, type Mark } from '../../src/geometry/crest.ts';
 import { importLogo } from '../../src/geometry/logo.ts';
 import { missingGlyphs } from '../../src/geometry/fonts.ts';
 import { GODS, CATEGORIES, type Category, type GodId, type Patron } from '../../src/geometry/pantheon.ts';
-import { resolve, validateSpec, slugify, type Service, type ServiceSpec } from '../../src/catalog/service.ts';
+import { resolve, validateSpec, slugify, withLogo, type Service, type ServiceSpec } from '../../src/catalog/service.ts';
 import { baseMarks, lockups, type MarkKey } from '../../src/catalog/fileset.ts';
 import { checkPrint, type PrintReport } from '../../src/print/service.ts';
 import type { Design } from '../../src/catalog/design.ts';
@@ -38,13 +38,32 @@ export function specIssues(spec: ServiceSpec): string[] {
   }
 }
 
-/** A spec that always renders, even mid-edit (empty name, half-typed caption). */
-export function renderableService(spec: ServiceSpec): Service {
-  return resolve({ ...spec, name: spec.name.trim() || 'Untitled', caption: spec.caption?.trim() || undefined, monogram: /^[A-Za-z0-9]$/.test(spec.monogram ?? '') ? spec.monogram : undefined });
+/** A spec that always renders, even mid-edit (empty name, half-typed caption); with its logo as patron when it asks for it and has one. */
+export function renderableService(spec: ServiceSpec, logoSvg?: string): Service {
+  const s = resolve({ ...spec, name: spec.name.trim() || 'Untitled', caption: spec.caption?.trim() || undefined, monogram: /^[A-Za-z0-9]$/.test(spec.monogram ?? '') ? spec.monogram : undefined });
+  return spec.god === 'logo' ? withLogo(s, logoPath(logoSvg)) : s;
 }
 
-export const patronKey = (p: Patron) => ('god' in p ? p.god : `monogram-${p.monogram}`);
-export const patronLabel = (p: Patron) => ('god' in p ? title(GODS[p.god].name) : `Monogram ${p.monogram}`);
+const logoPaths = new Map<string, string | undefined>();
+/** A logo SVG's path data, imported once per file (undefined when it has none, or cannot be read). */
+export function logoPath(svg: string | undefined): string | undefined {
+  if (!svg) return undefined;
+  if (!logoPaths.has(svg)) {
+    if (logoPaths.size > 64) logoPaths.clear();
+    const l = readLogo(svg);
+    logoPaths.set(svg, l && 'd' in l ? l.d : undefined);
+  }
+  return logoPaths.get(svg);
+}
+
+/** A short key for a logo's drawing (FNV-1a), so memoised marks are told apart without keeping the path as the key. */
+const hashOf = (s: string) => {
+  let h = 0x811c9dc5;
+  for (let i = 0; i < s.length; i++) h = Math.imul(h ^ s.charCodeAt(i), 0x01000193);
+  return (h >>> 0).toString(36) + s.length.toString(36);
+};
+export const patronKey = (p: Patron) => ('god' in p ? p.god : 'monogram' in p ? `monogram-${p.monogram}` : `logo-${hashOf(p.logo)}-${p.letter}`);
+export const patronLabel = (p: Patron) => ('god' in p ? title(GODS[p.god].name) : 'monogram' in p ? `Monogram ${p.monogram}` : 'Its own logo');
 export const title = (s: string) => s.charAt(0) + s.slice(1).toLowerCase();
 
 export type Logo = { d: string; warnings: string[] } | { error: string } | null;

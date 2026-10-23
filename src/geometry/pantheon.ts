@@ -9,6 +9,7 @@ import { ccw, signedArea } from './math.ts';
 import { flatten, union, difference, offset, ringsPath } from './poly.ts';
 import { lineText } from './fonts.ts';
 import { SYMBOLS, type SymbolDetail, type SymbolId } from './symbols.ts';
+import { PRINT_MIN_UNITS, isClean, problemsAt } from '../print/printcheck.ts';
 
 // The categories live in a module of their own (no geometry), so the pages that only list them do not load the drawings.
 import { CATEGORIES, type Category } from '../catalog/categories.ts';
@@ -50,8 +51,12 @@ export const GODS: Record<GodId, God> = {
   dionysus: { id: 'dionysus', name: 'DIONYSUS', title: 'God of the feast and its company', attribute: 'Kantharos — the cup of the feast', categories: ['community'], symbol: 'kantharos' },
 };
 
-/** A service's patron: a god, or a monogram for services no god fits. */
-export type Patron = { god: GodId } | { monogram: string };
+/**
+ * A service's patron: a god, a monogram for services no god fits, or the
+ * service's own logo (imported path data, any scale) — with its initial, cut
+ * in print editions when the logo would not keep its shape there.
+ */
+export type Patron = { god: GodId } | { monogram: string } | { logo: string; letter: string };
 
 /** The default patron for a category. */
 export function defaultPatron(category: Category, name: string): Patron {
@@ -83,9 +88,36 @@ function monogramSymbol(letter: string, detail: SymbolDetail): string {
   return transformPath(d, 1, 0, 251 + t.capHeight / 2);
 }
 
+/** A logo fitted to the bay (x 237–275, y 198–304) by its bounding box, centred on the bay's centre line. */
+function logoSymbol(d: string): string {
+  const pts = flatten(d).flat();
+  const xs = pts.map((p) => p[0]);
+  const ys = pts.map((p) => p[1]);
+  const [x0, x1, y0, y1] = [Math.min(...xs), Math.max(...xs), Math.min(...ys), Math.max(...ys)];
+  const k = Math.min(34 / (x1 - x0 || 1), 96 / (y1 - y0 || 1));
+  return transformPath(d, k, C - ((x0 + x1) / 2) * k, 251 - ((y0 + y1) / 2) * k);
+}
+
+/** A patron as files record it: a logo by name only (its drawing is the service's logo file). */
+export const patronRecord = (p: Patron): { god: GodId } | { monogram: string } | { logo: true; letter: string } => ('logo' in p ? { logo: true, letter: p.letter } : p);
+
+const printsAsLogo = new Map<string, boolean>();
+/** Whether a logo patron keeps its shape in the print edition's bay (checked as the print gate checks a glyph); else the initial is cut. */
+export function patronPrintsAsLogo(p: Patron): boolean {
+  if (!('logo' in p)) return false;
+  let ok = printsAsLogo.get(p.logo);
+  if (ok === undefined) {
+    ok = isClean(problemsAt(union(flatten(logoSymbol(p.logo))), PRINT_MIN_UNITS, { topology: true }));
+    if (printsAsLogo.size > 64) printsAsLogo.clear();
+    printsAsLogo.set(p.logo, ok);
+  }
+  return ok;
+}
+
 /** The patron's symbol in bay space (x 237–275, y 198–304). Zeus has none. */
 export function patronSymbol(p: Patron, detail: SymbolDetail): string | null {
   if ('monogram' in p) return monogramSymbol(p.monogram, detail);
+  if ('logo' in p) return detail === 'bold' && !patronPrintsAsLogo(p) ? monogramSymbol(p.letter, 'bold') : logoSymbol(p.logo);
   const s = GODS[p.god].symbol;
   return s ? SYMBOLS[s](detail) : null;
 }
@@ -120,6 +152,8 @@ export function fitToCircle(d: string, r: number): string {
 /** The seal tier (≤ 48 px): a heavy ring around one bold symbol. */
 export function sealGlyph(p: Patron = { god: 'zeus' }): string {
   const ring = annulus(214, RIM);
+  // A logo is the seal's whole subject, as drawn (the seal is not a print edition).
+  if ('logo' in p) return ring + fitToCircle(p.logo, 170);
   const symbol = patronSymbol(p, 'bold');
   if (!symbol) return ring + transformPath(templeGlyph(), 0.76, 256 * 0.24, 257 * 0.24 - 4);
   return ring + fitToCircle(symbol, 'monogram' in p ? 150 : 176);

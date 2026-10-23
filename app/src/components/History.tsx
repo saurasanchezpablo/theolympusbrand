@@ -35,7 +35,7 @@ export function History({ design, onRestore }: Props) {
       <Section title="History">
         <ol className="history" aria-label="Saved versions">
           {rows.map(({ v, note }) => {
-            const s = renderableService(v.spec);
+            const s = renderableService(v.spec, v.logoSvg);
             const isCurrent = v.version === design.version;
             return (
               <li key={v.version} className={`history__row${isCurrent ? ' is-current' : ''}`}>

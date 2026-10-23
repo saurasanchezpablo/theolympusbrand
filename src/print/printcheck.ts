@@ -14,6 +14,9 @@
 import { RIM, type Pt, type Ring, signedArea } from '../geometry/math.ts';
 import { difference, flatten, offset, union } from '../geometry/poly.ts';
 
+/** Print-edition features below this many units (on the 504-unit rim) fail: a 0.5 mm line at the smallest print size. */
+export const PRINT_MIN_UNITS = 3.6;
+
 export const MARK_DIAMETER = 2 * RIM; // 504 units: the outer rim
 
 const inside = ([x, y]: Pt, ring: Ring): boolean => {

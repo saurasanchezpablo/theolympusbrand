@@ -4,10 +4,10 @@ import { Hero } from './Hero.tsx';
 import type { SceneHandle } from './medallion-scene.ts';
 import './home.css';
 
-type Service = { id: string; name: string; category: string; patron: { god: string } | { monogram: string }; title?: string | null; url?: string | null };
+type Service = { id: string; name: string; category: string; patron: { god: string } | { monogram: string } | { logo: true; letter: string }; title?: string | null; url?: string | null };
 
 const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
-const godOf = (s: Service) => ('god' in s.patron ? cap(s.patron.god) : `Monogram ${s.patron.monogram}`);
+const godOf = (s: Service) => ('god' in s.patron ? cap(s.patron.god) : 'monogram' in s.patron ? `Monogram ${s.patron.monogram}` : 'Its own logo');
 const host = (s: Service) => (s.url ?? `https://${s.id}.theolympus.cloud`).replace(/^https?:\/\//, '');
 const seal = (s: Service) => fileUrl(`assets/services/${s.id}/svg/the-olympus-${s.id}-seal.svg`);
 

@@ -50,7 +50,7 @@ Options:
 | `--name` | Display name, used in the lockups (required) |
 | `--category` | One of the categories above; picks the patron (required) |
 | `--id` | File and folder name; defaults to the name in kebab-case |
-| `--god` | Another patron than the category's, or `monogram` |
+| `--god` | Another patron than the category's, `monogram`, or `logo` (the service's own logo; needs `--logo`) |
 | `--monogram` | Letter used for monograms and the printed logo slot |
 | `--logo` | An SVG app logo for the fine edition's logo slot |
 | `--caption` | The lockup's second line, instead of "The Olympus · *God*" |
@@ -89,6 +89,12 @@ outlines first. The logo appears only in the fine edition. In the print
 edition the logo slot always carries the bold temple glyph: at that size no
 logo or letter keeps its shape on a 0.4 mm nozzle, and the god in the cella
 already identifies the service.
+
+With `"god": "logo"` the service's own logo is its patron as well: it stands
+in the temple's bay of the fine crest and the emblem, and in the seal (and
+so in favicons and dashboard icons). The print editions cut it in the bay
+only when it passes the same strict check as the god symbols at 3.6 units;
+a finer logo gives way to the service's initial there.
 
 ## What gets built
 

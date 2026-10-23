@@ -6,7 +6,7 @@ import { dirname, join, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { Resvg } from '@resvg/resvg-js';
 import { crest, seal } from '../../src/geometry/crest.ts';
-import { GODS, CATEGORIES } from '../../src/geometry/pantheon.ts';
+import { GODS, CATEGORIES, patronRecord } from '../../src/geometry/pantheon.ts';
 import { productionSvg } from '../../src/render/svg.ts';
 import { checkPrint, PRINTER_MM, PRINT_MIN_UNITS } from '../../src/print/service.ts';
 import { PALETTE } from '../../src/brand/palette.ts';
@@ -82,7 +82,7 @@ export function buildService(s: Service): ServiceReport {
   const report: ServiceReport = { id: s.id, name: s.name, files: files.length + 1, printOk: pc.ok, printMinUnits: pc.minUnits, printMinDiameterMM: pc.minDiameterMM, warnings };
   write(
     'manifest.json',
-    JSON.stringify({ service: { id: s.id, name: s.name, category: s.category, patron: s.patron, letter: s.letter, caption: s.caption, logo: s.logo ?? null }, print: { variablePartsMinUnits: report.printMinUnits, minDiameterMM: report.printMinDiameterMM, featureMM: PRINTER_MM }, warnings, files }, null, 2) + '\n',
+    JSON.stringify({ service: { id: s.id, name: s.name, category: s.category, patron: patronRecord(s.patron), letter: s.letter, caption: s.caption, logo: s.logo ?? null }, print: { variablePartsMinUnits: report.printMinUnits, minDiameterMM: report.printMinDiameterMM, featureMM: PRINTER_MM }, warnings, files }, null, 2) + '\n',
   );
   return report;
 }
@@ -95,7 +95,7 @@ export function buildIndex(services: Service[]): void {
   mkdirSync(SERVICES_OUT, { recursive: true });
   writeFileSync(
     join(SERVICES_OUT, 'index.json'),
-    JSON.stringify(services.map((s) => ({ id: s.id, name: s.name, category: s.category, patron: s.patron, title: 'god' in s.patron ? GODS[s.patron.god].title : null, caption: s.caption, url: s.url ?? null, path: `${s.id}/` })), null, 2) + '\n',
+    JSON.stringify(services.map((s) => ({ id: s.id, name: s.name, category: s.category, patron: patronRecord(s.patron), title: 'god' in s.patron ? GODS[s.patron.god].title : null, caption: s.caption, url: s.url ?? null, path: `${s.id}/` })), null, 2) + '\n',
   );
   // Overview board: every service's crest with its name and patron.
   const cols = 4;
@@ -108,7 +108,7 @@ export function buildIndex(services: Service[]): void {
     const y = 170 + Math.floor(i / cols) * 470;
     b += place(productionSvg(crest({ patron: s.patron }), { ground: 'light' }), x, y, 360);
     b += text(x, y + 392, s.name.toUpperCase(), { size: 17, font: 'semibold', spacing: 0.12 });
-    b += text(x, y + 416, `${'god' in s.patron ? GODS[s.patron.god].name : 'MONOGRAM'} · ${s.category}`, { size: 13, fill: PALETTE.slate });
+    b += text(x, y + 416, `${'god' in s.patron ? GODS[s.patron.god].name : 'logo' in s.patron ? 'ITS OWN LOGO' : 'MONOGRAM'} · ${s.category}`, { size: 13, fill: PALETTE.slate });
   });
   board(join(ROOT, 'docs', 'catalog', 'overview.png'), W, 170 + rows * 470 + 20, PALETTE.paper, b);
   // Seals board, at true pixel sizes.
@@ -144,7 +144,7 @@ function writeCatalogDoc(services: Service[]): void {
   });
   doc = between(doc, 'pantheon', ['| Category | Patron | Attribute | Domain |', '|---|---|---|---|', ...pantheon].join('\n'));
   const rows = services.map((s) => {
-    const patron = 'god' in s.patron ? `${sentence(GODS[s.patron.god].name)} — ${GODS[s.patron.god].attribute.toLowerCase()}` : `Monogram ${s.letter}`;
+    const patron = 'god' in s.patron ? `${sentence(GODS[s.patron.god].name)} — ${GODS[s.patron.god].attribute.toLowerCase()}` : 'logo' in s.patron ? 'Its own logo' : `Monogram ${s.letter}`;
     return `| <img src="../assets/services/${s.id}/png/the-olympus-${s.id}-seal-64.png" width="32"> | **${mdText(s.name)}** | ${s.category} | ${patron} | [files](../assets/services/${s.id}/) |`;
   });
   doc = between(doc, 'catalog', ['| Seal | Service | Category | Patron | Files |', '|---|---|---|---|---|', ...rows].join('\n'));

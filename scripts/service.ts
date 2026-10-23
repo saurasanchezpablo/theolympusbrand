@@ -3,7 +3,7 @@
 //   npm run service -- list
 //   npm run service -- gods
 //   npm run service -- categories
-//   npm run service -- add --name "Vaultwarden" --category security [--god athena|monogram]
+//   npm run service -- add --name "Vaultwarden" --category security [--god athena|monogram|logo]
 //                          [--id vaultwarden] [--monogram V] [--logo path/to/logo.svg]
 //                          [--caption "The Olympus · Vault"] [--url https://vault.theolympus.cloud]
 //                          [--app vaultwarden] [--description "Password manager"] [--no-build]
@@ -68,7 +68,7 @@ function build(ids: string[]) {
 
 switch (command) {
   case 'list': {
-    for (const s of loadCatalog()) console.log(`${pad(s.id, 18)} ${pad(s.name, 22)} ${pad(s.category, 15)} ${'god' in s.patron ? GODS[s.patron.god].name : `monogram ${s.letter}`}`);
+    for (const s of loadCatalog()) console.log(`${pad(s.id, 18)} ${pad(s.name, 22)} ${pad(s.category, 15)} ${'god' in s.patron ? GODS[s.patron.god].name : 'logo' in s.patron ? 'its own logo' : `monogram ${s.letter}`}`);
     break;
   }
   case 'gods': {
@@ -79,6 +79,7 @@ switch (command) {
       console.log(`${pad(g.id, 11)} ${pad(g.attribute, 38)} default for: ${pad(g.categories.join(', ') || '—', 15)} used by: ${(used.get(g.id) ?? []).join(', ') || '—'}`);
     }
     console.log(`${pad('monogram', 11)} the service's initial in Cinzel — for anything no god fits`);
+    console.log(`${pad('logo', 11)} the service's own logo (with --logo); its initial in print when the logo is too fine`);
     break;
   }
   case 'categories': {

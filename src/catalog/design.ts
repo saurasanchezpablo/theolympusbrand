@@ -27,10 +27,9 @@ export const HISTORY_LIMIT = 15;
  * which joins the history (the oldest fall away past HISTORY_LIMIT).
  */
 export function nextVersion(d: { spec: ServiceSpec; logoSvg?: string }, previous: Design | undefined, now: string): Design {
-  const { logo: _, ...spec } = d.spec;
   const history = previous ? [...(previous.history ?? []), versionOf(previous)].slice(-HISTORY_LIMIT) : undefined;
   return {
-    spec: d.logoSvg ? { ...spec, logo: `logos/${spec.id}.svg` } : spec,
+    spec: withLogoField(d.spec, d.logoSvg),
     logoSvg: d.logoSvg,
     version: previous ? previous.version + 1 : 1,
     created: previous?.created ?? now,
@@ -45,11 +44,21 @@ export const DESIGN_FORMAT = 'the-olympus/design';
 export const LIBRARY_FORMAT = 'the-olympus/library';
 const FORMAT_VERSION = 1;
 
-/** A design's spec as it is stored: `logo` points at the catalogue's copy of the logo. */
-function storedSpec(d: Design): ServiceSpec {
-  const { logo: _, ...spec } = d.spec;
-  return d.logoSvg ? { ...spec, logo: `logos/${spec.id}.svg` } : spec;
+/**
+ * A spec with its logo field as its logo makes it: pointing at the
+ * catalogue's copy when there is a logo; without one, no logo field — and no
+ * logo as patron (the category's default stands in).
+ */
+export function withLogoField(spec: ServiceSpec, logoSvg: string | undefined): ServiceSpec {
+  const { logo: _, ...rest } = spec;
+  if (logoSvg) return { ...rest, logo: `logos/${rest.id}.svg` };
+  if (rest.god !== 'logo') return rest;
+  const { god: _g, ...noPatron } = rest;
+  return noPatron;
 }
+
+/** A design's spec as it is stored: `logo` points at the catalogue's copy of the logo. */
+const storedSpec = (d: Design): ServiceSpec => withLogoField(d.spec, d.logoSvg);
 
 export function designFile(d: Design): string {
   return JSON.stringify({ format: DESIGN_FORMAT, formatVersion: FORMAT_VERSION, design: { ...d, spec: storedSpec(d) } }, null, 2) + '\n';
@@ -70,8 +79,6 @@ function asDesign(raw: unknown, where: string, now: string): Design {
   if (typeof o !== 'object' || !('spec' in o)) throw new Error(`${where}: not a design`);
   const spec = validateSpec(o.spec, where);
   if (o.logoSvg !== undefined && typeof o.logoSvg !== 'string') throw new Error(`${where}: "logoSvg" must be SVG text`);
-  // A logo path without its SVG cannot be used here; keep the design, drop the reference.
-  const { logo: _, ...rest } = spec;
   const version = Number.isInteger(o.version) && (o.version as number) > 0 ? (o.version as number) : 1;
   // Earlier versions: kept when they are sound and older than this one; a damaged entry is dropped, not fatal.
   const history: DesignVersion[] = [];
@@ -79,14 +86,16 @@ function asDesign(raw: unknown, where: string, now: string): Design {
     for (const h of o.history.slice(-HISTORY_LIMIT) as Partial<DesignVersion>[]) {
       try {
         if (!Number.isInteger(h.version) || h.version! < 1 || h.version! >= version || (h.logoSvg !== undefined && typeof h.logoSvg !== 'string')) continue;
-        const { logo: _l, ...hs } = validateSpec(h.spec, `${where}, version ${h.version}`);
-        history.push({ version: h.version!, updated: typeof h.updated === 'string' ? h.updated : now, spec: h.logoSvg ? { ...hs, logo: `logos/${hs.id}.svg` } : hs, ...(h.logoSvg ? { logoSvg: h.logoSvg } : {}) });
+        const hs = validateSpec(h.spec, `${where}, version ${h.version}`);
+        // A logo path without its SVG cannot be used here; keep the version, drop the reference.
+        history.push({ version: h.version!, updated: typeof h.updated === 'string' ? h.updated : now, spec: withLogoField(hs, h.logoSvg), ...(h.logoSvg ? { logoSvg: h.logoSvg } : {}) });
       } catch {
         /* skip */
       }
     }
   return {
-    spec: o.logoSvg ? { ...rest, logo: `logos/${spec.id}.svg` } : rest,
+    // A logo path without its SVG cannot be used here; keep the design, drop the reference.
+    spec: withLogoField(spec, o.logoSvg),
     logoSvg: o.logoSvg,
     version,
     created: typeof o.created === 'string' ? o.created : now,

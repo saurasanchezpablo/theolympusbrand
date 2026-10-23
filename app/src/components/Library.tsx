@@ -1,9 +1,8 @@
 import { useMemo, useState, type ReactNode } from 'react';
 import { productionSvg } from '../../../src/render/svg.ts';
-import { resolve } from '../../../src/catalog/service.ts';
 import type { Design } from '../../../src/catalog/design.ts';
 import { GODS } from '../../../src/geometry/pantheon.ts';
-import { CATEGORY_LIST, MASTER, sealFor, title } from '../model.ts';
+import { CATEGORY_LIST, MASTER, patronLabel, renderableService, sealFor, title } from '../model.ts';
 import { Segmented, SvgImage } from './ui.tsx';
 import { Icon } from './Icon.tsx';
 
@@ -43,10 +42,10 @@ export function Library({ house, mine, current, storageAvailable, onOpenMaster, 
 
   const q = query.trim().toLowerCase();
   const shown = entries.filter((e) => {
-    const s = resolve(e.design.spec);
+    const s = renderableService(e.design.spec, e.design.logoSvg);
     if (category && s.category !== category) return false;
     if (!q) return true;
-    const patron = 'god' in s.patron ? GODS[s.patron.god].name : `monogram ${s.letter}`;
+    const patron = patronLabel(s.patron);
     return [s.name, s.id, s.category, patron, s.description ?? '', s.caption].join(' ').toLowerCase().includes(q);
   });
 
@@ -99,7 +98,7 @@ export function Library({ house, mine, current, storageAvailable, onOpenMaster, 
           </li>
         )}
         {shown.map((e) => {
-          const s = resolve(e.design.spec);
+          const s = renderableService(e.design.spec, e.design.logoSvg);
           const key = e.kind === 'house' ? `h:${e.id}` : `m:${e.key}`;
           return (
             <li key={key} className="library__row">
@@ -108,7 +107,7 @@ export function Library({ house, mine, current, storageAvailable, onOpenMaster, 
                 <span className="item__text">
                   <span className="item__name">{s.name}</span>
                   <span className="item__meta">
-                    {'god' in s.patron ? title(GODS[s.patron.god].name) : `Monogram ${s.letter}`} · {s.category}
+                    {patronLabel(s.patron)} · {s.category}
                     {e.kind === 'mine' ? ` · v${e.design.version}` : ''}
                   </span>
                 </span>

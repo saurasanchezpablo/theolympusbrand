@@ -316,7 +316,7 @@ export type CrestConfig = {
 };
 
 const ZEUS: Patron = { god: 'zeus' };
-const patronId = (p: Patron) => ('god' in p ? p.god : `monogram-${p.monogram}`);
+const patronId = (p: Patron) => ('god' in p ? p.god : 'monogram' in p ? `monogram-${p.monogram}` : 'logo');
 
 const placeTemple = (P: Profile, d: string) => {
   const k = COMPOSITION.templeK;

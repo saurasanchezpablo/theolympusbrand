@@ -1,7 +1,8 @@
 import { useRef, useState } from 'react';
 import { productionSvg } from '../../../src/render/svg.ts';
 import { slugify, type Service, type ServiceSpec } from '../../../src/catalog/service.ts';
-import { CATEGORIES, GODS, initialOf, type Category, type GodId } from '../../../src/geometry/pantheon.ts';
+import { withLogoField } from '../../../src/catalog/design.ts';
+import { CATEGORIES, GODS, initialOf, patronPrintsAsLogo, type Category, type GodId } from '../../../src/geometry/pantheon.ts';
 import { THEME_KITS } from '../../../src/integrations/themes/index.ts';
 import { CATEGORY_LIST, GOD_LIST, defaultGodOf, sealFor, title, type Draft, type Logo } from '../model.ts';
 import { Field, Notes, Section, SvgImage } from './ui.tsx';
@@ -25,11 +26,14 @@ export function Config({ draft, service, logo, issues, warnings, onChange }: Pro
   };
   const fileRef = useRef<HTMLInputElement>(null);
 
+  const hasLogo = !!(logo && 'd' in logo);
+  const isLogo = spec.god === 'logo' && hasLogo;
   const isMonogram = spec.god === 'monogram' || (!spec.god && !defaultGodOf(spec.category));
-  const chosenGod: GodId | 'monogram' = isMonogram ? 'monogram' : ((spec.god as GodId | undefined) ?? defaultGodOf(spec.category)!);
+  const chosenGod: GodId | 'monogram' | 'logo' = isLogo ? 'logo' : isMonogram ? 'monogram' : ((spec.god as GodId | undefined) ?? defaultGodOf(spec.category)!);
   const defaultGod = defaultGodOf(spec.category);
-  const pickPatron = (g: GodId | 'monogram') => {
-    if (g === 'monogram') setSpec({ god: defaultGod ? 'monogram' : undefined });
+  const pickPatron = (g: GodId | 'monogram' | 'logo') => {
+    if (g === 'logo') setSpec({ god: 'logo' });
+    else if (g === 'monogram') setSpec({ god: defaultGod ? 'monogram' : undefined });
     else setSpec({ god: g === defaultGod ? undefined : g });
   };
   const defaultCaption = 'god' in service.patron ? `The Olympus · ${GODS[service.patron.god].name}` : 'The Olympus';
@@ -123,12 +127,26 @@ export function Config({ draft, service, logo, issues, warnings, onChange }: Pro
             <span className="patron__name">Monogram</span>
             {!defaultGod && <span className="patron__default">default</span>}
           </button>
+          <button
+            type="button"
+            role="radio"
+            aria-checked={chosenGod === 'logo'}
+            disabled={!hasLogo}
+            className={`patron${chosenGod === 'logo' ? ' is-on' : ''}`}
+            onClick={() => pickPatron('logo')}
+            title={hasLogo ? 'Your logo, in the bay and on the seal' : 'Import a logo below to stand it in the bay'}
+          >
+            {hasLogo ? <SvgImage className="patron__seal" svg={productionSvg(sealFor({ logo: (logo as { d: string }).d, letter: service.letter }), { ground: 'transparent' })} alt="" /> : <span className="patron__seal patron__seal--empty" aria-hidden="true" />}
+            <span className="patron__name">Your logo</span>
+          </button>
         </div>
         <p className="field__hint patron__about">
           {'god' in service.patron ? (
             <>
               <strong>{title(GODS[service.patron.god].name)}</strong>, {GODS[service.patron.god].title.charAt(0).toLowerCase() + GODS[service.patron.god].title.slice(1)}. In the bay: {GODS[service.patron.god].attribute.toLowerCase()}.
             </>
+          ) : 'logo' in service.patron ? (
+            <>Your logo stands in the bay, on the seal and in the logo slot. Print editions cut it only if it keeps its shape at 0.4 mm{patronPrintsAsLogo(service.patron) ? ' — it does' : <> — it does not, so they carry the initial, {service.letter}</>}.</>
           ) : (
             <>The service’s initial stands in the bay, cut heavy enough to print.</>
           )}
@@ -167,7 +185,7 @@ export function Config({ draft, service, logo, issues, warnings, onChange }: Pro
                 <Icon name="upload" /> {draft.logoSvg ? 'Replace logo' : 'Use an SVG logo…'}
               </button>
               {draft.logoSvg && (
-                <button type="button" className="btn btn--ghost btn--sm" onClick={() => onChange({ ...draft, logoSvg: undefined, spec: withoutLogo(spec) })}>
+                <button type="button" className="btn btn--ghost btn--sm" onClick={() => onChange({ ...draft, logoSvg: undefined, spec: withLogoField(spec, undefined) })}>
                   Use the seal
                 </button>
               )}
@@ -187,11 +205,6 @@ export function Config({ draft, service, logo, issues, warnings, onChange }: Pro
       <Notes items={warnings} tone="warn" />
     </section>
   );
-}
-
-function withoutLogo(spec: ServiceSpec): ServiceSpec {
-  const { logo: _, ...rest } = spec;
-  return rest;
 }
 
 /** A viewBox around path data, from its numbers (good enough for a thumbnail). */

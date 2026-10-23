@@ -795,6 +795,18 @@ a.btn--primary {
   height: 38px;
 }
 
+/* Your logo, before one is imported: an empty ring where its seal will be. */
+.patron:disabled {
+  cursor: not-allowed;
+  color: var(--slate);
+}
+
+.patron__seal--empty {
+  box-sizing: border-box;
+  border: 1.5px dashed var(--silver);
+  border-radius: 50%;
+}
+
 .patron__name {
   font-size: 11px;
   font-weight: 500;

@@ -1,9 +1,8 @@
 import { useMemo, useState } from 'react';
 import { productionSvg } from '../../../src/render/svg.ts';
-import { resolve } from '../../../src/catalog/service.ts';
 import { GODS } from '../../../src/geometry/pantheon.ts';
 import type { Design } from '../../../src/catalog/design.ts';
-import { CATEGORY_LIST, marksFor, readLogo, title } from '../model.ts';
+import { CATEGORY_LIST, marksFor, readLogo, renderableService, title } from '../model.ts';
 import { loadLibrary, useHouse } from '../library.ts';
 import { requestOpen } from '../bus.ts';
 import { download } from '../exporters.ts';
@@ -64,7 +63,7 @@ export function CataloguePage() {
       </header>
       <div className="cards">
         {shown.map((e) => {
-          const s = resolve(e.design.spec);
+          const s = renderableService(e.design.spec, e.design.logoSvg);
           const house = e.kind === 'house';
           const folder = `assets/services/${s.id}`;
           const files = index && house ? filesUnder(index, folder) : [];

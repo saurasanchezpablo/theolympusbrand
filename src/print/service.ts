@@ -3,12 +3,12 @@
 import { variableParts } from '../geometry/crest.ts';
 import { flatten, union } from '../geometry/poly.ts';
 import type { Patron } from '../geometry/pantheon.ts';
-import { isClean, minDiameterMM, minFeature, problemsAt } from './printcheck.ts';
+import { PRINT_MIN_UNITS, isClean, minDiameterMM, minFeature, problemsAt } from './printcheck.ts';
+
+export { PRINT_MIN_UNITS };
 
 /** Filament printer, 0.4 mm nozzle: finest reliable printed feature (mm). */
 export const PRINTER_MM = 0.5;
-/** Print-edition features below this many units (on the 504-unit rim) fail. */
-export const PRINT_MIN_UNITS = 3.6;
 /**
  * Minimum feature of the parts every print crest shares (temple, name,
  * border), measured once: `minFeature` of the print crest with an empty slot.

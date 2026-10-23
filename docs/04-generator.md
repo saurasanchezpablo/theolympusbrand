@@ -38,15 +38,20 @@ while you read other pages, so nothing in progress is lost.
 3. Pick the **category**. It works as a preset: it chooses the patron god
    (Media → Apollo, Security → Athena…).
 4. Keep that **patron** or choose another god — or the **monogram**, the
-   service's initial cut in Cinzel.
+   service's initial cut in Cinzel — or **Your logo**, once you have imported
+   one (step 5).
 5. Optionally put an **application logo** in the logo slot (an SVG file).
+   Chosen as the patron too, it stands in the temple's bay and on the seal
+   as well. Print editions cut it in the bay only if it keeps its shape on a
+   0.4 mm nozzle; otherwise they carry the initial, and the patron's note
+   says so.
 6. Optionally change the **caption**, the lockup's second line.
 7. **Save** (or Ctrl+S). Each save increments the design's version.
 8. **Export** — or **share** it as a link.
 
 What the system lets a design change is exactly what keeps the family
 consistent: the god in the central bay, the logo slot, and the lockup's
-wording. The rim, border, temple, thunderbolt, name plinth, clouds and
+wording (the bay may carry your own logo). The rim, border, temple, thunderbolt, name plinth, clouds and
 proportions are the master's and cannot be edited — the master itself is
 shown read-only.
 

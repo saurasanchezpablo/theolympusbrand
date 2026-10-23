@@ -2,7 +2,7 @@
 
 import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { basename, join, resolve as resolvePath, sep } from 'node:path';
-import { validateSpec, resolve, SPEC_KEYS, type Service, type ServiceSpec } from '../catalog/service.ts';
+import { validateSpec, resolve, withLogo, SPEC_KEYS, type Service, type ServiceSpec } from '../catalog/service.ts';
 import { importLogo } from '../geometry/logo.ts';
 import { dataDir, dataLogo, dataServices, loadRemoved } from './data.ts';
 
@@ -29,7 +29,9 @@ export function loadCatalog(dir = SERVICES_DIR): Service[] {
     .sort((a, b) => (a.id < b.id ? -1 : 1))
     .map((spec) => {
       if (spec.logo && !logoFile(spec)) throw new Error(`${spec.id}: logo ${spec.logo} not found in the data folder or catalog/`);
-      return resolve(spec);
+      const service = resolve(spec);
+      // Its own logo as patron: read here, so every build draws it.
+      return spec.god === 'logo' ? withLogo(service, logoOf(service)?.d) : service;
     });
 }
 

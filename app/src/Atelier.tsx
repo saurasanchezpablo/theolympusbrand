@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { slugify } from '../../src/catalog/service.ts';
-import { designFile, libraryFile, nextVersion, parseDesigns, type Design, type DesignVersion } from '../../src/catalog/design.ts';
+import { designFile, libraryFile, nextVersion, parseDesigns, withLogoField, type Design, type DesignVersion } from '../../src/catalog/design.ts';
 import { readShareCode, shareCode } from '../../src/catalog/share.ts';
 import type { MarkKey } from '../../src/catalog/fileset.ts';
 import type { Mark } from '../../src/geometry/crest.ts';
@@ -135,12 +135,12 @@ export default function Atelier({ active }: { active: boolean }) {
 
   /* ---------- the open design, rendered ---------- */
   const draft = open.kind === 'draft' ? open.draft : null;
-  const service = useMemo(() => (draft ? renderableService(draft.spec) : null), [draft]);
+  const service = useMemo(() => (draft ? renderableService(draft.spec, draft.logoSvg) : null), [draft]);
   const logo = useMemo(() => readLogo(draft?.logoSvg), [draft?.logoSvg]);
   const logoD = logo && 'd' in logo ? logo.d : undefined;
   const marks: Partial<Record<MarkKey, Mark>> = useMemo(() => (service ? marksFor(service, logoD) : MASTER.marks()), [service, logoD]);
   const print = useMemo(() => (service ? printFor(service.patron) : null), [service]);
-  const issues = useMemo(() => (draft ? specIssues(draft.spec) : []), [draft]);
+  const issues = useMemo(() => (draft ? specIssues(withLogoField(draft.spec, draft.logoSvg)) : []), [draft]);
   const idClash = draft && Object.entries(mine).some(([k, d]) => d.spec.id === draft.spec.id && !(draft.origin.kind === 'mine' && draft.origin.key === k));
   const warnings = useMemo(() => {
     if (!service) return [];

@@ -20,7 +20,8 @@ export type ServiceSpec = {
   id: string;
   name: string;
   category: Category;
-  god?: GodId | 'monogram';
+  /** The patron in the bay: a god, "monogram" for the initial, or "logo" for the service's own logo (which it must have). */
+  god?: GodId | 'monogram' | 'logo';
   monogram?: string;
   logo?: string;
   caption?: string;
@@ -64,7 +65,8 @@ export function validateSpec(raw: unknown, where = 'service'): ServiceSpec {
   const text = (v: unknown, max: number) => typeof v === 'string' && v.trim().length > 0 && v.length <= max && !/[\u0000-\u001f\u007f-\u009f]/.test(v);
   if (!text(o.name, 48)) errors.push('"name" is required: one line of at most 48 characters, without control characters');
   if (typeof o.category !== 'string' || !(o.category in CATEGORIES)) errors.push(`"category" must be one of: ${Object.keys(CATEGORIES).join(', ')}`);
-  if (o.god !== undefined && (typeof o.god !== 'string' || !(o.god === 'monogram' || o.god in GODS))) errors.push(`"god" must be "monogram" or one of: ${Object.keys(GODS).join(', ')}`);
+  if (o.god !== undefined && (typeof o.god !== 'string' || !(o.god === 'monogram' || o.god === 'logo' || o.god in GODS))) errors.push(`"god" must be "monogram", "logo" or one of: ${Object.keys(GODS).join(', ')}`);
+  if (o.god === 'logo' && o.logo === undefined) errors.push('"god": "logo" needs a "logo": the service\'s own logo is its patron');
   if (o.god === 'zeus') errors.push('"zeus" is reserved for the master crest');
   if (o.monogram !== undefined && (typeof o.monogram !== 'string' || !/^[A-Za-z0-9]$/.test(o.monogram))) errors.push('"monogram" must be a single letter or digit');
   if (o.logo !== undefined && (typeof o.logo !== 'string' || !/^logos\/[a-z0-9]+(?:-[a-z0-9]+)*\.svg$/.test(o.logo))) errors.push('"logo" must be a file in catalog/logos/, such as "logos/jellyfin.svg"');
@@ -82,7 +84,16 @@ export function validateSpec(raw: unknown, where = 'service'): ServiceSpec {
 export function resolve(spec: ServiceSpec): Service {
   const letter = (spec.monogram ?? initialOf(spec.name)).toUpperCase();
   const patron: Patron =
-    spec.god === 'monogram' ? { monogram: letter } : spec.god ? { god: spec.god } : defaultPatron(spec.category, spec.name);
+    spec.god === 'monogram' || spec.god === 'logo' ? { monogram: letter } : spec.god ? { god: spec.god } : defaultPatron(spec.category, spec.name);
   const patronName = 'god' in patron ? GODS[patron.god].name : null;
   return { ...spec, patron, letter, caption: spec.caption?.trim() || (patronName ? `The Olympus · ${patronName}` : 'The Olympus') };
+}
+
+/**
+ * A service whose spec takes its own logo as patron, with the logo given
+ * (path data, as imported): where the logo is read, its patron becomes it.
+ * Until then — or with no logo to read — the initial stands in.
+ */
+export function withLogo(s: Service, logo: string | undefined): Service {
+  return s.god === 'logo' && logo ? { ...s, patron: { logo, letter: s.letter } } : s;
 }

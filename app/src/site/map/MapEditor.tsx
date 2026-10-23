@@ -8,7 +8,7 @@ import { useCallback, useEffect, useRef, useState, type MutableRefObject, type R
 import type { MapData, MapEntry } from '../../../../src/map/items.ts';
 import type { Place } from '../../../../src/map/places.ts';
 import { DESIGN_LINK, type ServiceSpec } from '../../../../src/catalog/service.ts';
-import type { Design } from '../../../../src/catalog/design.ts';
+import { withLogoField, type Design } from '../../../../src/catalog/design.ts';
 import { loadLibrary } from '../../designs.ts';
 import type { MachineSpec } from '../../../../src/catalog/machine.ts';
 import { CATEGORIES } from '../../../../src/catalog/categories.ts';
@@ -34,13 +34,13 @@ export function linkedSpec(id: string, key: string, d: Design, old: ServiceSpec 
     god: ds.god,
     monogram: ds.monogram,
     caption: ds.caption,
-    logo: d.logoSvg ? `logos/${id}.svg` : undefined,
     url: ds.url ?? old?.url,
     app: ds.app ?? old?.app,
     description: ds.description || old?.description,
     design: `${key}@${d.version}`,
   };
-  return Object.fromEntries(Object.entries(spec).filter(([, v]) => v !== undefined && v !== '')) as ServiceSpec;
+  // The logo travels with the design; a design without its logo cannot keep it as patron.
+  return withLogoField(Object.fromEntries(Object.entries(spec).filter(([, v]) => v !== undefined && v !== '')) as ServiceSpec, d.logoSvg);
 }
 
 /** What this browser knows of a service's linked design: none, one it does not have, or one it has (newer or not). */
